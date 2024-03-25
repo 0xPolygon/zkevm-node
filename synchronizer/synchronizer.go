@@ -129,6 +129,7 @@ func NewSynchronizer(
 		res.syncTrustedStateExecutor = l2_shared.NewSyncTrustedStateExecutorSelector(map[uint64]syncinterfaces.SyncTrustedStateExecutor{
 			uint64(state.FORKID_ETROG):      syncTrustedStateEtrog,
 			uint64(state.FORKID_ELDERBERRY): syncTrustedStateEtrog,
+			uint64(state.FORKID_9):          syncTrustedStateEtrog,
 		}, res.state)
 	}
 	var l1checkerL2Blocks *actions.CheckL2BlockHash
