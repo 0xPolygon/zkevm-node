@@ -35,6 +35,7 @@ type etherman interface {
 	TrustedSequencer() (common.Address, error)
 	GetLatestBatchNumber() (uint64, error)
 	GetLatestBlockNumber(ctx context.Context) (uint64, error)
+	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 }
 
 // stateInterface gathers the methods required to interact with the state.
