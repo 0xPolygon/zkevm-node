@@ -505,6 +505,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 	// Call the blockchain to retrieve data
 	header, err := s.etherMan.HeaderByNumber(s.ctx, nil)
 	if err != nil {
+		log.Error("error getting header of the latest block in L1. Error: ", err)
 		return lastEthBlockSynced, err
 	}
 	lastKnownBlock := header.Number
@@ -693,16 +694,6 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 			return rollbackErr
 		}
 		log.Error("error processing reorg on eth tx manager. Error: ", err)
-		return err
-	}
-	err = s.state.ResetL1InfoTree(s.ctx, dbTx)
-	if err != nil {
-		rollbackErr := dbTx.Rollback(s.ctx)
-		if rollbackErr != nil {
-			log.Errorf("error rolling back state when resetting l1InfoTree. BlockNumber: %d, rollbackErr: %s, error : %v", blockNumber, rollbackErr.Error(), err)
-			return rollbackErr
-		}
-		log.Error("error resetting the l1InfoTree. Error: ", err)
 		return err
 	}
 	err = dbTx.Commit(s.ctx)

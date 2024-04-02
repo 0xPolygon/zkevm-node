@@ -28,7 +28,6 @@ type StateFullInterface interface {
 	AddForcedBatch(ctx context.Context, forcedBatch *state.ForcedBatch, dbTx pgx.Tx) error
 	AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error
 	Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error
-	ResetL1InfoTree(ctx context.Context, dbTx pgx.Tx) error
 	GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*state.Block, error)
 	GetLastBatchNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetBatchByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.Batch, error)
