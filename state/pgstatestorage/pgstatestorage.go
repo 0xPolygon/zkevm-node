@@ -128,7 +128,7 @@ func (p *PostgresStorage) GetLogsByBlockNumber(ctx context.Context, blockNumber 
        INNER JOIN state.l2block b ON b.block_num = t.l2_block_num
        INNER JOIN state.receipt r ON r.tx_hash = t.hash
        WHERE b.block_num = $1
-       ORDER BY r.tx_index, l.log_index ASC`
+       ORDER BY r.tx_index ASC, l.log_index ASC`
 
 	q := p.getExecQuerier(dbTx)
 	rows, err := q.Query(ctx, query, blockNumber)
@@ -159,7 +159,7 @@ func (p *PostgresStorage) GetLogs(ctx context.Context, fromBlock uint64, toBlock
 	const queryFilterByBlockHash = `AND b.block_hash = $7 `
 	const queryFilterByBlockNumbers = `AND b.block_num BETWEEN $7 AND $8 `
 
-	const queryOrder = `ORDER BY b.block_num ASC, r.tx_index, l.log_index ASC`
+	const queryOrder = `ORDER BY b.block_num ASC, r.tx_index ASC, l.log_index ASC`
 
 	// count queries
 	const queryToCountLogsByBlockHash = "" +
