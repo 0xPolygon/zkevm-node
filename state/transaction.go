@@ -252,11 +252,9 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 		if executor.IsInvalidL2Block(executor.RomErrorCode(txResponse.RomError)) {
 			continue
 		}
-
 		txResp := *txResponse
 		transactions = append(transactions, &txResp.Tx)
 		txsL2Hash = append(txsL2Hash, txResp.TxHashL2_V2)
-
 		storeTxEGPData := StoreTxEGPData{EGPLog: nil, EffectivePercentage: uint8(txResponse.EffectivePercentage)}
 		if txsEGPLog != nil {
 			storeTxEGPData.EGPLog = txsEGPLog[i]

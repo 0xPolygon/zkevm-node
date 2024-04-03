@@ -513,8 +513,7 @@ services:
 
   zkevm-prover:
     container_name: zkevm-prover
-    platform: linux/amd64
-    image: hermeznetwork/zkevm-prover:v5.0.7
+    image: hermeznetwork/zkevm-prover:v6.0.0
     ports:
       - 50061:50061 # MT
       - 50071:50071 # Executor
@@ -605,8 +604,7 @@ services:
 
   zkevm-permissionless-prover:
     container_name: zkevm-permissionless-prover
-    platform: linux/amd64
-    image: hermeznetwork/zkevm-prover:v5.0.7
+    image: hermeznetwork/zkevm-prover:v6.0.0
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover
