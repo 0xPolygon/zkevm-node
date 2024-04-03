@@ -530,6 +530,22 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		if err != nil {
 			return lastEthBlockSynced, err
 		}
+
+		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
+		block, err := s.checkReorg(lastEthBlockSynced)
+		if err != nil {
+			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
+			return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
+		}
+		if block != nil {
+			err = s.resetState(block.BlockNumber)
+			if err != nil {
+				log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
+				return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+			}
+			return block, nil
+		}
+
 		start = time.Now()
 		err = s.ProcessBlockRange(blocks, order)
 		metrics.ProcessL1DataTime(time.Since(start))
