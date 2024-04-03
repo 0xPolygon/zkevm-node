@@ -755,7 +755,6 @@ func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block,
 				return nil, err
 			}
 			lb, err := s.state.GetPreviousBlock(s.ctx, depth, dbTx)
-			reorgedBlock = *lb
 			errC := dbTx.Commit(s.ctx)
 			if errC != nil {
 				log.Errorf("error committing dbTx, err: %v", errC)
@@ -774,6 +773,7 @@ func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block,
 				log.Error("error getting previousBlock from db. Error: ", err)
 				return nil, err
 			}
+			reorgedBlock = *lb
 		} else {
 			log.Debugf("checkReorg: Block %d hashOk %t parentHashOk %t", reorgedBlock.BlockNumber, block.Hash() == reorgedBlock.BlockHash, block.ParentHash() == reorgedBlock.ParentHash)
 			break
