@@ -43,7 +43,7 @@ check-docker:
 # Check for Docker-compose
 .PHONY: check-docker-compose
 check-docker-compose:
-	@docker compose version > /dev/null || (echo "Error: docker compose is not installed" && exit 1)
+	@which docker-compose > /dev/null || (echo "Error: docker-compose is not installed" && exit 1)
 
 # Check for Protoc
 .PHONY: check-protoc
