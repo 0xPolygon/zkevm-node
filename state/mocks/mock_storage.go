@@ -4966,12 +4966,12 @@ func (_c *StorageMock_GetLatestVirtualBatchTimestamp_Call) RunAndReturn(run func
 	return _c
 }
 
-// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
-func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+// GetLeavesByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
+func (_m *StorageMock) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, l1InfoRoot, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLeafsByL1InfoRoot")
+		panic("no return value specified for GetLeavesByL1InfoRoot")
 	}
 
 	var r0 []state.L1InfoTreeExitRootStorageEntry
@@ -4996,32 +4996,32 @@ func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot comm
 	return r0, r1
 }
 
-// StorageMock_GetLeafsByL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLeafsByL1InfoRoot'
-type StorageMock_GetLeafsByL1InfoRoot_Call struct {
+// StorageMock_GetLeavesByL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLeavesByL1InfoRoot'
+type StorageMock_GetLeavesByL1InfoRoot_Call struct {
 	*mock.Call
 }
 
-// GetLeafsByL1InfoRoot is a helper method to define mock.On call
+// GetLeavesByL1InfoRoot is a helper method to define mock.On call
 //   - ctx context.Context
 //   - l1InfoRoot common.Hash
 //   - dbTx pgx.Tx
-func (_e *StorageMock_Expecter) GetLeafsByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *StorageMock_GetLeafsByL1InfoRoot_Call {
-	return &StorageMock_GetLeafsByL1InfoRoot_Call{Call: _e.mock.On("GetLeafsByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
+func (_e *StorageMock_Expecter) GetLeavesByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *StorageMock_GetLeavesByL1InfoRoot_Call {
+	return &StorageMock_GetLeavesByL1InfoRoot_Call{Call: _e.mock.On("GetLeavesByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(common.Hash), args[2].(pgx.Tx))
 	})
 	return _c
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) Return(_a0 []state.L1InfoTreeExitRootStorageEntry, _a1 error) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) Return(_a0 []state.L1InfoTreeExitRootStorageEntry, _a1 error) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error)) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error)) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Return(run)
 	return _c
 }
