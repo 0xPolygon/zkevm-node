@@ -38,8 +38,8 @@ func NewL1InfoTree(height uint8, initialLeaves [][32]byte) (*L1InfoTree, error) 
 func (mt *L1InfoTree) ResetL1InfoTree(initialLeaves [][32]byte) (*L1InfoTree, error) {
 	log.Info("Resetting L1InfoTree...")
 	newMT := &L1InfoTree{
-		zeroHashes: mt.zeroHashes,
-		height:     mt.height,
+		zeroHashes: generateZeroHashes(32), // nolint:gomnd
+		height:     32,                     // nolint:gomnd
 		count:      uint32(len(initialLeaves)),
 	}
 	var err error
@@ -50,7 +50,6 @@ func (mt *L1InfoTree) ResetL1InfoTree(initialLeaves [][32]byte) (*L1InfoTree, er
 	}
 	log.Debug("Reset initial count: ", newMT.count)
 	log.Debug("Reset initial root: ", newMT.currentRoot)
-	mt = newMT
 	return newMT, nil
 }
 

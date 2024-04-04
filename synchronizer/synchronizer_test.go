@@ -260,6 +260,11 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Return(blocks, order, nil).
 				Once()
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
+				Return(ethBlock, nil).
+				Once()
+
 			m.ZKEVMClient.
 				On("BatchNumber", ctx).
 				Return(uint64(1), nil)
@@ -507,6 +512,11 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 			m.Etherman.
 				On("GetRollupInfoByBlockRange", ctx, fromBlock, &toBlock).
 				Return(blocks, order, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
+				Return(ethBlock, nil).
 				Once()
 
 			m.State.
