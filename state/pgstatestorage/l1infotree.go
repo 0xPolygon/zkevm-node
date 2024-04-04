@@ -146,17 +146,18 @@ func (p *PostgresStorage) GetL1InfoRootLeafByIndexVx(ctx context.Context, l1Info
 	}
 	return entry, nil
 }
-func (p *PostgresStorage) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
-	return p.GetLeafsByL1InfoRootVx(ctx, l1InfoRoot, dbTx, l1InfoTreeIndexFieldName)
+
+func (p *PostgresStorage) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+	return p.GetLeavesByL1InfoRootVx(ctx, l1InfoRoot, dbTx, l1InfoTreeIndexFieldName)
 }
 
-func (p *PostgresStorage) GetLeafsByL1InfoRootVx(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx, indexFieldName string) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+func (p *PostgresStorage) GetLeavesByL1InfoRootVx(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx, indexFieldName string) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	// TODO: Optimize this query
-	const getLeafsByL1InfoRootSQL = `SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, %s
+	const getLeavesByL1InfoRootSQL = `SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, %s
 		FROM state.exit_root 
 		WHERE %s IS NOT NULL AND %s <= (SELECT %s FROM state.exit_root WHERE l1_info_root=$1)
 		ORDER BY %s ASC`
-	sql := fmt.Sprintf(getLeafsByL1InfoRootSQL, indexFieldName, indexFieldName, indexFieldName, indexFieldName, indexFieldName)
+	sql := fmt.Sprintf(getLeavesByL1InfoRootSQL, indexFieldName, indexFieldName, indexFieldName, indexFieldName, indexFieldName)
 	e := p.getExecQuerier(dbTx)
 	rows, err := e.Query(ctx, sql, l1InfoRoot)
 	if err != nil {
