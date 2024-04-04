@@ -52,17 +52,18 @@ type ClientSynchronizer struct {
 	etherMan           syncinterfaces.EthermanFullInterface
 	latestFlushID      uint64
 	// If true the lastFlushID is stored in DB and we don't need to check again
-	latestFlushIDIsFulfilled bool
-	etherManForL1            []syncinterfaces.EthermanFullInterface
-	state                    syncinterfaces.StateFullInterface
-	pool                     syncinterfaces.PoolInterface
-	ethTxManager             syncinterfaces.EthTxManager
-	zkEVMClient              syncinterfaces.ZKEVMClientInterface
-	eventLog                 syncinterfaces.EventLogInterface
-	ctx                      context.Context
-	cancelCtx                context.CancelFunc
-	genesis                  state.Genesis
-	cfg                      Config
+	latestFlushIDIsFulfilled      bool
+	etherManForL1                 []syncinterfaces.EthermanFullInterface
+	state                         syncinterfaces.StateFullInterface
+	pool                          syncinterfaces.PoolInterface
+	ethTxManager                  syncinterfaces.EthTxManager
+	zkEVMClient                   syncinterfaces.ZKEVMClientInterface
+	zkEVMClientEthereumCompatible syncinterfaces.ZKEVMClientEthereumCompatibleInterface
+	eventLog                      syncinterfaces.EventLogInterface
+	ctx                           context.Context
+	cancelCtx                     context.CancelFunc
+	genesis                       state.Genesis
+	cfg                           Config
 	// Id of the 'process' of the executor. Each time that it starts this value changes
 	// This value is obtained from the call state.GetStoredFlushID
 	// It starts as an empty string and it is filled in the first call
@@ -87,6 +88,7 @@ func NewSynchronizer(
 	pool syncinterfaces.PoolInterface,
 	ethTxManager syncinterfaces.EthTxManager,
 	zkEVMClient syncinterfaces.ZKEVMClientInterface,
+	zkEVMClientEthereumCompatible syncinterfaces.ZKEVMClientEthereumCompatibleInterface,
 	eventLog syncinterfaces.EventLogInterface,
 	genesis state.Genesis,
 	cfg Config,
@@ -94,23 +96,24 @@ func NewSynchronizer(
 	ctx, cancel := context.WithCancel(context.Background())
 	metrics.Register()
 	res := &ClientSynchronizer{
-		isTrustedSequencer:      isTrustedSequencer,
-		state:                   st,
-		etherMan:                ethMan,
-		etherManForL1:           etherManForL1,
-		pool:                    pool,
-		ctx:                     ctx,
-		cancelCtx:               cancel,
-		ethTxManager:            ethTxManager,
-		zkEVMClient:             zkEVMClient,
-		eventLog:                eventLog,
-		genesis:                 genesis,
-		cfg:                     cfg,
-		proverID:                "",
-		previousExecutorFlushID: 0,
-		l1SyncOrchestration:     nil,
-		l1EventProcessors:       nil,
-		halter:                  syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
+		isTrustedSequencer:            isTrustedSequencer,
+		state:                         st,
+		etherMan:                      ethMan,
+		etherManForL1:                 etherManForL1,
+		pool:                          pool,
+		ctx:                           ctx,
+		cancelCtx:                     cancel,
+		ethTxManager:                  ethTxManager,
+		zkEVMClient:                   zkEVMClient,
+		zkEVMClientEthereumCompatible: zkEVMClientEthereumCompatible,
+		eventLog:                      eventLog,
+		genesis:                       genesis,
+		cfg:                           cfg,
+		proverID:                      "",
+		previousExecutorFlushID:       0,
+		l1SyncOrchestration:           nil,
+		l1EventProcessors:             nil,
+		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
 	}
 	if !isTrustedSequencer {
 		log.Info("Permissionless: creating and Initializing L2 synchronization components")
@@ -144,7 +147,7 @@ func NewSynchronizer(
 				log.Errorf("error getting last L2Block number from state. Error: %v", err)
 				return nil, err
 			}
-			l1checkerL2Blocks = actions.NewCheckL2BlockHash(res.state, res.zkEVMClient, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
+			l1checkerL2Blocks = actions.NewCheckL2BlockHash(res.state, res.zkEVMClientEthereumCompatible, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
 		} else {
 			log.Infof("Trusted Node can't check L2Block hash, ignoring parameter")
 		}
