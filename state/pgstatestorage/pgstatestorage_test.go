@@ -1086,7 +1086,11 @@ func TestGetLogsByBlockNumber(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	testState = state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(cfg, stateDb), executorClient, stateTree, nil, mt)
+	mtr, err := l1infotree.NewL1InfoTreeRecursive(32)
+	if err != nil {
+		panic(err)
+	}
+	testState = state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(cfg, stateDb), executorClient, stateTree, nil, mt, mtr)
 
 	dbTx, err := testState.BeginStateTransaction(ctx)
 	require.NoError(t, err)
