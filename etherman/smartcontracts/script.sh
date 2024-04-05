@@ -8,15 +8,18 @@ gen() {
     abigen --bin bin/${package}.bin --abi abi/${package}.abi --pkg=${package} --out=${package}/${package}.go
 }
 
+gen pol
+gen mockverifier
+gen proxy
 gen preetrogpolygonzkevmglobalexitroot
 gen preetrogpolygonzkevmbridge
 gen preetrogpolygonzkevm
-gen elderberrypolygonzkevm
 gen etrogpolygonzkevm
-gen etrogpolygonzkevmbridge
-gen pol
 gen etrogpolygonzkevmglobalexitroot
 gen etrogpolygonrollupmanager
 gen mocketrogpolygonrollupmanager
-gen mockverifier
-gen proxy
+gen elderberrypolygonzkevm
+gen feijoapolygonzkevm
+gen feijoapolygonzkevmglobalexitroot
+gen feijoapolygonrollupmanager
+gen mockfeijoapolygonrollupmanager
