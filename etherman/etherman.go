@@ -18,12 +18,12 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/etherman/ethgasstation"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/elderberrypolygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevmglobalexitroot"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonrollupmanager"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmglobalexitroot"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevmglobalexitroot"
 	ethmanTypes "github.com/0xPolygonHermez/zkevm-node/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
@@ -92,13 +92,13 @@ var (
 	updateL1InfoTreeSignatureHash = crypto.Keccak256Hash([]byte("UpdateL1InfoTree(bytes32,bytes32)"))
 
 	// PreLxLy events
-	updateGlobalExitRootSignatureHash              = crypto.Keccak256Hash([]byte("UpdateGlobalExitRoot(bytes32,bytes32)"))
+	updateGlobalExitRootSignatureHash                   = crypto.Keccak256Hash([]byte("UpdateGlobalExitRoot(bytes32,bytes32)"))
 	preEtrogVerifyBatchesTrustedAggregatorSignatureHash = crypto.Keccak256Hash([]byte("VerifyBatchesTrustedAggregator(uint64,bytes32,address)"))
-	transferOwnershipSignatureHash                 = crypto.Keccak256Hash([]byte("OwnershipTransferred(address,address)"))
-	updateZkEVMVersionSignatureHash                = crypto.Keccak256Hash([]byte("UpdateZkEVMVersion(uint64,uint64,string)"))
+	transferOwnershipSignatureHash                      = crypto.Keccak256Hash([]byte("OwnershipTransferred(address,address)"))
+	updateZkEVMVersionSignatureHash                     = crypto.Keccak256Hash([]byte("UpdateZkEVMVersion(uint64,uint64,string)"))
 	preEtrogConsolidatePendingStateSignatureHash        = crypto.Keccak256Hash([]byte("ConsolidatePendingState(uint64,bytes32,uint64)"))
 	preEtrogOverridePendingStateSignatureHash           = crypto.Keccak256Hash([]byte("OverridePendingState(uint64,bytes32,address)"))
-	sequenceBatchesPreEtrogSignatureHash           = crypto.Keccak256Hash([]byte("SequenceBatches(uint64)"))
+	sequenceBatchesPreEtrogSignatureHash                = crypto.Keccak256Hash([]byte("SequenceBatches(uint64)"))
 
 	// Proxy events
 	initializedProxySignatureHash = crypto.Keccak256Hash([]byte("Initialized(uint8)"))
@@ -187,15 +187,15 @@ type externalGasProviders struct {
 
 // Client is a simple implementation of EtherMan.
 type Client struct {
-	EthClient                ethereumClient
+	EthClient                     ethereumClient
 	PreEtrogZkEVM                 *preetrogpolygonzkevm.Preetrogpolygonzkevm
 	ElderberryZKEVM               *elderberrypolygonzkevm.Elderberrypolygonzkevm
 	EtrogZkEVM                    *etrogpolygonzkevm.Etrogpolygonzkevm
 	EtrogRollupManager            *etrogpolygonrollupmanager.Etrogpolygonrollupmanager
 	EtrogGlobalExitRootManager    *etrogpolygonzkevmglobalexitroot.Etrogpolygonzkevmglobalexitroot
 	PreEtrogGlobalExitRootManager *preetrogpolygonzkevmglobalexitroot.Preetrogpolygonzkevmglobalexitroot
-	Pol                      *pol.Pol
-	SCAddresses              []common.Address
+	Pol                           *pol.Pol
+	SCAddresses                   []common.Address
 
 	RollupID uint32
 
@@ -274,16 +274,16 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 	log.Debug("rollupID: ", rollupID)
 
 	client := &Client{
-		EthClient:                ethClient,
+		EthClient:                     ethClient,
 		EtrogZkEVM:                    etrogZkevm,
 		ElderberryZKEVM:               elderberryZkevm,
 		PreEtrogZkEVM:                 preEtrogZkevm,
 		EtrogRollupManager:            etrogRollupManager,
-		Pol:                      pol,
+		Pol:                           pol,
 		EtrogGlobalExitRootManager:    etrogGlobalExitRoot,
 		PreEtrogGlobalExitRootManager: preEtrogGlobalExitRoot,
-		SCAddresses:              scAddresses,
-		RollupID:                 rollupID,
+		SCAddresses:                   scAddresses,
+		RollupID:                      rollupID,
 		GasProviders: externalGasProviders{
 			MultiGasProvider: cfg.MultiGasProvider,
 			Providers:        gProviders,

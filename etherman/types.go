@@ -3,8 +3,8 @@ package etherman
 import (
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
 

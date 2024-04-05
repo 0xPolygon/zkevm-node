@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mocketrogpolygonrollupmanager"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mockverifier"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonrollupmanager"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmbridge"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmglobalexitroot"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mocketrogpolygonrollupmanager"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mockverifier"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/proxy"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -190,15 +190,15 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 	client.Commit()
 
 	c := &Client{
-		EthClient:             client.Client(),
+		EthClient:                  client.Client(),
 		EtrogZkEVM:                 trueZkevm,
 		EtrogRollupManager:         rollupManager,
-		Pol:                   polContract,
+		Pol:                        polContract,
 		EtrogGlobalExitRootManager: globalExitRoot,
-		RollupID:              rollupID,
-		SCAddresses:           []common.Address{zkevmAddr, mockRollupManagerAddr, exitManagerAddr},
-		auth:                  map[common.Address]bind.TransactOpts{},
-		cfg:                   cfg,
+		RollupID:                   rollupID,
+		SCAddresses:                []common.Address{zkevmAddr, mockRollupManagerAddr, exitManagerAddr},
+		auth:                       map[common.Address]bind.TransactOpts{},
+		cfg:                        cfg,
 	}
 	err = c.AddOrReplaceAuth(*auth)
 	if err != nil {
