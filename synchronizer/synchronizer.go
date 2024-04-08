@@ -21,8 +21,8 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync/l2_shared"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync/l2_sync_etrog"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/metrics"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -176,7 +176,7 @@ func NewSynchronizer(
 	return res, nil
 }
 
-func decodeSyncBlockProtection (sBP string) (rpc.BlockNumber, error){
+func decodeSyncBlockProtection(sBP string) (rpc.BlockNumber, error) {
 	switch sBP {
 	case "latest":
 		return rpc.LatestBlockNumber, nil
@@ -542,7 +542,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 	}
 
 	for {
-		toBlock := fromBlock + s.cfg.SyncChunkSize	
+		toBlock := fromBlock + s.cfg.SyncChunkSize
 		if toBlock > lastKnownBlock.Uint64() {
 			toBlock = lastKnownBlock.Uint64()
 		}
