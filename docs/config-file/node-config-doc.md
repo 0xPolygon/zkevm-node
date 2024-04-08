@@ -1339,6 +1339,7 @@ because depending of this values is going to ask to a trusted node for trusted t
 | - [SyncInterval](#Synchronizer_SyncInterval )                                         | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                |
 | - [SyncChunkSize](#Synchronizer_SyncChunkSize )                                       | No      | integer          | No         | -          | SyncChunkSize is the number of blocks to sync on each chunk                                                                                                                                                                                             |
 | - [TrustedSequencerURL](#Synchronizer_TrustedSequencerURL )                           | No      | string           | No         | -          | TrustedSequencerURL is the rpc url to connect and sync the trusted state                                                                                                                                                                                |
+| - [SyncBlockProtection](#Synchronizer_SyncBlockProtection )                           | No      | string           | No         | -          | SyncBlockProtection specify the state to sync (lastest, finalized or safe)                                                                                                                                                                              |
 | - [L1SyncCheckL2BlockHash](#Synchronizer_L1SyncCheckL2BlockHash )                     | No      | boolean          | No         | -          | L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)                                                                                                            |
 | - [L1SyncCheckL2BlockNumberhModulus](#Synchronizer_L1SyncCheckL2BlockNumberhModulus ) | No      | integer          | No         | -          | L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check<br />a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)                                                                               |
 | - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )                       | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
@@ -1399,7 +1400,21 @@ SyncChunkSize=100
 TrustedSequencerURL=""
 ```
 
-### <a name="Synchronizer_L1SyncCheckL2BlockHash"></a>9.4. `Synchronizer.L1SyncCheckL2BlockHash`
+### <a name="Synchronizer_SyncBlockProtection"></a>9.4. `Synchronizer.SyncBlockProtection`
+
+**Type:** : `string`
+
+**Default:** `"latest"`
+
+**Description:** SyncBlockProtection specify the state to sync (lastest, finalized or safe)
+
+**Example setting the default value** ("latest"):
+```
+[Synchronizer]
+SyncBlockProtection="latest"
+```
+
+### <a name="Synchronizer_L1SyncCheckL2BlockHash"></a>9.5. `Synchronizer.L1SyncCheckL2BlockHash`
 
 **Type:** : `boolean`
 
@@ -1413,7 +1428,7 @@ TrustedSequencerURL=""
 L1SyncCheckL2BlockHash=true
 ```
 
-### <a name="Synchronizer_L1SyncCheckL2BlockNumberhModulus"></a>9.5. `Synchronizer.L1SyncCheckL2BlockNumberhModulus`
+### <a name="Synchronizer_L1SyncCheckL2BlockNumberhModulus"></a>9.6. `Synchronizer.L1SyncCheckL2BlockNumberhModulus`
 
 **Type:** : `integer`
 
@@ -1428,7 +1443,7 @@ a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
 L1SyncCheckL2BlockNumberhModulus=30
 ```
 
-### <a name="Synchronizer_L1SynchronizationMode"></a>9.6. `Synchronizer.L1SynchronizationMode`
+### <a name="Synchronizer_L1SynchronizationMode"></a>9.7. `Synchronizer.L1SynchronizationMode`
 
 **Type:** : `enum (of string)`
 
@@ -1448,7 +1463,7 @@ Must be one of:
 * "sequential"
 * "parallel"
 
-### <a name="Synchronizer_L1ParallelSynchronization"></a>9.7. `[Synchronizer.L1ParallelSynchronization]`
+### <a name="Synchronizer_L1ParallelSynchronization"></a>9.8. `[Synchronizer.L1ParallelSynchronization]`
 
 **Type:** : `object`
 **Description:** L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')
@@ -1466,7 +1481,7 @@ Must be one of:
 | - [RollupInfoRetriesSpacing](#Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing )                             | No      | string  | No         | -          | Duration                                                                                                                                                                                      |
 | - [FallbackToSequentialModeOnSynchronized](#Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized ) | No      | boolean | No         | -          | FallbackToSequentialModeOnSynchronized if true switch to sequential mode if the system is synchronized                                                                                        |
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.7.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.8.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
 
 **Type:** : `integer`
 
@@ -1480,7 +1495,7 @@ Must be one of:
 MaxClients=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.7.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.8.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
 
 **Type:** : `integer`
 
@@ -1495,7 +1510,7 @@ sugested twice of NumberOfParallelOfEthereumClients
 MaxPendingNoProcessedBlocks=25
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.7.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.8.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
 
 **Title:** Duration
 
@@ -1523,7 +1538,7 @@ This value only apply when the system is synchronized
 RequestLastBlockPeriod="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.7.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
+#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.8.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
 
 **Type:** : `object`
 **Description:** Consumer Configuration for the consumer of rollup information from L1
@@ -1533,7 +1548,7 @@ RequestLastBlockPeriod="5s"
 | - [AceptableInacctivityTime](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime )       | No      | string  | No         | -          | Duration                                                                                                                 |
 | - [ApplyAfterNumRollupReceived](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived ) | No      | integer | No         | -          | ApplyAfterNumRollupReceived is the number of iterations to<br />start checking the time waiting for new rollup info data |
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.7.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.8.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
 
 **Title:** Duration
 
@@ -1562,7 +1577,7 @@ fast enought then you could increse the number of parallel clients to sync with 
 AceptableInacctivityTime="5s"
 ```
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.7.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.8.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
 
 **Type:** : `integer`
 
@@ -1577,7 +1592,7 @@ start checking the time waiting for new rollup info data
 ApplyAfterNumRollupReceived=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.7.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.8.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
 
 **Title:** Duration
 
@@ -1603,7 +1618,7 @@ ApplyAfterNumRollupReceived=10
 RequestLastBlockTimeout="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.7.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.8.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
 
 **Type:** : `integer`
 
@@ -1617,7 +1632,7 @@ RequestLastBlockTimeout="5s"
 RequestLastBlockMaxRetries=3
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.7.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.8.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
 
 **Title:** Duration
 
@@ -1643,7 +1658,7 @@ RequestLastBlockMaxRetries=3
 StatisticsPeriod="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.7.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
+#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.8.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
 
 **Title:** Duration
 
@@ -1669,7 +1684,7 @@ StatisticsPeriod="5m0s"
 TimeOutMainLoop="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.7.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
+#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.8.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
 
 **Title:** Duration
 
@@ -1695,7 +1710,7 @@ TimeOutMainLoop="5m0s"
 RollupInfoRetriesSpacing="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.7.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
+#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.8.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
 
 **Type:** : `boolean`
 
@@ -1709,7 +1724,7 @@ RollupInfoRetriesSpacing="5s"
 FallbackToSequentialModeOnSynchronized=false
 ```
 
-### <a name="Synchronizer_L2Synchronization"></a>9.8. `[Synchronizer.L2Synchronization]`
+### <a name="Synchronizer_L2Synchronization"></a>9.9. `[Synchronizer.L2Synchronization]`
 
 **Type:** : `object`
 **Description:** L2Synchronization Configuration for L2 synchronization
@@ -1720,7 +1735,7 @@ FallbackToSequentialModeOnSynchronized=false
 | - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
 | - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
 
-#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.8.1. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
+#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.9.1. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
 
 **Type:** : `boolean`
 
@@ -1735,7 +1750,7 @@ if true, the synchronizer will accept empty batches and process them.
 AcceptEmptyClosedBatches=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.8.2. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
+#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.9.2. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
 
 **Type:** : `boolean`
 
@@ -1749,7 +1764,7 @@ AcceptEmptyClosedBatches=false
 ReprocessFullBatchOnClose=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.8.3. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
+#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.9.3. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
 
 **Type:** : `boolean`
 
