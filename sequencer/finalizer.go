@@ -224,7 +224,7 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 	firstL1InfoRootUpdate := true
 	skipFirstSleep := true
 
-	if f.cfg.L1InfoTreeCheckInterval.Duration.Seconds() == 999999 {
+	if f.cfg.L1InfoTreeCheckInterval.Duration.Seconds() == 999999 { //nolint:gomnd
 		if !f.lastL1InfoTreeValid {
 			f.lastL1InfoTreeCond.L.Lock()
 			f.lastL1InfoTreeValid = true
