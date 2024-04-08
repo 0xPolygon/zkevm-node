@@ -43,18 +43,18 @@ func (p *PostgresStorage) GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state
 	return &block, err
 }
 
-// GetFirstUncheckedBlock returns the first L1 block that has not been checked.
-func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error) {
+// GetFirstUncheckedBlock returns the first L1 block that has not been checked from a given block number.
+func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
 	var (
 		blockHash  string
 		parentHash string
 		block      state.Block
 	)
-	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block  WHERE checked=false ORDER BY block_num LIMIT 1"
+	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block  WHERE block_num>=$1 AND  checked=false ORDER BY block_num LIMIT 1"
 
 	q := p.getExecQuerier(dbTx)
 
-	err := q.QueryRow(ctx, getLastBlockSQL).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+	err := q.QueryRow(ctx, getLastBlockSQL, fromBlockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrNotFound
 	}

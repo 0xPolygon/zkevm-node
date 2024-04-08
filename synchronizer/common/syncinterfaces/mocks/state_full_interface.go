@@ -881,9 +881,9 @@ func (_c *StateFullInterface_GetExitRootByGlobalExitRoot_Call) RunAndReturn(run 
 	return _c
 }
 
-// GetFirstUncheckedBlock provides a mock function with given fields: ctx, dbTx
-func (_m *StateFullInterface) GetFirstUncheckedBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error) {
-	ret := _m.Called(ctx, dbTx)
+// GetFirstUncheckedBlock provides a mock function with given fields: ctx, fromBlockNumber, dbTx
+func (_m *StateFullInterface) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	ret := _m.Called(ctx, fromBlockNumber, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetFirstUncheckedBlock")
@@ -891,19 +891,19 @@ func (_m *StateFullInterface) GetFirstUncheckedBlock(ctx context.Context, dbTx p
 
 	var r0 *state.Block
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (*state.Block, error)); ok {
-		return rf(ctx, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
+		return rf(ctx, fromBlockNumber, dbTx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) *state.Block); ok {
-		r0 = rf(ctx, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.Block); ok {
+		r0 = rf(ctx, fromBlockNumber, dbTx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*state.Block)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, pgx.Tx) error); ok {
-		r1 = rf(ctx, dbTx)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, fromBlockNumber, dbTx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -918,14 +918,15 @@ type StateFullInterface_GetFirstUncheckedBlock_Call struct {
 
 // GetFirstUncheckedBlock is a helper method to define mock.On call
 //   - ctx context.Context
+//   - fromBlockNumber uint64
 //   - dbTx pgx.Tx
-func (_e *StateFullInterface_Expecter) GetFirstUncheckedBlock(ctx interface{}, dbTx interface{}) *StateFullInterface_GetFirstUncheckedBlock_Call {
-	return &StateFullInterface_GetFirstUncheckedBlock_Call{Call: _e.mock.On("GetFirstUncheckedBlock", ctx, dbTx)}
+func (_e *StateFullInterface_Expecter) GetFirstUncheckedBlock(ctx interface{}, fromBlockNumber interface{}, dbTx interface{}) *StateFullInterface_GetFirstUncheckedBlock_Call {
+	return &StateFullInterface_GetFirstUncheckedBlock_Call{Call: _e.mock.On("GetFirstUncheckedBlock", ctx, fromBlockNumber, dbTx)}
 }
 
-func (_c *StateFullInterface_GetFirstUncheckedBlock_Call) Run(run func(ctx context.Context, dbTx pgx.Tx)) *StateFullInterface_GetFirstUncheckedBlock_Call {
+func (_c *StateFullInterface_GetFirstUncheckedBlock_Call) Run(run func(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx)) *StateFullInterface_GetFirstUncheckedBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
 	})
 	return _c
 }
@@ -935,7 +936,7 @@ func (_c *StateFullInterface_GetFirstUncheckedBlock_Call) Return(_a0 *state.Bloc
 	return _c
 }
 
-func (_c *StateFullInterface_GetFirstUncheckedBlock_Call) RunAndReturn(run func(context.Context, pgx.Tx) (*state.Block, error)) *StateFullInterface_GetFirstUncheckedBlock_Call {
+func (_c *StateFullInterface_GetFirstUncheckedBlock_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.Block, error)) *StateFullInterface_GetFirstUncheckedBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

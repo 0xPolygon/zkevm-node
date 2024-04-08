@@ -1653,35 +1653,37 @@ func TestGetLastGER(t *testing.T) {
 
 func TestGetFirstUncheckedBlock(t *testing.T) {
 	var err error
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 1, Checked: true}, nil)
+	blockNumber := uint64(51001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
 	require.NoError(t, err)
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 2, Checked: false}, nil)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
 	require.NoError(t, err)
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 3, Checked: true}, nil)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
 	require.NoError(t, err)
 
-	block, err := testState.GetFirstUncheckedBlock(context.Background(), nil)
+	block, err := testState.GetFirstUncheckedBlock(context.Background(), blockNumber, nil)
 	require.NoError(t, err)
-	require.Equal(t, uint64(2), block.BlockNumber)
+	require.Equal(t, uint64(blockNumber+1), block.BlockNumber)
 }
 
 func TestUpdateCheckedBlockByNumber(t *testing.T) {
 	var err error
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 1, Checked: true}, nil)
+	blockNumber := uint64(54001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
 	require.NoError(t, err)
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 2, Checked: false}, nil)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
 	require.NoError(t, err)
-	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 3, Checked: true}, nil)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
 	require.NoError(t, err)
 
-	b1, err := testState.GetBlockByNumber(context.Background(), uint64(1), nil)
+	b1, err := testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
 	require.NoError(t, err)
 	require.True(t, b1.Checked)
 
-	err = testState.UpdateCheckedBlockByNumber(context.Background(), uint64(1), false, nil)
+	err = testState.UpdateCheckedBlockByNumber(context.Background(), uint64(blockNumber), false, nil)
 	require.NoError(t, err)
 
-	b1, err = testState.GetBlockByNumber(context.Background(), uint64(1), nil)
+	b1, err = testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
 	require.NoError(t, err)
 	require.False(t, b1.Checked)
 }
