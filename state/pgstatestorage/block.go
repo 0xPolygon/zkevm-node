@@ -56,7 +56,7 @@ func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, dbTx pgx.T
 
 	err := q.QueryRow(ctx, getLastBlockSQL).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, state.ErrStateNotSynchronized
+		return nil, state.ErrNotFound
 	}
 	block.BlockHash = common.HexToHash(blockHash)
 	block.ParentHash = common.HexToHash(parentHash)
