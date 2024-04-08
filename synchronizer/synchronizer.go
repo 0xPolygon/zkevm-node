@@ -514,7 +514,7 @@ func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block)
 // This function syncs the node from a specific block to the latest
 func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Block) (*state.Block, error) {
 	// Call the blockchain to retrieve data
-	header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(int64(s.syncBlockProtection)))
+	header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(s.syncBlockProtection.Int64()))
 	if err != nil {
 		log.Error("error getting header of the latest block in L1. Error: ", err)
 		return lastEthBlockSynced, err
