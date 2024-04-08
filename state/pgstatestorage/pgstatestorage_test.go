@@ -1650,3 +1650,38 @@ func TestGetLastGER(t *testing.T) {
 	require.Equal(t, common.HexToHash("0x2").String(), ger.String())
 
 }
+
+func TestGetFirstUncheckedBlock(t *testing.T) {
+	var err error
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 1, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 2, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 3, Checked: true}, nil)
+	require.NoError(t, err)
+
+	block, err := testState.GetFirstUncheckedBlock(context.Background(), nil)
+	require.NoError(t, err)
+	require.Equal(t, uint64(2), block.BlockNumber)
+}
+
+func TestUpdateCheckedBlockByNumber(t *testing.T) {
+	var err error
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 1, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 2, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: 3, Checked: true}, nil)
+	require.NoError(t, err)
+
+	b1, err := testState.GetBlockByNumber(context.Background(), uint64(1), nil)
+	require.NoError(t, err)
+	require.True(t, b1.Checked)
+
+	err = testState.UpdateCheckedBlockByNumber(context.Background(), uint64(1), false, nil)
+	require.NoError(t, err)
+
+	b1, err = testState.GetBlockByNumber(context.Background(), uint64(1), nil)
+	require.NoError(t, err)
+	require.False(t, b1.Checked)
+}
