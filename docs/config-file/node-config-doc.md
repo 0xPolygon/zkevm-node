@@ -1404,14 +1404,14 @@ TrustedSequencerURL=""
 
 **Type:** : `string`
 
-**Default:** `"latest"`
+**Default:** `"safe"`
 
 **Description:** SyncBlockProtection specify the state to sync (lastest, finalized or safe)
 
-**Example setting the default value** ("latest"):
+**Example setting the default value** ("safe"):
 ```
 [Synchronizer]
-SyncBlockProtection="latest"
+SyncBlockProtection="safe"
 ```
 
 ### <a name="Synchronizer_L1SyncCheckL2BlockHash"></a>9.5. `Synchronizer.L1SyncCheckL2BlockHash`
