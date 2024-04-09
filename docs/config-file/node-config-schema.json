@@ -532,6 +532,36 @@
 					"description": "L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
 					"default": 30
 				},
+				"L1BlockCheck": {
+					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"description": "Enable if is true then the check l1 Block Hash is active",
+							"default": true
+						},
+						"L1SafeBlockPoint": {
+							"type": "string",
+							"enum": [
+								"finalized",
+								"safe"
+							],
+							"description": "L1SafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe or latest",
+							"default": "finalized"
+						},
+						"L1SafeBlockOffset": {
+							"type": "integer",
+							"description": "L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
+							"default": 0
+						},
+						"ForceCheckBeforeStart": {
+							"type": "boolean",
+							"description": "ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks",
+							"default": true
+						}
+					},
+					"additionalProperties": false,
+					"type": "object"
+				},
 				"L1SynchronizationMode": {
 					"type": "string",
 					"enum": [

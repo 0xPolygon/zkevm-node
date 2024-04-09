@@ -10,10 +10,12 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 )
 
+// L1BlockChecker is an interface that defines the method to check L1 blocks
 type L1BlockChecker interface {
 	Step(ctx context.Context) error
 }
 
+// AsyncCheck is a wrapper for L1BlockChecker to become asynchronous
 type AsyncCheck struct {
 	checker     L1BlockChecker
 	mutex       sync.Mutex
@@ -21,12 +23,14 @@ type AsyncCheck struct {
 	onFnishCall func()
 }
 
+// NewAsyncCheck creates a new AsyncCheck
 func NewAsyncCheck(checker L1BlockChecker) *AsyncCheck {
 	return &AsyncCheck{
 		checker: checker,
 	}
 }
 
+// Run is a method that starts the async check
 func (a *AsyncCheck) Run(ctx context.Context, onFinish func()) {
 	a.lastResult = nil
 	a.onFnishCall = onFinish
@@ -38,6 +42,9 @@ func (a *AsyncCheck) RunSynchronous(ctx context.Context) syncinterfaces.Iteratio
 	return a.executeIteration(ctx)
 }
 
+// GetResponse returns the last result of the check:
+// - Nil -> still running
+// - Not nil -> finished, and this is the result. You must call again Run to start a new check
 func (a *AsyncCheck) GetResponse() *syncinterfaces.IterationResult {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()

@@ -9,17 +9,20 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 )
 
+// L1BlockCheckerIntegration is a struct that integrates the L1BlockChecker with the synchronizer
 type L1BlockCheckerIntegration struct {
 	forceCheckOnStart bool
 	checker           syncinterfaces.AsyncL1BlockChecker
 	sync              SyncCheckReorger
 }
 
+// SyncCheckReorger is an interface that defines the methods required from Synchronizer object
 type SyncCheckReorger interface {
 	ExecuteReorg(blockNumber uint64, reason string) error
 	OnDetectedMismatchL1BlockReorg()
 }
 
+// NewL1BlockCheckerIntegration creates a new L1BlockCheckerIntegration
 func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, sync SyncCheckReorger, forceCheckOnStart bool) *L1BlockCheckerIntegration {
 	return &L1BlockCheckerIntegration{
 		forceCheckOnStart: forceCheckOnStart,
@@ -28,6 +31,7 @@ func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, sy
 	}
 }
 
+// OnStart is a method that is called before starting the synchronizer
 func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 	if v.forceCheckOnStart {
 		log.Infof("%s Forcing L1BlockChecker check before start", logPrefix)
@@ -48,15 +52,17 @@ func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 	return nil
 }
 
+// OnStartL1Sync is a method that is called before starting the L1 sync
 func (v *L1BlockCheckerIntegration) OnStartL1Sync(ctx context.Context) bool {
 	return v.checkBackgroundResult(ctx, "before start L1 sync")
-
 }
 
+// OnStartL2Sync is a method that is called before starting the L2 sync
 func (v *L1BlockCheckerIntegration) OnStartL2Sync(ctx context.Context) bool {
 	return v.checkBackgroundResult(ctx, "before start 2 sync")
 }
 
+// OnCheckReorg is a method that is called when a reorg is checked
 func (v *L1BlockCheckerIntegration) OnCheckReorg(ctx context.Context, latestBlock *state.Block) bool {
 	return v.checkBackgroundResult(ctx, "OnCheckReorg")
 }

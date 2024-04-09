@@ -796,6 +796,7 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 	return nil
 }
 
+// OnDetectedMismatchL1BlockReorg function will be called when a reorg is detected (asynchronous call)
 func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
 	log.Infof("Detected Reorg in background at block (mismatch)")
 	if s.l1SyncOrchestration != nil && s.l1SyncOrchestration.IsProducerRunning() {
@@ -803,6 +804,7 @@ func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
 	}
 }
 
+// ExecuteReorg function will reset the state to the block before the reorg
 func (s *ClientSynchronizer) ExecuteReorg(blockNumber uint64, reason string) error {
 	log.Info("Detected reorg at block (mismatch): ", blockNumber, " reason: ", reason, " resetting the state to block:", blockNumber-1)
 	s.CleanTrustedState()

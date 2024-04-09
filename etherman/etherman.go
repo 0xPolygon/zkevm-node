@@ -147,7 +147,7 @@ const (
 	InitialSequenceBatchesOrder EventOrder = "InitialSequenceBatches"
 )
 
-type EthereumClient interface {
+type ethereumClient interface {
 	ethereum.ChainReader
 	ethereum.ChainStateReader
 	ethereum.ContractCaller
@@ -181,7 +181,7 @@ type externalGasProviders struct {
 
 // Client is a simple implementation of EtherMan.
 type Client struct {
-	EthClient                EthereumClient
+	EthClient                ethereumClient
 	OldZkEVM                 *oldpolygonzkevm.Oldpolygonzkevm
 	EtrogZKEVM               *etrogpolygonzkevm.Etrogpolygonzkevm
 	ZkEVM                    *polygonzkevm.Polygonzkevm

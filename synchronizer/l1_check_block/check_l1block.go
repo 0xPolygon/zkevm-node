@@ -18,14 +18,14 @@ import (
 // - Get first not checked block
 // - Get last block on L1 (safe/finalized/ or minus -n)
 
+// L1Requester is an interface for GETH client
 type L1Requester interface {
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
 }
 
+// StateInterfacer is an interface for the state
 type StateInterfacer interface {
 	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
-	//GetFirstUncheckedBlockSinceNumber(ctx context.Context, firstBlockNum uint64, dbTx pgx.Tx) (*state.Block, error)
-	//GetUncheckedBlocksSinceNumber(ctx context.Context, firstBlockNum uint64, dbTx pgx.Tx) ([]state.Block, error)
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
 }
 
@@ -45,6 +45,7 @@ func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockN
 	}
 }
 
+// Step is a method that checks the L1 block hash, run until all blocks are checked and returns
 func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 	stateBlock, err := p.State.GetFirstUncheckedBlock(ctx, uint64(0), nil)
 	if errors.Is(err, state.ErrNotFound) {
@@ -59,10 +60,10 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 		return err
 	}
 
-	return p.DoAllBlocks(ctx, stateBlock, safeBlockNumber)
+	return p.doAllBlocks(ctx, stateBlock, safeBlockNumber)
 }
 
-func (p *CheckL1BlockHash) DoAllBlocks(ctx context.Context, stateBlock *state.Block, safeBlockNumber uint64) error {
+func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Block, safeBlockNumber uint64) error {
 	var err error
 	startTime := time.Now()
 
@@ -76,7 +77,7 @@ func (p *CheckL1BlockHash) DoAllBlocks(ctx context.Context, stateBlock *state.Bl
 			log.Debugf("%s: firtst block %d to check is not still safe enough %d ", stateBlock.BlockNumber, safeBlockNumber, logPrefix)
 			return nil
 		}
-		err = p.DoBlock(ctx, stateBlock)
+		err = p.doBlock(ctx, stateBlock)
 		if err != nil {
 			return err
 		}
@@ -87,15 +88,14 @@ func (p *CheckL1BlockHash) DoAllBlocks(ctx context.Context, stateBlock *state.Bl
 			log.Infof("%s: checked all blocks (%d) (using as safe Block Point: %d) time:%s", logPrefix, numBlocksChecked, safeBlockNumber, diff)
 			return nil
 		}
-
 	}
 }
 
-func (p *CheckL1BlockHash) ReorgDetected(ctx context.Context, blockNumber uint64, reason string) error {
+func (p *CheckL1BlockHash) reorgDetected(ctx context.Context, blockNumber uint64, reason string) error {
 	return common.NewReorgError(blockNumber, fmt.Errorf(reason))
 }
 
-func (p *CheckL1BlockHash) DoBlock(ctx context.Context, stateBlock *state.Block) error {
+func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block) error {
 	if stateBlock == nil {
 		log.Warn("%s: function CheckL1Block receive a nil pointer", logPrefix)
 		return nil
@@ -108,7 +108,7 @@ func (p *CheckL1BlockHash) DoBlock(ctx context.Context, stateBlock *state.Block)
 		msg := fmt.Sprintf("%s: Reorg detected at block %d l1Block.Hash=%s != stateBlock.Hash=%s", logPrefix, stateBlock.BlockNumber,
 			l1Block.Hash().String(), stateBlock.BlockHash.String())
 		log.Errorf(msg)
-		return p.ReorgDetected(ctx, stateBlock.BlockNumber, msg)
+		return p.reorgDetected(ctx, stateBlock.BlockNumber, msg)
 	}
 	log.Infof("%s: L1Block: %d hash: %s is correct marking as checked", logPrefix, stateBlock.BlockNumber,
 		stateBlock.BlockHash.String())

@@ -2,20 +2,26 @@ package l1_check_block
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
+// L1BlockPoint is an enum that represents the point of the L1 block
 type L1BlockPoint int
 
 const (
+	// FinalizedBlockNumber is the finalized block number
 	FinalizedBlockNumber L1BlockPoint = 2
-	SafeBlockNumber      L1BlockPoint = 1
-	LastBlockNumber      L1BlockPoint = 0
+	// SafeBlockNumber is the safe block number
+	SafeBlockNumber L1BlockPoint = 1
+	// LastBlockNumber is the last block number
+	LastBlockNumber L1BlockPoint = 0
 )
 
+// ToString converts a L1BlockPoint to a string
 func (v L1BlockPoint) ToString() string {
 	switch v {
 	case FinalizedBlockNumber:
@@ -42,6 +48,7 @@ func StringToL1BlockPoint(s string) L1BlockPoint {
 	}
 }
 
+// ToGethRequest converts a L1BlockPoint to a big.Int used for request to GETH
 func (v L1BlockPoint) ToGethRequest() *big.Int {
 	switch v {
 	case FinalizedBlockNumber:
@@ -54,6 +61,7 @@ func (v L1BlockPoint) ToGethRequest() *big.Int {
 	return big.NewInt(int64(v))
 }
 
+// SafeL1BlockNumberFetch is a struct that implements a safe L1 block number fetch
 type SafeL1BlockNumberFetch struct {
 	// SafeBlockPoint is the block number that is reference to l1 Block
 	SafeBlockPoint L1BlockPoint
@@ -69,6 +77,7 @@ func NewSafeL1BlockNumberFetch(safeBlockPoint L1BlockPoint, offset int) *SafeL1B
 	}
 }
 
+// GetSafeBlockNumber gets the safe block number from L1
 func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, requester L1Requester) (uint64, error) {
 	l1SafePointBlock, err := requester.HeaderByNumber(ctx, p.SafeBlockPoint.ToGethRequest())
 	if err != nil {
@@ -78,6 +87,7 @@ func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, request
 	return l1SafePointBlock.Number.Uint64() + uint64(p.Offset), nil
 }
 
+// String returns a string representation of SafeL1BlockNumberFetch
 func (p *SafeL1BlockNumberFetch) String() string {
-	return p.SafeBlockPoint.ToString() + " offset:" + string(p.Offset)
+	return fmt.Sprintf("SafeBlockPoint: %s, Offset: %d", p.SafeBlockPoint.ToString(), p.Offset)
 }
