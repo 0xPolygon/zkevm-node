@@ -577,7 +577,6 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		if len(b) == 0 {
 			log.Error("block array can't be empty")
 			return lastEthBlockSynced, fmt.Errorf("b array can't be empty")
-
 		}
 		log.Info("Before clean array: ", len(b))
 		// First position of the array must be deleted
@@ -791,7 +790,8 @@ If hash or hash parent don't match, reorg detected and the function will return 
 must be reverted. Then, check the previous ethereum block synced, get block info from the blockchain and check
 hash and has parent. This operation has to be done until a match is found.
 */
-func (s *ClientSynchronizer) oldCheckReorg(latestBlock *state.Block) (*state.Block, error) {
+// TODO This function will be deprecated
+func (s *ClientSynchronizer) oldCheckReorg(latestBlock *state.Block) (*state.Block, error) { //nolint:unused
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestEthBlockSynced := *latestBlock
 	reorgedBlock := *latestBlock
@@ -876,8 +876,8 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 			}
 			block = &etherman.Block{
 				BlockNumber: b.Number().Uint64(),
-				BlockHash: b.Hash(),
-				ParentHash: b.ParentHash(),
+				BlockHash:   b.Hash(),
+				ParentHash:  b.ParentHash(),
 			}
 		}
 		log.Infof("[checkReorg function] BlockNumber: %d BlockHash got from L1 provider: %s", block.BlockNumber, block.BlockHash.String())
