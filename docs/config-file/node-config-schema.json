@@ -520,7 +520,7 @@
 				"SyncBlockProtection": {
 					"type": "string",
 					"description": "SyncBlockProtection specify the state to sync (lastest, finalized or safe)",
-					"default": "latest"
+					"default": "safe"
 				},
 				"L1SyncCheckL2BlockHash": {
 					"type": "boolean",
