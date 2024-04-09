@@ -84,7 +84,21 @@ func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, request
 		log.Errorf("%s: Error getting L1 block %d. err: %s", logPrefix, p.String(), err.Error())
 		return uint64(0), err
 	}
-	return l1SafePointBlock.Number.Uint64() + uint64(p.Offset), nil
+	result := l1SafePointBlock.Number.Uint64()
+	if p.Offset < 0 {
+		if result < uint64(-p.Offset) {
+			result = 0
+		} else {
+			result += uint64(p.Offset)
+		}
+	} else {
+		result = l1SafePointBlock.Number.Uint64() + uint64(p.Offset)
+	}
+	if p.SafeBlockPoint == LastBlockNumber {
+		result = min(result, l1SafePointBlock.Number.Uint64())
+	}
+
+	return result, nil
 }
 
 // String returns a string representation of SafeL1BlockNumberFetch

@@ -29,15 +29,19 @@ type StateInterfacer interface {
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
 }
 
+type SafeL1BlockNumberFetcher interface {
+	GetSafeBlockNumber(ctx context.Context, l1Client L1Requester) (uint64, error)
+}
+
 // CheckL1BlockHash is a struct that implements a checker of L1Block hash
 type CheckL1BlockHash struct {
 	L1Client               L1Requester
 	State                  StateInterfacer
-	SafeBlockNumberFetcher *SafeL1BlockNumberFetch
+	SafeBlockNumberFetcher SafeL1BlockNumberFetcher
 }
 
 // NewCheckL1BlockHash creates a new CheckL1BlockHash
-func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockNumberFetcher *SafeL1BlockNumberFetch) *CheckL1BlockHash {
+func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockNumberFetcher SafeL1BlockNumberFetcher) *CheckL1BlockHash {
 	return &CheckL1BlockHash{
 		L1Client:               l1Client,
 		State:                  state,
@@ -54,6 +58,10 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 	}
 	if err != nil {
 		return err
+	}
+	if stateBlock == nil {
+		log.Warn("%s: function CheckL1Block receive a nil pointer", logPrefix)
+		return nil
 	}
 	safeBlockNumber, err := p.SafeBlockNumberFetcher.GetSafeBlockNumber(ctx, p.L1Client)
 	if err != nil {
@@ -102,6 +110,11 @@ func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block)
 	}
 	l1Block, err := p.L1Client.HeaderByNumber(ctx, big.NewInt(int64(stateBlock.BlockNumber)))
 	if err != nil {
+		return err
+	}
+	if l1Block == nil {
+		err = fmt.Errorf("%s: request of block: %d to L1 returns a nil", logPrefix, stateBlock.BlockNumber)
+		log.Error(err.Error())
 		return err
 	}
 	if l1Block.Hash() != stateBlock.BlockHash {
