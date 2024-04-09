@@ -16,6 +16,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions/processor_manager"
 	syncCommon "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l1_check_block"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l1_parallel_sync"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l1event_orders"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync/l2_shared"
@@ -77,6 +78,7 @@ type ClientSynchronizer struct {
 	l1EventProcessors        *processor_manager.L1EventProcessors
 	syncTrustedStateExecutor syncinterfaces.SyncTrustedStateExecutor
 	halter                   syncinterfaces.CriticalErrorHandler
+	asyncL1BlockChecker      syncinterfaces.L1BlockCheckerIntegrater
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -122,6 +124,20 @@ func NewSynchronizer(
 		l1EventProcessors:             nil,
 		syncBlockProtection:           syncBlockProtection,
 		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
+	}
+	if cfg.L1BlockCheck.Enable {
+		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
+		l1requester, ok := res.etherMan.GetL1EthereumClient().(l1_check_block.L1Requester)
+		if !ok {
+			log.Errorf("error casting etherMan to L1Requester")
+			cancel()
+			return nil, fmt.Errorf("error casting etherMan to L1Requester")
+		}
+		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(l1requester, res.state,
+			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
+
+		res.asyncL1BlockChecker = l1_check_block.NewL1BlockCheckerIntegration(
+			l1_check_block.NewAsyncCheck(l1BlockChecker), res, cfg.L1BlockCheck.ForceCheckBeforeStart)
 	}
 
 	if !isTrustedSequencer {
@@ -251,6 +267,10 @@ func (s *ClientSynchronizer) Sync() error {
 	// If there is no lastEthereumBlock means that sync from the beginning is necessary. If not, it continues from the retrieved ethereum block
 	// Get the latest synced block. If there is no block on db, use genesis block
 	log.Info("Sync started")
+	if s.asyncL1BlockChecker != nil {
+		_ = s.asyncL1BlockChecker.OnStart(s.ctx)
+	}
+
 	dbTx, err := s.state.BeginStateTransaction(s.ctx)
 	if err != nil {
 		log.Errorf("error creating db transaction to get latest block. Error: %v", err)
@@ -372,6 +392,7 @@ func (s *ClientSynchronizer) Sync() error {
 				continue
 			}
 			log.Infof("latestSequencedBatchNumber: %d, latestSyncedBatch: %d, lastVerifiedBatchNumber: %d", latestSequencedBatchNumber, latestSyncedBatch, lastVerifiedBatchNumber)
+
 			// Sync trusted state
 			// latestSyncedBatch -> Last batch on DB
 			// latestSequencedBatchNumber -> last batch on SMC
@@ -379,6 +400,12 @@ func (s *ClientSynchronizer) Sync() error {
 				startTrusted := time.Now()
 				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
 					log.Info("Syncing trusted state (permissionless)")
+					if s.asyncL1BlockChecker != nil {
+						if s.asyncL1BlockChecker.OnStartL2Sync(s.ctx) {
+							log.Warn("s.asyncL1BlockChecker.OnStartL2Sync -> continue")
+							continue
+						}
+					}
 					err = s.syncTrustedState(latestSyncedBatch)
 					metrics.FullTrustedSyncTime(time.Since(startTrusted))
 					if err != nil {
@@ -407,6 +434,12 @@ func (s *ClientSynchronizer) Sync() error {
 				waitDuration = s.cfg.SyncInterval.Duration
 			}
 			//Sync L1Blocks
+			if s.asyncL1BlockChecker != nil {
+				if s.asyncL1BlockChecker.OnStartL1Sync(s.ctx) {
+					log.Warn("s.asyncL1BlockChecker.OnStartL1Sync -> continue")
+					continue
+				}
+			}
 			startL1 := time.Now()
 			if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
 				log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
@@ -752,9 +785,28 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 		return err
 	}
 	if s.l1SyncOrchestration != nil {
-		s.l1SyncOrchestration.Reset(blockNumber)
+		lastBlock, err := s.state.GetLastBlock(s.ctx, nil)
+		if err != nil {
+			log.Errorf("error getting last block synced from db. Error: %v", err)
+			s.l1SyncOrchestration.Reset(blockNumber)
+		} else {
+			s.l1SyncOrchestration.Reset(lastBlock.BlockNumber)
+		}
 	}
 	return nil
+}
+
+func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
+	log.Infof("Detected Reorg in background at block (mismatch)")
+	if s.l1SyncOrchestration != nil && s.l1SyncOrchestration.IsProducerRunning() {
+		log.Fatalf("Stop synchronizer: because L1 sync parallel orchestration can't be aborted. Please restart process")
+	}
+}
+
+func (s *ClientSynchronizer) ExecuteReorg(blockNumber uint64, reason string) error {
+	log.Info("Detected reorg at block (mismatch): ", blockNumber, " reason: ", reason, " resetting the state to block:", blockNumber-1)
+	s.CleanTrustedState()
+	return s.resetState(blockNumber - 1)
 }
 
 /*
@@ -766,6 +818,19 @@ must be reverted. Then, check the previous ethereum block synced, get block info
 hash and has parent. This operation has to be done until a match is found.
 */
 func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block, error) {
+	if s.asyncL1BlockChecker != nil {
+		if s.asyncL1BlockChecker.OnCheckReorg(s.ctx, latestBlock) {
+			log.Infof("[checkReorg function]  reorg detected by background process!")
+			currentLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
+			if err != nil {
+				log.Errorf("error getting last block synced from db. Error: %v", err)
+				return nil, err
+			}
+			// Note: this make a reset again, but it is necessary to ensure to stop sync process
+			log.Infof("[checkReorg function]  reorg detected by background process! returning block: %d", currentLastBlock.BlockNumber)
+			return currentLastBlock, nil
+		}
+	}
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestEthBlockSynced := *latestBlock
 	reorgedBlock := *latestBlock

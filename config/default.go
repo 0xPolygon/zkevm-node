@@ -106,6 +106,11 @@ SyncBlockProtection = "latest" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
 L1SyncCheckL2BlockNumberhModulus = 30
+	[Synchronizer.L1BlockCheck]
+		Enable = true
+		L1SafeBlockPoint = "finalized"
+		L1SafeBlockOffset = 0
+		ForceCheckBeforeStart = true
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
 		MaxPendingNoProcessedBlocks = 25

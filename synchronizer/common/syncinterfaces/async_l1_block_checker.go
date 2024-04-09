@@ -1,0 +1,36 @@
+package syncinterfaces
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/0xPolygonHermez/zkevm-node/state"
+)
+
+type IterationResult struct {
+	Err           error
+	ReorgDetected bool
+	BlockNumber   uint64
+	ReorgMessage  string
+}
+
+func (ir *IterationResult) String() string {
+	if ir.Err == nil {
+		return fmt.Sprintf("IterationResult{Err: nil, ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s", ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
+	} else {
+		return fmt.Sprintf("IterationResult{Err: %s, ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s", ir.Err.Error(), ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
+	}
+}
+
+type AsyncL1BlockChecker interface {
+	Run(ctx context.Context, onFinish func())
+	RunSynchronous(ctx context.Context) IterationResult
+	GetResponse() *IterationResult
+}
+
+type L1BlockCheckerIntegrater interface {
+	OnStart(ctx context.Context) error
+	OnStartL1Sync(ctx context.Context) bool
+	OnStartL2Sync(ctx context.Context) bool
+	OnCheckReorg(ctx context.Context, latestBlock *state.Block) bool
+}

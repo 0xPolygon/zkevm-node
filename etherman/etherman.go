@@ -147,7 +147,7 @@ const (
 	InitialSequenceBatchesOrder EventOrder = "InitialSequenceBatches"
 )
 
-type ethereumClient interface {
+type EthereumClient interface {
 	ethereum.ChainReader
 	ethereum.ChainStateReader
 	ethereum.ContractCaller
@@ -181,7 +181,7 @@ type externalGasProviders struct {
 
 // Client is a simple implementation of EtherMan.
 type Client struct {
-	EthClient                ethereumClient
+	EthClient                EthereumClient
 	OldZkEVM                 *oldpolygonzkevm.Oldpolygonzkevm
 	EtrogZKEVM               *etrogpolygonzkevm.Etrogpolygonzkevm
 	ZkEVM                    *polygonzkevm.Polygonzkevm
@@ -285,6 +285,11 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		cfg:   cfg,
 		auth:  map[common.Address]bind.TransactOpts{},
 	}, nil
+}
+
+// GetL1EthereumClient return geth client
+func (etherMan *Client) GetL1EthereumClient() interface{} {
+	return etherMan.EthClient
 }
 
 // VerifyGenBlockNumber verifies if the genesis Block Number is valid
