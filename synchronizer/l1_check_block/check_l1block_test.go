@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	commonsync "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l1_check_block"
 	mock_l1_check_block "github.com/0xPolygonHermez/zkevm-node/synchronizer/l1_check_block/mocks"
 	"github.com/ethereum/go-ethereum/common"
@@ -88,8 +89,8 @@ func TestCheckL1BlockHashL1ClientReturnsANil(t *testing.T) {
 	require.Error(t, res)
 }
 
-// The first block to check is equal to the safe point, must be processed
-func TestCheckL1BlockHashMatchHash(t *testing.T) {
+// Check a block that is OK
+func TestCheckL1BlockHashMatchHashUpdateCheckMarkOnDB(t *testing.T) {
 	data := newTestData(t)
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
@@ -103,4 +104,23 @@ func TestCheckL1BlockHashMatchHash(t *testing.T) {
 
 	res := data.sut.Step(data.ctx)
 	require.NoError(t, res)
+}
+
+// The first block to check is equal to the safe point, must be processed
+func TestCheckL1BlockHashMismatch(t *testing.T) {
+	data := newTestData(t)
+
+	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
+	data.stateBlock.BlockHash = common.HexToHash("0x1234") // Wrong hash to trigger a mismatch
+	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(uint64(data.stateBlock.BlockNumber), nil)
+	l1Block := &types.Header{
+		Number: big.NewInt(100),
+	}
+	data.mockL1Client.EXPECT().HeaderByNumber(data.ctx, big.NewInt(int64(data.stateBlock.BlockNumber))).Return(l1Block, nil)
+
+	res := data.sut.Step(data.ctx)
+	require.Error(t, res)
+	resErr, ok := res.(*commonsync.ReorgError)
+	require.True(t, ok)
+	require.Equal(t, uint64(data.stateBlock.BlockNumber), resErr.BlockNumber)
 }

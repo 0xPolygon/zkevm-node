@@ -15,18 +15,31 @@ type L1BlockChecker interface {
 	Step(ctx context.Context) error
 }
 
+const (
+	defaultPeriodTime = time.Second
+)
+
 // AsyncCheck is a wrapper for L1BlockChecker to become asynchronous
 type AsyncCheck struct {
 	checker     L1BlockChecker
 	mutex       sync.Mutex
 	lastResult  *syncinterfaces.IterationResult
 	onFnishCall func()
+	periodTime  time.Duration
 }
 
 // NewAsyncCheck creates a new AsyncCheck
 func NewAsyncCheck(checker L1BlockChecker) *AsyncCheck {
 	return &AsyncCheck{
-		checker: checker,
+		checker:    checker,
+		periodTime: defaultPeriodTime,
+	}
+}
+
+func NewAsyncCheckWithPeriodTime(checker L1BlockChecker, periodTime time.Duration) *AsyncCheck {
+	return &AsyncCheck{
+		checker:    checker,
+		periodTime: periodTime,
 	}
 }
 
@@ -74,15 +87,20 @@ func (a *AsyncCheck) launchChecker(ctx context.Context) {
 	}()
 }
 
+// step is a method that executes a until executeItertion
+// returns an error or a reorg
 func (a *AsyncCheck) step(ctx context.Context) *syncinterfaces.IterationResult {
 	select {
 	case <-ctx.Done():
+		log.Debugf("%s L1BlockChecker: context done", logPrefix)
 		return &syncinterfaces.IterationResult{Err: ctx.Err()}
-	case <-time.After(1 * time.Second):
+	default:
 		result := a.executeIteration(ctx)
 		if result.ReorgDetected {
 			return &result
 		}
+		log.Debugf("%s L1BlockChecker:returned %s waiting %s to relaunch", logPrefix, result.String(), a.periodTime)
+		time.Sleep(a.periodTime)
 	}
 	return nil
 }
@@ -90,9 +108,11 @@ func (a *AsyncCheck) step(ctx context.Context) *syncinterfaces.IterationResult {
 // executeIteration executes a single iteration of the checker
 func (a *AsyncCheck) executeIteration(ctx context.Context) syncinterfaces.IterationResult {
 	res := syncinterfaces.IterationResult{}
+	log.Debugf("%s calling checker.Step(...)", logPrefix)
 	res.Err = a.checker.Step(ctx)
+	log.Debugf("%s returned checker.Step(...) %w", logPrefix, res.Err)
 	if res.Err != nil {
-		log.Errorf("%s Fail check L1 Blocks: %s", logPrefix, res.Err)
+		log.Errorf("%s Fail check L1 Blocks: %w", logPrefix, res.Err)
 		if common.IsReorgError(res.Err) {
 			// log error
 			blockNumber := common.GetReorgErrorBlockNumber(res.Err)

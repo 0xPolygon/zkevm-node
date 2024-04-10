@@ -11,9 +11,10 @@ import (
 
 // L1BlockCheckerIntegration is a struct that integrates the L1BlockChecker with the synchronizer
 type L1BlockCheckerIntegration struct {
-	forceCheckOnStart bool
-	checker           syncinterfaces.AsyncL1BlockChecker
-	sync              SyncCheckReorger
+	forceCheckOnStart  bool
+	checker            syncinterfaces.AsyncL1BlockChecker
+	sync               SyncCheckReorger
+	timeBetweenRetries time.Duration
 }
 
 // SyncCheckReorger is an interface that defines the methods required from Synchronizer object
@@ -23,11 +24,12 @@ type SyncCheckReorger interface {
 }
 
 // NewL1BlockCheckerIntegration creates a new L1BlockCheckerIntegration
-func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, sync SyncCheckReorger, forceCheckOnStart bool) *L1BlockCheckerIntegration {
+func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, sync SyncCheckReorger, forceCheckOnStart bool, timeBetweenRetries time.Duration) *L1BlockCheckerIntegration {
 	return &L1BlockCheckerIntegration{
-		forceCheckOnStart: forceCheckOnStart,
-		checker:           checker,
-		sync:              sync,
+		forceCheckOnStart:  forceCheckOnStart,
+		checker:            checker,
+		sync:               sync,
+		timeBetweenRetries: timeBetweenRetries,
 	}
 }
 
@@ -41,7 +43,7 @@ func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 			if result.Err == nil {
 				break
 			} else {
-				time.Sleep(1 * time.Second)
+				time.Sleep(v.timeBetweenRetries)
 			}
 		}
 		if result.ReorgDetected {
@@ -97,7 +99,7 @@ func (v *L1BlockCheckerIntegration) executeResult(ctx context.Context, result sy
 				return true
 			}
 			log.Errorf("%s Error executing reorg: %s", logPrefix, err)
-			time.Sleep(1 * time.Second)
+			time.Sleep(v.timeBetweenRetries)
 		}
 	}
 	return false

@@ -16,9 +16,13 @@ type IterationResult struct {
 
 func (ir *IterationResult) String() string {
 	if ir.Err == nil {
-		return fmt.Sprintf("IterationResult{Err: nil, ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s", ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
+		if ir.ReorgDetected {
+			return fmt.Sprintf("IterationResult{ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s}", ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
+		} else {
+			return "IterationResult{None}"
+		}
 	} else {
-		return fmt.Sprintf("IterationResult{Err: %s, ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s", ir.Err.Error(), ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
+		return fmt.Sprintf("IterationResult{Err: %s, ReorgDetected: %v, BlockNumber: %d ReorgMessage:%s}", ir.Err.Error(), ir.ReorgDetected, ir.BlockNumber, ir.ReorgMessage)
 	}
 }
 

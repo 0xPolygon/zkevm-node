@@ -137,7 +137,7 @@ func NewSynchronizer(
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
 		res.asyncL1BlockChecker = l1_check_block.NewL1BlockCheckerIntegration(
-			l1_check_block.NewAsyncCheck(l1BlockChecker), res, cfg.L1BlockCheck.ForceCheckBeforeStart)
+			l1_check_block.NewAsyncCheck(l1BlockChecker), res, cfg.L1BlockCheck.ForceCheckBeforeStart, time.Second)
 	}
 
 	if !isTrustedSequencer {
