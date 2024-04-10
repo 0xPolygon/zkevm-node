@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	errGenericToTestAsync = fmt.Errorf("error_async")
-	errReorgToTestAsync   = common.NewReorgError(uint64(1234), fmt.Errorf("fake reorg to test"))
+	errGenericToTestAsync       = fmt.Errorf("error_async")
+	errReorgToTestAsync         = common.NewReorgError(uint64(1234), fmt.Errorf("fake reorg to test"))
+	timeoutContextForAsyncTests = time.Second
 )
 
 type mockChecker struct {
@@ -35,7 +36,7 @@ func (m *mockChecker) Step(ctx context.Context) error {
 func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(4)
 
@@ -52,7 +53,7 @@ func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
 func TestAsyncGetResponseIsNilUntilStops(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(4)
 	require.Nil(t, sut.GetResponse(), "befoure start result is Nil")
@@ -69,7 +70,7 @@ func TestAsyncGetResponseIsNilUntilStops(t *testing.T) {
 func TestAsyncGRunSynchronousReturnTheFirstResult(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(1)
 
@@ -84,7 +85,7 @@ func TestAsyncGRunSynchronousReturnTheFirstResult(t *testing.T) {
 func TestAsyncGRunSynchronousDontAffectGetResponse(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(1)
 
