@@ -1817,6 +1817,17 @@ func (etherMan *Client) EstimateGas(ctx context.Context, from common.Address, to
 	})
 }
 
+// DepositCount returns deposits count
+func (etherman *Client) DepositCount(ctx context.Context, blockNumber *uint64) (*big.Int, error) {
+	var opts *bind.CallOpts
+	if blockNumber != nil {
+		opts = new(bind.CallOpts)
+		opts.BlockNumber = new(big.Int).SetUint64(*blockNumber)
+	}
+
+	return etherman.GlobalExitRootManager.DepositCount(opts)
+}
+
 // CheckTxWasMined check if a tx was already mined
 func (etherMan *Client) CheckTxWasMined(ctx context.Context, txHash common.Hash) (bool, *types.Receipt, error) {
 	receipt, err := etherMan.EthClient.TransactionReceipt(ctx, txHash)
