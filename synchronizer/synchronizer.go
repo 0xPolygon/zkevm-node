@@ -581,7 +581,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		log.Info("Before clean array: ", len(b))
 		// First position of the array must be deleted
 		blocks := removeBlockElement(b, 0)
-		log.Info("After clean array: ", len(b))
+		log.Info("After clean array: ", len(blocks))
 
 		start = time.Now()
 		err = s.ProcessBlockRange(blocks, order)
@@ -689,7 +689,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 				log.Debug("EventOrder: ", element.Name, ". Batch Sequence: ", batchSequence, "forkId: ", forkId)
 			} else {
 				forkId = s.state.GetForkIDByBlockNumber(blocks[i].BlockNumber)
-				log.Debug("EventOrder: ", element.Name, ". BlockNumber: ", blocks[i].BlockNumber, "forkId: ", forkId)
+				log.Debug("EventOrder: ", element.Name, ". BlockNumber: ", blocks[i].BlockNumber, ". forkId: ", forkId)
 			}
 			forkIdTyped := actions.ForkIdType(forkId)
 			// Process event received from l1
