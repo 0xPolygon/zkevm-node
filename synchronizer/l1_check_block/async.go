@@ -36,6 +36,7 @@ func NewAsyncCheck(checker L1BlockChecker) *AsyncCheck {
 	}
 }
 
+// NewAsyncCheckWithPeriodTime creates a new AsyncCheck with a period time between relaunch checker.Step
 func NewAsyncCheckWithPeriodTime(checker L1BlockChecker, periodTime time.Duration) *AsyncCheck {
 	return &AsyncCheck{
 		checker:    checker,

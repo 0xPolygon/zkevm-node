@@ -29,6 +29,7 @@ type StateInterfacer interface {
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
 }
 
+// SafeL1BlockNumberFetcher is an interface for fetching the  L1 block number reference point (safe, finalized,...)
 type SafeL1BlockNumberFetcher interface {
 	GetSafeBlockNumber(ctx context.Context, l1Client L1Requester) (uint64, error)
 }
