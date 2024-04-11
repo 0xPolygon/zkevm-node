@@ -149,6 +149,38 @@ func (_c *AsyncL1BlockChecker_RunSynchronous_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// Stop provides a mock function with given fields:
+func (_m *AsyncL1BlockChecker) Stop() {
+	_m.Called()
+}
+
+// AsyncL1BlockChecker_Stop_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Stop'
+type AsyncL1BlockChecker_Stop_Call struct {
+	*mock.Call
+}
+
+// Stop is a helper method to define mock.On call
+func (_e *AsyncL1BlockChecker_Expecter) Stop() *AsyncL1BlockChecker_Stop_Call {
+	return &AsyncL1BlockChecker_Stop_Call{Call: _e.mock.On("Stop")}
+}
+
+func (_c *AsyncL1BlockChecker_Stop_Call) Run(run func()) *AsyncL1BlockChecker_Stop_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *AsyncL1BlockChecker_Stop_Call) Return() *AsyncL1BlockChecker_Stop_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AsyncL1BlockChecker_Stop_Call) RunAndReturn(run func()) *AsyncL1BlockChecker_Stop_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewAsyncL1BlockChecker creates a new instance of AsyncL1BlockChecker. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewAsyncL1BlockChecker(t interface {

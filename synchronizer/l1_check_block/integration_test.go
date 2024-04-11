@@ -31,7 +31,7 @@ type testDataIntegration struct {
 func newDataIntegration(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
 	mockChecker := mock_syncinterfaces.NewAsyncL1BlockChecker(t)
 	mockSync := mock_l1_check_block.NewSyncCheckReorger(t)
-	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, mockSync, forceCheckOnStart, time.Millisecond)
+	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, nil, mockSync, forceCheckOnStart, time.Millisecond)
 	return &testDataIntegration{
 		mockChecker: mockChecker,
 		mockSync:    mockSync,

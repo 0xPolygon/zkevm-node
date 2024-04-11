@@ -29,6 +29,7 @@ func (ir *IterationResult) String() string {
 type AsyncL1BlockChecker interface {
 	Run(ctx context.Context, onFinish func())
 	RunSynchronous(ctx context.Context) IterationResult
+	Stop()
 	GetResult() *IterationResult
 }
 

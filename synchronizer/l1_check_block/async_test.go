@@ -19,7 +19,7 @@ var (
 )
 
 type mockChecker struct {
-	Wg             sync.WaitGroup
+	Wg             *sync.WaitGroup
 	ErrorsToReturn []error
 }
 
@@ -34,7 +34,7 @@ func (m *mockChecker) Step(ctx context.Context) error {
 
 // If checker.step() returns ok, the async object will relaunch the call
 func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
-	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}}
+	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}, Wg: &sync.WaitGroup{}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
@@ -51,7 +51,7 @@ func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
 }
 
 func TestAsyncGetResultIsNilUntilStops(t *testing.T) {
-	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}}
+	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}, Wg: &sync.WaitGroup{}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
@@ -68,7 +68,7 @@ func TestAsyncGetResultIsNilUntilStops(t *testing.T) {
 
 // RunSynchronous it returns the first result, doesnt mind if a reorg or not
 func TestAsyncGRunSynchronousReturnTheFirstResult(t *testing.T) {
-	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}}
+	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}, Wg: &sync.WaitGroup{}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
@@ -83,7 +83,7 @@ func TestAsyncGRunSynchronousReturnTheFirstResult(t *testing.T) {
 }
 
 func TestAsyncGRunSynchronousDontAffectGetResult(t *testing.T) {
-	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}}
+	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}, Wg: &sync.WaitGroup{}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
@@ -93,4 +93,40 @@ func TestAsyncGRunSynchronousDontAffectGetResult(t *testing.T) {
 
 	require.NotNil(t, result)
 	require.Nil(t, sut.GetResult())
+}
+
+func TestAsyncStop(t *testing.T) {
+	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}, Wg: &sync.WaitGroup{}}
+	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
+	defer cancel()
+	require.Nil(t, sut.GetResult(), "before start result is Nil")
+	mockChecker.Wg.Add(4)
+	sut.Run(ctx, nil)
+	sut.Stop()
+	sut.Stop()
+
+	result := sut.GetResultBlockingUntilAvailable(0)
+	require.NotNil(t, result)
+	mockChecker.Wg = &sync.WaitGroup{}
+	mockChecker.Wg.Add(4)
+	mockChecker.ErrorsToReturn = []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}
+	sut.Run(ctx, nil)
+	mockChecker.Wg.Wait()
+	result = sut.GetResultBlockingUntilAvailable(0)
+	require.NotNil(t, result)
+}
+
+func TestAsyncMultipleRun(t *testing.T) {
+	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}, Wg: &sync.WaitGroup{}}
+	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
+	defer cancel()
+	require.Nil(t, sut.GetResult(), "before start result is Nil")
+	mockChecker.Wg.Add(4)
+	sut.Run(ctx, nil)
+	sut.Run(ctx, nil)
+	sut.Run(ctx, nil)
+	result := sut.GetResultBlockingUntilAvailable(0)
+	require.NotNil(t, result)
 }

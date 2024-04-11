@@ -55,6 +55,14 @@ func TestGetSafeBlockNumberMutliplesCases(t *testing.T) {
 			expectedBlockNumber: 110,
 		},
 		{
+			name:                "PendingBlockNumber+10",
+			blockPoint:          "pending",
+			offset:              10,
+			l1ReturnBlockNumber: 100,
+			expectedCallToGeth:  big.NewInt(int64(rpc.PendingBlockNumber)),
+			expectedBlockNumber: 110,
+		},
+		{
 			name:                "LastBlockNumber+10, can't add 10 to latest block number. So must return latest block number and ignore positive offset",
 			blockPoint:          "latest",
 			offset:              10,

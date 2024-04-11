@@ -14,9 +14,11 @@ type L1BlockPoint int
 
 const (
 	// FinalizedBlockNumber is the finalized block number
-	FinalizedBlockNumber L1BlockPoint = 2
+	FinalizedBlockNumber L1BlockPoint = 3
 	// SafeBlockNumber is the safe block number
-	SafeBlockNumber L1BlockPoint = 1
+	SafeBlockNumber L1BlockPoint = 2
+	// PendingBlockNumber is the pending block number
+	PendingBlockNumber L1BlockPoint = 1
 	// LastBlockNumber is the last block number
 	LastBlockNumber L1BlockPoint = 0
 )
@@ -28,6 +30,8 @@ func (v L1BlockPoint) ToString() string {
 		return "finalized"
 	case SafeBlockNumber:
 		return "safe"
+	case PendingBlockNumber:
+		return "pending"
 	case LastBlockNumber:
 		return "latest"
 	}
@@ -41,6 +45,8 @@ func StringToL1BlockPoint(s string) L1BlockPoint {
 		return FinalizedBlockNumber
 	case "safe":
 		return SafeBlockNumber
+	case "pending":
+		return PendingBlockNumber
 	case "latest":
 		return LastBlockNumber
 	default:
@@ -53,6 +59,8 @@ func (v L1BlockPoint) ToGethRequest() *big.Int {
 	switch v {
 	case FinalizedBlockNumber:
 		return big.NewInt(int64(rpc.FinalizedBlockNumber))
+	case PendingBlockNumber:
+		return big.NewInt(int64(rpc.PendingBlockNumber))
 	case SafeBlockNumber:
 		return big.NewInt(int64(rpc.SafeBlockNumber))
 	case LastBlockNumber:
@@ -75,6 +83,11 @@ func NewSafeL1BlockNumberFetch(safeBlockPoint L1BlockPoint, offset int) *SafeL1B
 		SafeBlockPoint: safeBlockPoint,
 		Offset:         offset,
 	}
+}
+
+// Description returns a string representation of SafeL1BlockNumberFetch
+func (p *SafeL1BlockNumberFetch) Description() string {
+	return fmt.Sprintf("%s/%d", p.SafeBlockPoint.ToString(), p.Offset)
 }
 
 // GetSafeBlockNumber gets the safe block number from L1

@@ -136,8 +136,24 @@ func NewSynchronizer(
 		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(l1requester, res.state,
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
+		var preCheckAsync syncinterfaces.AsyncL1BlockChecker
+		if cfg.L1BlockCheck.PreCheckEnable {
+			log.Infof("L1BlockChecker enabled precheck from: %s/%d to: %s/%d",
+				cfg.L1BlockCheck.L1SafeBlockPoint, cfg.L1BlockCheck.L1SafeBlockOffset,
+				cfg.L1BlockCheck.L1PreSafeBlockPoint, cfg.L1BlockCheck.L1PreSafeBlockOffset)
+			l1BlockPreChecker := l1_check_block.NewPreCheckL1BlockHash(l1requester, res.state,
+				l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset),
+				l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1PreSafeBlockPoint), cfg.L1BlockCheck.L1PreSafeBlockOffset),
+			)
+			preCheckAsync = l1_check_block.NewAsyncCheck(l1BlockPreChecker)
+		}
+
 		res.asyncL1BlockChecker = l1_check_block.NewL1BlockCheckerIntegration(
-			l1_check_block.NewAsyncCheck(l1BlockChecker), res, cfg.L1BlockCheck.ForceCheckBeforeStart, time.Second)
+			l1_check_block.NewAsyncCheck(l1BlockChecker),
+			preCheckAsync,
+			res,
+			cfg.L1BlockCheck.ForceCheckBeforeStart,
+			time.Second)
 	}
 
 	if !isTrustedSequencer {

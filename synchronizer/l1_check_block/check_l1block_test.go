@@ -94,6 +94,7 @@ func TestCheckL1BlockHashMatchHashUpdateCheckMarkOnDB(t *testing.T) {
 	data := newTestData(t)
 
 	data.mockState.EXPECT().GetFirstUncheckedBlock(data.ctx, uint64(0), nil).Return(data.stateBlock, nil)
+	data.mockBlockNumberFetch.EXPECT().Description().Return("mock")
 	data.mockBlockNumberFetch.EXPECT().GetSafeBlockNumber(data.ctx, data.mockL1Client).Return(data.stateBlock.BlockNumber, nil)
 	l1Block := &types.Header{
 		Number: big.NewInt(100),

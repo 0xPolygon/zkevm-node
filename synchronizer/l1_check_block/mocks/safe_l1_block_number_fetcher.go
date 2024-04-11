@@ -22,6 +22,51 @@ func (_m *SafeL1BlockNumberFetcher) EXPECT() *SafeL1BlockNumberFetcher_Expecter 
 	return &SafeL1BlockNumberFetcher_Expecter{mock: &_m.Mock}
 }
 
+// Description provides a mock function with given fields:
+func (_m *SafeL1BlockNumberFetcher) Description() string {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Description")
+	}
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// SafeL1BlockNumberFetcher_Description_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Description'
+type SafeL1BlockNumberFetcher_Description_Call struct {
+	*mock.Call
+}
+
+// Description is a helper method to define mock.On call
+func (_e *SafeL1BlockNumberFetcher_Expecter) Description() *SafeL1BlockNumberFetcher_Description_Call {
+	return &SafeL1BlockNumberFetcher_Description_Call{Call: _e.mock.On("Description")}
+}
+
+func (_c *SafeL1BlockNumberFetcher_Description_Call) Run(run func()) *SafeL1BlockNumberFetcher_Description_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *SafeL1BlockNumberFetcher_Description_Call) Return(_a0 string) *SafeL1BlockNumberFetcher_Description_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *SafeL1BlockNumberFetcher_Description_Call) RunAndReturn(run func() string) *SafeL1BlockNumberFetcher_Description_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSafeBlockNumber provides a mock function with given fields: ctx, l1Client
 func (_m *SafeL1BlockNumberFetcher) GetSafeBlockNumber(ctx context.Context, l1Client l1_check_block.L1Requester) (uint64, error) {
 	ret := _m.Called(ctx, l1Client)

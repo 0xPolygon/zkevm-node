@@ -32,6 +32,7 @@ type StateInterfacer interface {
 // SafeL1BlockNumberFetcher is an interface for fetching the  L1 block number reference point (safe, finalized,...)
 type SafeL1BlockNumberFetcher interface {
 	GetSafeBlockNumber(ctx context.Context, l1Client L1Requester) (uint64, error)
+	Description() string
 }
 
 // CheckL1BlockHash is a struct that implements a checker of L1Block hash
@@ -50,18 +51,23 @@ func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockN
 	}
 }
 
+// Name is a method that returns the name of the checker
+func (p *CheckL1BlockHash) Name() string {
+	return logPrefix + " CheckL1Block: "
+}
+
 // Step is a method that checks the L1 block hash, run until all blocks are checked and returns
 func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 	stateBlock, err := p.State.GetFirstUncheckedBlock(ctx, uint64(0), nil)
 	if errors.Is(err, state.ErrNotFound) {
-		log.Debugf("%s: No unchecked blocks to check", logPrefix)
+		log.Debugf("%s: No unchecked blocks to check", p.Name())
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 	if stateBlock == nil {
-		log.Warn("%s: function CheckL1Block receive a nil pointer", logPrefix)
+		log.Warn("%s: function CheckL1Block receive a nil pointer", p.Name())
 		return nil
 	}
 	safeBlockNumber, err := p.SafeBlockNumberFetcher.GetSafeBlockNumber(ctx, p.L1Client)
@@ -77,13 +83,13 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Bl
 	startTime := time.Now()
 
 	if stateBlock == nil {
-		return fmt.Errorf("%s: DoAllBlocks stateBlock is nil! ", logPrefix)
+		return fmt.Errorf("%s: DoAllBlocks stateBlock is nil! ", p.Name())
 	}
 	numBlocksChecked := 0
 	for {
 		lastStateBlockNumber := stateBlock.BlockNumber
 		if stateBlock.BlockNumber > safeBlockNumber {
-			log.Debugf("%s: firtst block %d to check is not still safe enough %d ", stateBlock.BlockNumber, safeBlockNumber, logPrefix)
+			log.Debugf("%s: firtst block %d to check is not still safe enough %d ", p.Name(), stateBlock.BlockNumber, safeBlockNumber, logPrefix)
 			return nil
 		}
 		err = p.doBlock(ctx, stateBlock)
@@ -94,22 +100,34 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Bl
 		stateBlock, err = p.State.GetFirstUncheckedBlock(ctx, lastStateBlockNumber, nil)
 		if errors.Is(err, state.ErrNotFound) {
 			diff := time.Since(startTime)
-			log.Infof("%s: checked all blocks (%d) (using as safe Block Point: %d) time:%s", logPrefix, numBlocksChecked, safeBlockNumber, diff)
+			log.Infof("%s: checked all blocks (%d) (using as safe Block Point(%s): %d) time:%s", p.Name(), numBlocksChecked, p.SafeBlockNumberFetcher.Description(), safeBlockNumber, diff)
 			return nil
 		}
 	}
 }
 
-func (p *CheckL1BlockHash) reorgDetected(ctx context.Context, blockNumber uint64, reason string) error {
-	return common.NewReorgError(blockNumber, fmt.Errorf(reason))
+func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block) error {
+	err := CheckBlockHash(ctx, stateBlock, p.L1Client)
+	if err != nil {
+		return err
+	}
+	log.Infof("%s: L1Block: %d hash: %s is correct marking as checked", p.Name(), stateBlock.BlockNumber,
+		stateBlock.BlockHash.String())
+	err = p.State.UpdateCheckedBlockByNumber(ctx, stateBlock.BlockNumber, true, nil)
+	if err != nil {
+		log.Errorf("%s: Error updating block %d as checked. err: %s", p.Name(), stateBlock.BlockNumber, err.Error())
+		return err
+	}
+	return nil
 }
 
-func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block) error {
+// CheckBlockHash is a method that checks the L1 block hash
+func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Requester) error {
 	if stateBlock == nil {
 		log.Warn("%s: function CheckL1Block receive a nil pointer", logPrefix)
 		return nil
 	}
-	l1Block, err := p.L1Client.HeaderByNumber(ctx, big.NewInt(int64(stateBlock.BlockNumber)))
+	l1Block, err := L1Client.HeaderByNumber(ctx, big.NewInt(int64(stateBlock.BlockNumber)))
 	if err != nil {
 		return err
 	}
@@ -122,14 +140,7 @@ func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block)
 		msg := fmt.Sprintf("%s: Reorg detected at block %d l1Block.Hash=%s != stateBlock.Hash=%s", logPrefix, stateBlock.BlockNumber,
 			l1Block.Hash().String(), stateBlock.BlockHash.String())
 		log.Errorf(msg)
-		return p.reorgDetected(ctx, stateBlock.BlockNumber, msg)
-	}
-	log.Infof("%s: L1Block: %d hash: %s is correct marking as checked", logPrefix, stateBlock.BlockNumber,
-		stateBlock.BlockHash.String())
-	err = p.State.UpdateCheckedBlockByNumber(ctx, stateBlock.BlockNumber, true, nil)
-	if err != nil {
-		log.Errorf("%s: Error updating block %d as checked. err: %s", logPrefix, stateBlock.BlockNumber, err.Error())
-		return err
+		return common.NewReorgError(stateBlock.BlockNumber, fmt.Errorf(msg))
 	}
 	return nil
 }

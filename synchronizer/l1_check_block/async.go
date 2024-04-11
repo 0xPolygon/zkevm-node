@@ -27,7 +27,10 @@ type AsyncCheck struct {
 	onFnishCall func()
 	periodTime  time.Duration
 	// Wg is a wait group to wait for the result
-	Wg sync.WaitGroup
+	Wg        sync.WaitGroup
+	ctx       context.Context
+	cancelCtx context.CancelFunc
+	isRunning bool
 }
 
 // NewAsyncCheck creates a new AsyncCheck
@@ -48,9 +51,22 @@ func NewAsyncCheckWithPeriodTime(checker L1BlockChecker, periodTime time.Duratio
 
 // Run is a method that starts the async check
 func (a *AsyncCheck) Run(ctx context.Context, onFinish func()) {
-	a.clearResult()
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
 	a.onFnishCall = onFinish
-	a.launchChecker(ctx)
+	if a.isRunning {
+		log.Infof("%s L1BlockChecker: already running, changing onFinish call", logPrefix)
+		return
+	}
+	a.lastResult = nil
+	a.ctx, a.cancelCtx = context.WithCancel(ctx)
+	a.launchChecker(a.ctx)
+}
+
+// Stop is a method that stops the async check
+func (a *AsyncCheck) Stop() {
+	a.cancelCtx()
+	a.Wg.Wait()
 }
 
 // RunSynchronous is a method that forces the check to be synchronous before starting the async check
@@ -96,12 +112,6 @@ func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *syn
 	return a.GetResult()
 }
 
-func (a *AsyncCheck) clearResult() {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	a.lastResult = nil
-}
-
 func (a *AsyncCheck) setResult(result syncinterfaces.IterationResult) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
@@ -111,21 +121,26 @@ func (a *AsyncCheck) setResult(result syncinterfaces.IterationResult) {
 func (a *AsyncCheck) launchChecker(ctx context.Context) {
 	// add waitGroup  to wait for a result
 	a.Wg.Add(1)
+	a.isRunning = true
 	go func() {
 		log.Infof("%s L1BlockChecker: starting background process", logPrefix)
-
 		for {
 			result := a.step(ctx)
 			if result != nil {
 				a.setResult(*result)
 				// Result is set wg is done
-				a.Wg.Done()
 				break
 			}
 		}
 		log.Infof("%s L1BlockChecker: finished background process", logPrefix)
-		if a.onFnishCall != nil {
-			a.onFnishCall()
+		a.Wg.Done()
+		a.mutex.Lock()
+		onFinishCall := a.onFnishCall
+		a.isRunning = false
+		a.mutex.Unlock()
+		// call onFinish function with no mutex
+		if onFinishCall != nil {
+			onFinishCall()
 		}
 	}()
 }

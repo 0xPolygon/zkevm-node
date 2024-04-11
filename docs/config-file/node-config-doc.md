@@ -1448,12 +1448,15 @@ L1SyncCheckL2BlockNumberhModulus=30
 
 **Type:** : `object`
 
-| Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                           |
-| ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [Enable](#Synchronizer_L1BlockCheck_Enable )                               | No      | boolean          | No         | -          | Enable if is true then the check l1 Block Hash is active                                                                                                                                                                                    |
-| - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe or latest                                                                                                                |
-| - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
-| - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                        |
+| Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Enable](#Synchronizer_L1BlockCheck_Enable )                               | No      | boolean          | No         | -          | Enable if is true then the check l1 Block Hash is active                                                                                                                                                                                                |
+| - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                    |
+| - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block             |
+| - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                                    |
+| - [PreCheckEnable](#Synchronizer_L1BlockCheck_PreCheckEnable )               | No      | boolean          | No         | -          | PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                        |
+| - [L1PreSafeBlockPoint](#Synchronizer_L1BlockCheck_L1PreSafeBlockPoint )     | No      | enum (of string) | No         | -          | L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                 |
+| - [L1PreSafeBlockOffset](#Synchronizer_L1BlockCheck_L1PreSafeBlockOffset )   | No      | integer          | No         | -          | L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
 
 #### <a name="Synchronizer_L1BlockCheck_Enable"></a>9.7.1. `Synchronizer.L1BlockCheck.Enable`
 
@@ -1476,7 +1479,7 @@ Enable=true
 **Default:** `"finalized"`
 
 **Description:** L1SafeBlockPoint is the point that a block is considered safe enough to be checked
-it can be: finalized, safe or latest
+it can be: finalized, safe,pending or latest
 
 **Example setting the default value** ("finalized"):
 ```
@@ -1487,6 +1490,7 @@ L1SafeBlockPoint="finalized"
 Must be one of:
 * "finalized"
 * "safe"
+* "latest"
 
 #### <a name="Synchronizer_L1BlockCheck_L1SafeBlockOffset"></a>9.7.3. `Synchronizer.L1BlockCheck.L1SafeBlockOffset`
 
@@ -1516,6 +1520,56 @@ L1SafeBlockOffset=0
 ```
 [Synchronizer.L1BlockCheck]
 ForceCheckBeforeStart=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_PreCheckEnable"></a>9.7.5. `Synchronizer.L1BlockCheck.PreCheckEnable`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+PreCheckEnable=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockPoint"></a>9.7.6. `Synchronizer.L1BlockCheck.L1PreSafeBlockPoint`
+
+**Type:** : `enum (of string)`
+
+**Default:** `"latest"`
+
+**Description:** L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
+it can be: finalized, safe,pending or latest
+
+**Example setting the default value** ("latest"):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockPoint="latest"
+```
+
+Must be one of:
+* "finalized"
+* "safe"
+* "latest"
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockOffset"></a>9.7.7. `Synchronizer.L1BlockCheck.L1PreSafeBlockOffset`
+
+**Type:** : `integer`
+
+**Default:** `-32`
+
+**Description:** L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point
+it can be positive or negative
+Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block
+
+**Example setting the default value** (-32):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockOffset=-32
 ```
 
 ### <a name="Synchronizer_L1SynchronizationMode"></a>9.8. `Synchronizer.L1SynchronizationMode`
