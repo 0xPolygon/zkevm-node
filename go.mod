@@ -19,7 +19,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/prometheus/client_model v0.6.1
-	github.com/prometheus/common v0.52.2
+	github.com/prometheus/common v0.52.3
 	github.com/rubenv/sql-migrate v1.6.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/viper v1.17.0
