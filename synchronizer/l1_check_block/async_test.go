@@ -43,7 +43,7 @@ func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
 	sut.Run(ctx, nil)
 
 	mockChecker.Wg.Wait()
-	result := sut.GetResponse()
+	result := sut.GetResultBlockingUntilAvailable(0)
 	require.NotNil(t, result)
 	require.Equal(t, uint64(1234), result.BlockNumber)
 	require.Equal(t, true, result.ReorgDetected)
@@ -56,7 +56,7 @@ func TestAsyncGetResponseIsNilUntilStops(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(4)
-	require.Nil(t, sut.GetResponse(), "befoure start result is Nil")
+	require.Nil(t, sut.GetResponse(), "before start result is Nil")
 
 	sut.Run(ctx, nil)
 

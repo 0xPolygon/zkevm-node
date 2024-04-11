@@ -26,6 +26,8 @@ type AsyncCheck struct {
 	lastResult  *syncinterfaces.IterationResult
 	onFnishCall func()
 	periodTime  time.Duration
+	// Wg is a wait group to wait for the result
+	Wg sync.WaitGroup
 }
 
 // NewAsyncCheck creates a new AsyncCheck
@@ -46,7 +48,7 @@ func NewAsyncCheckWithPeriodTime(checker L1BlockChecker, periodTime time.Duratio
 
 // Run is a method that starts the async check
 func (a *AsyncCheck) Run(ctx context.Context, onFinish func()) {
-	a.lastResult = nil
+	a.clearResult()
 	a.onFnishCall = onFinish
 	a.launchChecker(ctx)
 }
@@ -65,6 +67,39 @@ func (a *AsyncCheck) GetResponse() *syncinterfaces.IterationResult {
 	return a.lastResult
 }
 
+// https://stackoverflow.com/questions/32840687/timeout-for-waitgroup-wait
+// waitTimeout waits for the waitgroup for the specified max timeout.
+// Returns true if waiting timed out.
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		wg.Wait()
+	}()
+	select {
+	case <-c:
+		return false // completed normally
+	case <-time.After(timeout):
+		return true // timed out
+	}
+}
+
+// GetResponseWait returns the last result of the check and wait until is available
+func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *syncinterfaces.IterationResult {
+	if timeout == 0 {
+		a.Wg.Wait()
+	} else {
+		waitTimeout(&a.Wg, timeout)
+	}
+	return a.GetResponse()
+}
+
+func (a *AsyncCheck) clearResult() {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+	a.lastResult = nil
+}
+
 func (a *AsyncCheck) setResult(result syncinterfaces.IterationResult) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
@@ -72,12 +107,17 @@ func (a *AsyncCheck) setResult(result syncinterfaces.IterationResult) {
 }
 
 func (a *AsyncCheck) launchChecker(ctx context.Context) {
+	// add waitGroup  to wait for a result
+	a.Wg.Add(1)
 	go func() {
 		log.Infof("%s L1BlockChecker: starting background process", logPrefix)
+
 		for {
 			result := a.step(ctx)
 			if result != nil {
 				a.setResult(*result)
+				// Result is set wg is done
+				a.Wg.Done()
 				break
 			}
 		}
