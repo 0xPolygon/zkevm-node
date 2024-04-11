@@ -869,6 +869,7 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 	block := syncedBlock
 	for {
 		if block == nil {
+			log.Infof("[checkReorg function] Checking Block %d in L1", reorgedBlock.BlockNumber)
 			b, err := s.etherMan.EthBlockByNumber(s.ctx, reorgedBlock.BlockNumber)
 			if err != nil {
 				log.Errorf("error getting latest block synced from blockchain. Block: %d, error: %v", reorgedBlock.BlockNumber, err)
@@ -879,6 +880,8 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 				BlockHash:   b.Hash(),
 				ParentHash:  b.ParentHash(),
 			}
+		} else {
+			log.Infof("[checkReorg function] Using block %d from GetRollupInfoByBlockRange", block.BlockNumber)
 		}
 		log.Infof("[checkReorg function] BlockNumber: %d BlockHash got from L1 provider: %s", block.BlockNumber, block.BlockHash.String())
 		log.Infof("[checkReorg function] latestBlockNumber: %d latestBlockHash already synced: %s", latestStoredBlock.BlockNumber, latestStoredBlock.BlockHash.String())
