@@ -50,19 +50,19 @@ func TestAsyncRelaunchCheckerUntilReorgDetected(t *testing.T) {
 	require.Equal(t, nil, result.Err)
 }
 
-func TestAsyncGetResponseIsNilUntilStops(t *testing.T) {
+func TestAsyncGetResultIsNilUntilStops(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{nil, nil, errGenericToTestAsync, errReorgToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
 	defer cancel()
 	mockChecker.Wg.Add(4)
-	require.Nil(t, sut.GetResponse(), "before start result is Nil")
+	require.Nil(t, sut.GetResult(), "before start result is Nil")
 
 	sut.Run(ctx, nil)
 
-	require.Nil(t, sut.GetResponse(), "after start result is Nil")
+	require.Nil(t, sut.GetResult(), "after start result is Nil")
 	mockChecker.Wg.Wait()
-	result := sut.GetResponse()
+	result := sut.GetResultBlockingUntilAvailable(0)
 	require.NotNil(t, result)
 }
 
@@ -82,7 +82,7 @@ func TestAsyncGRunSynchronousReturnTheFirstResult(t *testing.T) {
 	require.Equal(t, errGenericToTestAsync, result.Err)
 }
 
-func TestAsyncGRunSynchronousDontAffectGetResponse(t *testing.T) {
+func TestAsyncGRunSynchronousDontAffectGetResult(t *testing.T) {
 	mockChecker := &mockChecker{ErrorsToReturn: []error{errGenericToTestAsync}}
 	sut := l1_check_block.NewAsyncCheckWithPeriodTime(mockChecker, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutContextForAsyncTests)
@@ -92,5 +92,5 @@ func TestAsyncGRunSynchronousDontAffectGetResponse(t *testing.T) {
 	result := sut.RunSynchronous(ctx)
 
 	require.NotNil(t, result)
-	require.Nil(t, sut.GetResponse())
+	require.Nil(t, sut.GetResult())
 }

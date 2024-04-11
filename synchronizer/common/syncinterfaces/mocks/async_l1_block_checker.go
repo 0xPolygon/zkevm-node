@@ -22,12 +22,12 @@ func (_m *AsyncL1BlockChecker) EXPECT() *AsyncL1BlockChecker_Expecter {
 	return &AsyncL1BlockChecker_Expecter{mock: &_m.Mock}
 }
 
-// GetResponse provides a mock function with given fields:
-func (_m *AsyncL1BlockChecker) GetResponse() *syncinterfaces.IterationResult {
+// GetResult provides a mock function with given fields:
+func (_m *AsyncL1BlockChecker) GetResult() *syncinterfaces.IterationResult {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetResponse")
+		panic("no return value specified for GetResult")
 	}
 
 	var r0 *syncinterfaces.IterationResult
@@ -42,29 +42,29 @@ func (_m *AsyncL1BlockChecker) GetResponse() *syncinterfaces.IterationResult {
 	return r0
 }
 
-// AsyncL1BlockChecker_GetResponse_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetResponse'
-type AsyncL1BlockChecker_GetResponse_Call struct {
+// AsyncL1BlockChecker_GetResult_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetResult'
+type AsyncL1BlockChecker_GetResult_Call struct {
 	*mock.Call
 }
 
-// GetResponse is a helper method to define mock.On call
-func (_e *AsyncL1BlockChecker_Expecter) GetResponse() *AsyncL1BlockChecker_GetResponse_Call {
-	return &AsyncL1BlockChecker_GetResponse_Call{Call: _e.mock.On("GetResponse")}
+// GetResult is a helper method to define mock.On call
+func (_e *AsyncL1BlockChecker_Expecter) GetResult() *AsyncL1BlockChecker_GetResult_Call {
+	return &AsyncL1BlockChecker_GetResult_Call{Call: _e.mock.On("GetResult")}
 }
 
-func (_c *AsyncL1BlockChecker_GetResponse_Call) Run(run func()) *AsyncL1BlockChecker_GetResponse_Call {
+func (_c *AsyncL1BlockChecker_GetResult_Call) Run(run func()) *AsyncL1BlockChecker_GetResult_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *AsyncL1BlockChecker_GetResponse_Call) Return(_a0 *syncinterfaces.IterationResult) *AsyncL1BlockChecker_GetResponse_Call {
+func (_c *AsyncL1BlockChecker_GetResult_Call) Return(_a0 *syncinterfaces.IterationResult) *AsyncL1BlockChecker_GetResult_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *AsyncL1BlockChecker_GetResponse_Call) RunAndReturn(run func() *syncinterfaces.IterationResult) *AsyncL1BlockChecker_GetResponse_Call {
+func (_c *AsyncL1BlockChecker_GetResult_Call) RunAndReturn(run func() *syncinterfaces.IterationResult) *AsyncL1BlockChecker_GetResult_Call {
 	_c.Call.Return(run)
 	return _c
 }

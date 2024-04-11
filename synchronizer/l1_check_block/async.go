@@ -58,10 +58,10 @@ func (a *AsyncCheck) RunSynchronous(ctx context.Context) syncinterfaces.Iteratio
 	return a.executeIteration(ctx)
 }
 
-// GetResponse returns the last result of the check:
+// GetResult returns the last result of the check:
 // - Nil -> still running
 // - Not nil -> finished, and this is the result. You must call again Run to start a new check
-func (a *AsyncCheck) GetResponse() *syncinterfaces.IterationResult {
+func (a *AsyncCheck) GetResult() *syncinterfaces.IterationResult {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 	return a.lastResult
@@ -84,14 +84,16 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	}
 }
 
-// GetResponseWait returns the last result of the check and wait until is available
+// GetResultBlockingUntilAvailable wait the time specific in timeout, if reach timeout returns current
+// result, if not, wait until the result is available.
+// if timeout is 0, it waits indefinitely
 func (a *AsyncCheck) GetResultBlockingUntilAvailable(timeout time.Duration) *syncinterfaces.IterationResult {
 	if timeout == 0 {
 		a.Wg.Wait()
 	} else {
 		waitTimeout(&a.Wg, timeout)
 	}
-	return a.GetResponse()
+	return a.GetResult()
 }
 
 func (a *AsyncCheck) clearResult() {

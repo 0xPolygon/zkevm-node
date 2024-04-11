@@ -71,7 +71,7 @@ func (v *L1BlockCheckerIntegration) OnCheckReorg(ctx context.Context, latestBloc
 
 func (v *L1BlockCheckerIntegration) checkBackgroundResult(ctx context.Context, positionMessage string) bool {
 	log.Debugf("%s Checking L1BlockChecker %s", logPrefix, positionMessage)
-	result := v.checker.GetResponse()
+	result := v.checker.GetResult()
 	if result != nil {
 		if result.ReorgDetected {
 			log.Warnf("%s Checking L1BlockChecker %s: reorg detected %s", logPrefix, positionMessage, result.String())
