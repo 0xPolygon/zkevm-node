@@ -1462,7 +1462,7 @@ func TestRegularReorg(t *testing.T) {
 				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
 				Return(ethBlock1bis, nil).
 				Once()
-			
+
 			m.State.
 				On("BeginStateTransaction", ctx).
 				Return(m.DbTx, nil).
