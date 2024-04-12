@@ -1540,15 +1540,15 @@ PreCheckEnable=true
 
 **Type:** : `enum (of string)`
 
-**Default:** `"latest"`
+**Default:** `"safe"`
 
 **Description:** L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
 it can be: finalized, safe,pending or latest
 
-**Example setting the default value** ("latest"):
+**Example setting the default value** ("safe"):
 ```
 [Synchronizer.L1BlockCheck]
-L1PreSafeBlockPoint="latest"
+L1PreSafeBlockPoint="safe"
 ```
 
 Must be one of:
@@ -1560,16 +1560,16 @@ Must be one of:
 
 **Type:** : `integer`
 
-**Default:** `-32`
+**Default:** `0`
 
 **Description:** L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point
 it can be positive or negative
 Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block
 
-**Example setting the default value** (-32):
+**Example setting the default value** (0):
 ```
 [Synchronizer.L1BlockCheck]
-L1PreSafeBlockOffset=-32
+L1PreSafeBlockOffset=0
 ```
 
 ### <a name="Synchronizer_L1SynchronizationMode"></a>9.8. `Synchronizer.L1SynchronizationMode`

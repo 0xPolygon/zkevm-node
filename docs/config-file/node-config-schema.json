@@ -572,12 +572,12 @@
 								"latest"
 							],
 							"description": "L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
-							"default": "latest"
+							"default": "safe"
 						},
 						"L1PreSafeBlockOffset": {
 							"type": "integer",
 							"description": "L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
-							"default": -32
+							"default": 0
 						}
 					},
 					"additionalProperties": false,
