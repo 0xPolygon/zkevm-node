@@ -1216,3 +1216,142 @@ func TestReorg(t *testing.T) {
 	err = sync.Sync()
 	require.NoError(t, err)
 }
+
+func TestLatestSyncedBlockEmpty(t *testing.T) {
+	genesis := state.Genesis{
+		BlockNumber: uint64(0),
+	}
+	cfg := Config{
+		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
+		SyncChunkSize:         3,
+		L1SynchronizationMode: SequentialMode,
+		SyncBlockProtection:   "latest",
+	}
+
+	m := mocks{
+		Etherman:     mock_syncinterfaces.NewEthermanFullInterface(t),
+		State:        mock_syncinterfaces.NewStateFullInterface(t),
+		Pool:         mock_syncinterfaces.NewPoolInterface(t),
+		DbTx:         syncMocks.NewDbTxMock(t),
+		ZKEVMClient:  mock_syncinterfaces.NewZKEVMClientInterface(t),
+		EthTxManager: mock_syncinterfaces.NewEthTxManager(t),
+	}
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	sync, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
+	require.NoError(t, err)
+
+	// state preparation
+	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
+	forkIdInterval := state.ForkIDInterval{
+		ForkId:          9,
+		FromBatchNumber: 0,
+		ToBatchNumber:   math.MaxUint64,
+	}
+	m.State.EXPECT().GetForkIDInMemory(uint64(9)).Return(&forkIdInterval)
+
+	m.State.
+		On("BeginStateTransaction", ctxMatchBy).
+		Run(func(args mock.Arguments) {
+			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			ethHeader2 := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1.Hash()}
+			ethBlock2 := ethTypes.NewBlockWithHeader(ethHeader2)
+			ethHeader3 := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2.Hash()}
+			ethBlock3 := ethTypes.NewBlockWithHeader(ethHeader3)
+
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
+
+			m.State.
+				On("GetForkIDByBatchNumber", mock.Anything).
+				Return(uint64(9), nil).
+				Maybe()
+			m.State.
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock1, nil).
+				Once()
+
+			m.State.
+				On("GetLastBatchNumber", ctx, m.DbTx).
+				Return(uint64(10), nil).
+				Once()
+
+			m.State.
+				On("SetInitSyncBatch", ctx, uint64(10), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("GetLatestBatchNumber").
+				Return(uint64(10), nil)
+
+			var nilDbTx pgx.Tx
+			m.State.
+				On("GetLastBatchNumber", ctx, nilDbTx).
+				Return(uint64(10), nil)
+
+			m.Etherman.
+				On("GetLatestVerifiedBatchNum").
+				Return(uint64(10), nil)
+
+			m.State.
+				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
+				Return(nil)
+
+			n := big.NewInt(rpc.LatestBlockNumber.Int64())
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			blocks := []etherman.Block{}
+			order := map[common.Hash][]etherman.Order{}
+
+			fromBlock := ethBlock1.NumberU64()
+			toBlock := fromBlock + cfg.SyncChunkSize
+			if toBlock > ethBlock3.NumberU64() {
+				toBlock = ethBlock3.NumberU64()
+			}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock3.NumberU64(), nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
+				Return(uint64(1), nil).
+				Once()
+		}).
+		Return(m.DbTx, nil).
+		Once()
+
+	err = sync.Sync()
+	require.NoError(t, err)
+}
