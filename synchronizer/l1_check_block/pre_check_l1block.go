@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	// ErrDeSync is an error that indicates that from the starting of verification to end something have been changed on state
 	ErrDeSync = errors.New("DeSync: a block hash is different from the state block hash")
 )
 

@@ -75,16 +75,13 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 		return err
 	}
 	log.Debugf("%s: checking from block (%s) %d first block to check: %d....", p.Name(), p.SafeBlockNumberFetcher.Description(), safeBlockNumber, stateBlock.BlockNumber)
-	return p.doAllBlocks(ctx, stateBlock, safeBlockNumber)
+	return p.doAllBlocks(ctx, *stateBlock, safeBlockNumber)
 }
 
-func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Block, safeBlockNumber uint64) error {
+func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, firstStateBlock state.Block, safeBlockNumber uint64) error {
 	var err error
 	startTime := time.Now()
-
-	if stateBlock == nil {
-		return fmt.Errorf("%s: DoAllBlocks stateBlock is nil! ", p.Name())
-	}
+	stateBlock := &firstStateBlock
 	numBlocksChecked := 0
 	for {
 		lastStateBlockNumber := stateBlock.BlockNumber

@@ -42,7 +42,6 @@ func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 		result := v.runCheckerSync(ctx, v.checker)
 		if result.ReorgDetected {
 			v.executeResult(ctx, result)
-
 		} else {
 			log.Infof("%s Forcing L1BlockChecker check:OK ", logPrefix)
 			if v.preChecker != nil {

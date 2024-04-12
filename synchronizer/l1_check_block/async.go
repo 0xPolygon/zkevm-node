@@ -21,11 +21,11 @@ const (
 
 // AsyncCheck is a wrapper for L1BlockChecker to become asynchronous
 type AsyncCheck struct {
-	checker     L1BlockChecker
-	mutex       sync.Mutex
-	lastResult  *syncinterfaces.IterationResult
-	onFnishCall func()
-	periodTime  time.Duration
+	checker      L1BlockChecker
+	mutex        sync.Mutex
+	lastResult   *syncinterfaces.IterationResult
+	onFinishCall func()
+	periodTime   time.Duration
 	// Wg is a wait group to wait for the result
 	Wg        sync.WaitGroup
 	ctx       context.Context
@@ -41,19 +41,16 @@ func NewAsyncCheck(checker L1BlockChecker) *AsyncCheck {
 	}
 }
 
-// NewAsyncCheckWithPeriodTime creates a new AsyncCheck with a period time between relaunch checker.Step
-func NewAsyncCheckWithPeriodTime(checker L1BlockChecker, periodTime time.Duration) *AsyncCheck {
-	return &AsyncCheck{
-		checker:    checker,
-		periodTime: periodTime,
-	}
+// SetPeriodTime sets the period time between relaunch checker.Step
+func (a *AsyncCheck) SetPeriodTime(periodTime time.Duration) {
+	a.periodTime = periodTime
 }
 
 // Run is a method that starts the async check
 func (a *AsyncCheck) Run(ctx context.Context, onFinish func()) {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
-	a.onFnishCall = onFinish
+	a.onFinishCall = onFinish
 	if a.isRunning {
 		log.Infof("%s L1BlockChecker: already running, changing onFinish call", logPrefix)
 		return
@@ -135,7 +132,7 @@ func (a *AsyncCheck) launchChecker(ctx context.Context) {
 		log.Infof("%s L1BlockChecker: finished background process", logPrefix)
 		a.Wg.Done()
 		a.mutex.Lock()
-		onFinishCall := a.onFnishCall
+		onFinishCall := a.onFinishCall
 		a.isRunning = false
 		a.mutex.Unlock()
 		// call onFinish function with no mutex
@@ -145,7 +142,7 @@ func (a *AsyncCheck) launchChecker(ctx context.Context) {
 	}()
 }
 
-// step is a method that executes a until executeItertion
+// step is a method that executes until executeItertion
 // returns an error or a reorg
 func (a *AsyncCheck) step(ctx context.Context) *syncinterfaces.IterationResult {
 	select {

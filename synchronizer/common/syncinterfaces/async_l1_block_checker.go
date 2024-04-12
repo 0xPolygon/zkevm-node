@@ -33,7 +33,7 @@ type AsyncL1BlockChecker interface {
 	GetResult() *IterationResult
 }
 
-type L1BlockCheckerIntegrater interface {
+type L1BlockCheckerIntegrator interface {
 	OnStart(ctx context.Context) error
 	OnStartL1Sync(ctx context.Context) bool
 	OnStartL2Sync(ctx context.Context) bool

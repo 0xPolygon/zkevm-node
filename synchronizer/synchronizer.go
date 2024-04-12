@@ -78,7 +78,7 @@ type ClientSynchronizer struct {
 	l1EventProcessors        *processor_manager.L1EventProcessors
 	syncTrustedStateExecutor syncinterfaces.SyncTrustedStateExecutor
 	halter                   syncinterfaces.CriticalErrorHandler
-	asyncL1BlockChecker      syncinterfaces.L1BlockCheckerIntegrater
+	asyncL1BlockChecker      syncinterfaces.L1BlockCheckerIntegrator
 }
 
 // NewSynchronizer creates and initializes an instance of Synchronizer
@@ -127,7 +127,7 @@ func NewSynchronizer(
 	}
 	if cfg.L1BlockCheck.Enable {
 		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
-		l1requester, ok := res.etherMan.GetL1EthereumClient().(l1_check_block.L1Requester)
+		l1requester, ok := res.etherMan.(l1_check_block.L1Requester)
 		if !ok {
 			log.Errorf("error casting etherMan to L1Requester")
 			cancel()

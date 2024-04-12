@@ -87,53 +87,6 @@ func (_c *EthermanFullInterface_EthBlockByNumber_Call) RunAndReturn(run func(con
 	return _c
 }
 
-// GetL1EthereumClient provides a mock function with given fields:
-func (_m *EthermanFullInterface) GetL1EthereumClient() interface{} {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetL1EthereumClient")
-	}
-
-	var r0 interface{}
-	if rf, ok := ret.Get(0).(func() interface{}); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
-		}
-	}
-
-	return r0
-}
-
-// EthermanFullInterface_GetL1EthereumClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL1EthereumClient'
-type EthermanFullInterface_GetL1EthereumClient_Call struct {
-	*mock.Call
-}
-
-// GetL1EthereumClient is a helper method to define mock.On call
-func (_e *EthermanFullInterface_Expecter) GetL1EthereumClient() *EthermanFullInterface_GetL1EthereumClient_Call {
-	return &EthermanFullInterface_GetL1EthereumClient_Call{Call: _e.mock.On("GetL1EthereumClient")}
-}
-
-func (_c *EthermanFullInterface_GetL1EthereumClient_Call) Run(run func()) *EthermanFullInterface_GetL1EthereumClient_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *EthermanFullInterface_GetL1EthereumClient_Call) Return(_a0 interface{}) *EthermanFullInterface_GetL1EthereumClient_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *EthermanFullInterface_GetL1EthereumClient_Call) RunAndReturn(run func() interface{}) *EthermanFullInterface_GetL1EthereumClient_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetLatestBatchNumber provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()

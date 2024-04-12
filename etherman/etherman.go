@@ -287,11 +287,6 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 	}, nil
 }
 
-// GetL1EthereumClient return geth client
-func (etherMan *Client) GetL1EthereumClient() interface{} {
-	return etherMan.EthClient
-}
-
 // VerifyGenBlockNumber verifies if the genesis Block Number is valid
 func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	start := time.Now()

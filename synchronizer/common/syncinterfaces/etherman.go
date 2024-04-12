@@ -19,13 +19,8 @@ type EthermanFullInterface interface {
 	GetLatestVerifiedBatchNum() (uint64, error)
 
 	EthermanGetLatestBatchNumber
-	EthermanGetL1Client
 }
 
 type EthermanGetLatestBatchNumber interface {
 	GetLatestBatchNumber() (uint64, error)
-}
-
-type EthermanGetL1Client interface {
-	GetL1EthereumClient() interface{}
 }

@@ -29,6 +29,7 @@ func newTestData(t *testing.T) *testData {
 	mockL1Client := mock_l1_check_block.NewL1Requester(t)
 	mockState := mock_l1_check_block.NewStateInterfacer(t)
 	mockBlockNumberFetch := mock_l1_check_block.NewSafeL1BlockNumberFetcher(t)
+	mockBlockNumberFetch.EXPECT().Description().Return("mock").Maybe()
 	sut := l1_check_block.NewCheckL1BlockHash(mockL1Client, mockState, mockBlockNumberFetch)
 	require.NotNil(t, sut)
 	ctx := context.Background()
@@ -43,6 +44,7 @@ func newTestData(t *testing.T) *testData {
 			BlockHash:   common.HexToHash("0xb07e1289b32edefd8f3c702d016fb73c81d5950b2ebc790ad9d2cb8219066b4c"),
 		},
 	}
+
 }
 
 func TestCheckL1BlockHashNoBlocksOnDB(t *testing.T) {

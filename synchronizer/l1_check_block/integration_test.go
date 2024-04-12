@@ -30,20 +30,23 @@ type testDataIntegration struct {
 }
 
 func newDataIntegration(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
-	return newDataIntegrationPreChecker(t, forceCheckOnStart, nil)
+	return newDataIntegrationOnlyMainChecker(t, forceCheckOnStart)
 }
 
 func newDataIntegrationWithPreChecker(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
-	return newDataIntegrationPreChecker(t, forceCheckOnStart, mock_syncinterfaces.NewAsyncL1BlockChecker(t))
+	res := newDataIntegrationOnlyMainChecker(t, forceCheckOnStart)
+	res.mockPreChecker = mock_syncinterfaces.NewAsyncL1BlockChecker(t)
+	res.sut = l1_check_block.NewL1BlockCheckerIntegration(res.mockChecker, res.mockPreChecker, res.mockSync, forceCheckOnStart, time.Millisecond)
+	return res
 }
 
-func newDataIntegrationPreChecker(t *testing.T, forceCheckOnStart bool, mockPreChecker *mock_syncinterfaces.AsyncL1BlockChecker) *testDataIntegration {
+func newDataIntegrationOnlyMainChecker(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
 	mockChecker := mock_syncinterfaces.NewAsyncL1BlockChecker(t)
 	mockSync := mock_l1_check_block.NewSyncCheckReorger(t)
-	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, mockPreChecker, mockSync, forceCheckOnStart, time.Millisecond)
+	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, nil, mockSync, forceCheckOnStart, time.Millisecond)
 	return &testDataIntegration{
 		mockChecker:    mockChecker,
-		mockPreChecker: mockPreChecker,
+		mockPreChecker: nil,
 		mockSync:       mockSync,
 		sut:            sut,
 		ctx:            context.Background(),
