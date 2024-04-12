@@ -151,6 +151,7 @@ func NewSynchronizer(
 		res.asyncL1BlockChecker = l1_check_block.NewL1BlockCheckerIntegration(
 			l1_check_block.NewAsyncCheck(l1BlockChecker),
 			preCheckAsync,
+			res.state,
 			res,
 			cfg.L1BlockCheck.ForceCheckBeforeStart,
 			time.Second)
@@ -408,7 +409,7 @@ func (s *ClientSynchronizer) Sync() error {
 				continue
 			}
 			log.Infof("latestSequencedBatchNumber: %d, latestSyncedBatch: %d, lastVerifiedBatchNumber: %d", latestSequencedBatchNumber, latestSyncedBatch, lastVerifiedBatchNumber)
-
+			resetDone := false
 			// Sync trusted state
 			// latestSyncedBatch -> Last batch on DB
 			// latestSequencedBatchNumber -> last batch on SMC
@@ -416,11 +417,11 @@ func (s *ClientSynchronizer) Sync() error {
 				startTrusted := time.Now()
 				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
 					log.Info("Syncing trusted state (permissionless)")
-					if s.asyncL1BlockChecker != nil {
-						if s.asyncL1BlockChecker.OnStartL2Sync(s.ctx) {
-							log.Warn("s.asyncL1BlockChecker.OnStartL2Sync -> continue")
-							continue
-						}
+					//Sync Trusted State
+					resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
+					if resetDone || err != nil {
+						log.Infof("Reset done before L2 sync")
+						continue
 					}
 					err = s.syncTrustedState(latestSyncedBatch)
 					metrics.FullTrustedSyncTime(time.Since(startTrusted))
@@ -450,16 +451,15 @@ func (s *ClientSynchronizer) Sync() error {
 				waitDuration = s.cfg.SyncInterval.Duration
 			}
 			//Sync L1Blocks
-			if s.asyncL1BlockChecker != nil {
-				if s.asyncL1BlockChecker.OnStartL1Sync(s.ctx) {
-					log.Warn("s.asyncL1BlockChecker.OnStartL1Sync -> continue")
-					continue
-				}
+			resetDone, lastEthBlockSynced, err := s.checkReorgAndExecuteReset(lastEthBlockSynced)
+			if resetDone || err != nil {
+				continue
 			}
+
 			startL1 := time.Now()
 			if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
 				log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
+				_, err = s.syncBlocksParallel(lastEthBlockSynced)
 			} else {
 				if s.l1SyncOrchestration != nil {
 					log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
@@ -467,7 +467,7 @@ func (s *ClientSynchronizer) Sync() error {
 					s.l1SyncOrchestration = nil
 				}
 				log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
+				_, err = s.syncBlocksSequential(lastEthBlockSynced)
 			}
 			metrics.FullL1SyncTime(time.Since(startL1))
 			if err != nil {
@@ -540,22 +540,7 @@ func sanityCheckForGenesisBlockRollupInfo(blocks []etherman.Block, order map[com
 // This function syncs the node from a specific block to the latest
 // lastEthBlockSynced -> last block synced in the db
 func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block) (*state.Block, error) {
-	// This function will read events fromBlockNum to latestEthBlock. Check reorg to be sure that everything is ok.
-	block, err := s.checkReorg(lastEthBlockSynced)
-	if err != nil {
-		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-		return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
-	}
-	if block != nil {
-		log.Infof("reorg detected. Resetting the state from block %v to block %v", lastEthBlockSynced.BlockNumber, block.BlockNumber)
-		err = s.resetState(block.BlockNumber)
-		if err != nil {
-			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-			s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
-			return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
-		}
-		return block, nil
-	}
+	// MOVED checkReorg to main sync function
 	log.Infof("Starting L1 sync orchestrator in parallel block: %d", lastEthBlockSynced.BlockNumber)
 	return s.l1SyncOrchestration.Start(lastEthBlockSynced)
 }
@@ -569,22 +554,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		return lastEthBlockSynced, err
 	}
 	lastKnownBlock := header.Number
-
-	// This function will read events fromBlockNum to latestEthBlock. Check reorg to be sure that everything is ok.
-	block, err := s.checkReorg(lastEthBlockSynced)
-	if err != nil {
-		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-		return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
-	}
-	if block != nil {
-		err = s.resetState(block.BlockNumber)
-		if err != nil {
-			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-			return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
-		}
-		return block, nil
-	}
-
+	// MOVED checkReorg function to main sync function
 	var fromBlock uint64
 	if lastEthBlockSynced.BlockNumber > 0 {
 		fromBlock = lastEthBlockSynced.BlockNumber + 1
@@ -800,6 +770,9 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 		log.Error("error committing the resetted state. Error: ", err)
 		return err
 	}
+	if s.asyncL1BlockChecker != nil {
+		s.asyncL1BlockChecker.OnResetState(s.ctx)
+	}
 	if s.l1SyncOrchestration != nil {
 		lastBlock, err := s.state.GetLastBlock(s.ctx, nil)
 		if err != nil {
@@ -816,7 +789,8 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
 	log.Infof("Detected Reorg in background at block (mismatch)")
 	if s.l1SyncOrchestration != nil && s.l1SyncOrchestration.IsProducerRunning() {
-		log.Fatalf("Stop synchronizer: because L1 sync parallel orchestration can't be aborted. Please restart process")
+		log.Errorf("Stop synchronizer: because L1 sync parallel orchestration can't be aborted. Please restart process")
+		s.l1SyncOrchestration.Abort()
 	}
 }
 
@@ -827,6 +801,49 @@ func (s *ClientSynchronizer) ExecuteReorg(blockNumber uint64, reason string) err
 	return s.resetState(blockNumber - 1)
 }
 
+// checkReorgAndExecuteReset function will check if there is a reorg and execute the reset
+// returns true is reset have been done
+func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state.Block) (bool, *state.Block, error) {
+	var err error
+	if lastEthBlockSynced == nil {
+		lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
+		if err != nil {
+			log.Errorf("error getting last block synced from db. Error: %v", err)
+			return true, nil, err
+		}
+	}
+	block, err := s.checkReorg(lastEthBlockSynced)
+	if err != nil {
+		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
+		return false, lastEthBlockSynced, fmt.Errorf("error checking reorgs")
+	}
+	if block != nil {
+		log.Infof("reorg detected. Resetting the state from block %v to block %v", lastEthBlockSynced.BlockNumber, block.BlockNumber)
+		s.CleanTrustedState()
+		err = s.resetState(block.BlockNumber)
+		if err != nil {
+			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
+			return false, lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+		}
+	}
+
+	// Get last block from state after reset
+	currentLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
+	if err != nil {
+		log.Errorf("error getting last block synced from db. Error: %v", err)
+		return true, nil, err
+	}
+	return false, currentLastBlock, nil
+}
+
+func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block, error) {
+	block, errReturnedReorgFunction := s.checkReorgRegularFlow(latestBlock)
+	if s.asyncL1BlockChecker != nil {
+		return s.asyncL1BlockChecker.CheckReorgWrapper(s.ctx, block, errReturnedReorgFunction)
+	}
+	return block, errReturnedReorgFunction
+}
+
 /*
 This function will check if there is a reorg.
 As input param needs the last ethereum block synced. Retrieve the block info from the blockchain
@@ -835,20 +852,7 @@ If hash or hash parent don't match, reorg detected and the function will return 
 must be reverted. Then, check the previous ethereum block synced, get block info from the blockchain and check
 hash and has parent. This operation has to be done until a match is found.
 */
-func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block, error) {
-	if s.asyncL1BlockChecker != nil {
-		if s.asyncL1BlockChecker.OnCheckReorg(s.ctx, latestBlock) {
-			log.Infof("[checkReorg function]  reorg detected by background process!")
-			currentLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
-			if err != nil {
-				log.Errorf("error getting last block synced from db. Error: %v", err)
-				return nil, err
-			}
-			// Note: this make a reset again, but it is necessary to ensure to stop sync process
-			log.Infof("[checkReorg function]  reorg detected by background process! returning block: %d", currentLastBlock.BlockNumber)
-			return currentLastBlock, nil
-		}
-	}
+func (s *ClientSynchronizer) checkReorgRegularFlow(latestBlock *state.Block) (*state.Block, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
 	latestEthBlockSynced := *latestBlock
 	reorgedBlock := *latestBlock

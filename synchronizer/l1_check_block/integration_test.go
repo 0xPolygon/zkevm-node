@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	mock_syncinterfaces "github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces/mocks"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l1_check_block"
@@ -21,6 +22,7 @@ var (
 type testDataIntegration struct {
 	mockChecker    *mock_syncinterfaces.AsyncL1BlockChecker
 	mockPreChecker *mock_syncinterfaces.AsyncL1BlockChecker
+	mockState      *mock_l1_check_block.StateForL1BlockCheckerIntegration
 	mockSync       *mock_l1_check_block.SyncCheckReorger
 	sut            *l1_check_block.L1BlockCheckerIntegration
 	ctx            context.Context
@@ -36,18 +38,20 @@ func newDataIntegration(t *testing.T, forceCheckOnStart bool) *testDataIntegrati
 func newDataIntegrationWithPreChecker(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
 	res := newDataIntegrationOnlyMainChecker(t, forceCheckOnStart)
 	res.mockPreChecker = mock_syncinterfaces.NewAsyncL1BlockChecker(t)
-	res.sut = l1_check_block.NewL1BlockCheckerIntegration(res.mockChecker, res.mockPreChecker, res.mockSync, forceCheckOnStart, time.Millisecond)
+	res.sut = l1_check_block.NewL1BlockCheckerIntegration(res.mockChecker, res.mockPreChecker, res.mockState, res.mockSync, forceCheckOnStart, time.Millisecond)
 	return res
 }
 
 func newDataIntegrationOnlyMainChecker(t *testing.T, forceCheckOnStart bool) *testDataIntegration {
 	mockChecker := mock_syncinterfaces.NewAsyncL1BlockChecker(t)
 	mockSync := mock_l1_check_block.NewSyncCheckReorger(t)
-	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, nil, mockSync, forceCheckOnStart, time.Millisecond)
+	mockState := mock_l1_check_block.NewStateForL1BlockCheckerIntegration(t)
+	sut := l1_check_block.NewL1BlockCheckerIntegration(mockChecker, nil, mockState, mockSync, forceCheckOnStart, time.Millisecond)
 	return &testDataIntegration{
 		mockChecker:    mockChecker,
 		mockPreChecker: nil,
 		mockSync:       mockSync,
+		mockState:      mockState,
 		sut:            sut,
 		ctx:            context.Background(),
 		resultReorg: syncinterfaces.IterationResult{
@@ -146,8 +150,9 @@ func TestIntegrationCheckAndPreCheckOnOnCheckReorgRunningOnBackground(t *testing
 	data := newDataIntegrationWithPreChecker(t, true)
 	data.mockChecker.EXPECT().GetResult().Return(nil)
 	data.mockPreChecker.EXPECT().GetResult().Return(nil)
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.False(t, reorgExecuted)
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.Nil(t, block)
+	require.NoError(t, err)
 }
 
 func TestIntegrationCheckAndPreCheckOnOnCheckReorgOneProcessHaveResultOK(t *testing.T) {
@@ -157,32 +162,38 @@ func TestIntegrationCheckAndPreCheckOnOnCheckReorgOneProcessHaveResultOK(t *test
 	// One have been stopped, so must relaunch both
 	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.False(t, reorgExecuted)
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.Nil(t, block)
+	require.NoError(t, err)
 }
 
 func TestIntegrationCheckAndPreCheckOnOnCheckReorgMainCheckerReorg(t *testing.T) {
 	data := newDataIntegrationWithPreChecker(t, true)
 	data.mockChecker.EXPECT().GetResult().Return(&data.resultReorg)
 	data.mockPreChecker.EXPECT().GetResult().Return(nil)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(nil).Once()
-	// One have been stopped, so must relaunch both
-	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.True(t, reorgExecuted)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1234), nil).Return(&state.Block{
+		BlockNumber: data.resultReorg.BlockNumber - 1,
+	}, nil)
+	// One have been stopped,but is going to be launched OnResetState call after the reset
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.NotNil(t, block)
+	require.Equal(t, data.resultReorg.BlockNumber-1, block.BlockNumber)
+	require.NoError(t, err)
 }
 
 func TestIntegrationCheckAndPreCheckOnOnCheckReorgPreCheckerReorg(t *testing.T) {
 	data := newDataIntegrationWithPreChecker(t, true)
 	data.mockChecker.EXPECT().GetResult().Return(nil)
 	data.mockPreChecker.EXPECT().GetResult().Return(&data.resultReorg)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(nil).Once()
-	// One have been stopped, so must relaunch both
-	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.True(t, reorgExecuted)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1234), nil).Return(&state.Block{
+		BlockNumber: data.resultReorg.BlockNumber - 1,
+	}, nil)
+	// One have been stopped,but is going to be launched OnResetState call after the reset
+
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.NotNil(t, block)
+	require.Equal(t, data.resultReorg.BlockNumber-1, block.BlockNumber)
+	require.NoError(t, err)
 }
 
 func TestIntegrationCheckAndPreCheckOnOnCheckReorgBothReorgWinOldest1(t *testing.T) {
@@ -193,12 +204,16 @@ func TestIntegrationCheckAndPreCheckOnOnCheckReorgBothReorgWinOldest1(t *testing
 	reorgPre := data.resultReorg
 	reorgPre.BlockNumber = 1236
 	data.mockPreChecker.EXPECT().GetResult().Return(&reorgPre)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1235), mock.Anything).Return(nil).Once()
-	// One have been stopped, so must relaunch both
-	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.True(t, reorgExecuted)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1235), nil).Return(&state.Block{
+		BlockNumber: 1234,
+	}, nil)
+
+	// Both have been stopped,but is going to be launched OnResetState call after the reset
+
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.NotNil(t, block)
+	require.Equal(t, uint64(1234), block.BlockNumber)
+	require.NoError(t, err)
 }
 
 func TestIntegrationCheckAndPreCheckOnOnCheckReorgBothReorgWinOldest2(t *testing.T) {
@@ -209,10 +224,75 @@ func TestIntegrationCheckAndPreCheckOnOnCheckReorgBothReorgWinOldest2(t *testing
 	reorgPre := data.resultReorg
 	reorgPre.BlockNumber = 1235
 	data.mockPreChecker.EXPECT().GetResult().Return(&reorgPre)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1235), mock.Anything).Return(nil).Once()
-	// One have been stopped, so must relaunch both
-	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
-	reorgExecuted := data.sut.OnCheckReorg(data.ctx, nil)
-	require.True(t, reorgExecuted)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1235), nil).Return(&state.Block{
+		BlockNumber: 1234,
+	}, nil)
+	// Both have been stopped,but is going to be launched OnResetState call after the reset
+
+	block, err := data.sut.CheckReorgWrapper(data.ctx, nil, nil)
+	require.NotNil(t, block)
+	require.Equal(t, uint64(1234), block.BlockNumber)
+	require.NoError(t, err)
+}
+
+func TestIntegrationCheckReorgWrapperBypassReorgFuncIfNoBackgroundData(t *testing.T) {
+	data := newDataIntegrationWithPreChecker(t, true)
+	data.mockChecker.EXPECT().GetResult().Return(nil)
+	data.mockPreChecker.EXPECT().GetResult().Return(nil)
+	reorgFuncBlock := &state.Block{
+		BlockNumber: 1234,
+	}
+	reorgFuncErr := fmt.Errorf("error")
+	block, err := data.sut.CheckReorgWrapper(data.ctx, reorgFuncBlock, reorgFuncErr)
+	require.Equal(t, reorgFuncBlock, block)
+	require.Equal(t, reorgFuncErr, err)
+}
+
+func TestIntegrationCheckReorgWrapperChooseOldestReorgFunc(t *testing.T) {
+	data := newDataIntegrationWithPreChecker(t, true)
+	data.mockChecker.EXPECT().GetResult().Return(nil)
+	data.mockPreChecker.EXPECT().GetResult().Return(&data.resultReorg)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1234), nil).Return(&state.Block{
+		BlockNumber: 1233,
+	}, nil)
+
+	reorgFuncBlock := &state.Block{
+		BlockNumber: 1230,
+	}
+	block, err := data.sut.CheckReorgWrapper(data.ctx, reorgFuncBlock, nil)
+	require.Equal(t, reorgFuncBlock, block)
+	require.NoError(t, err)
+}
+
+func TestIntegrationCheckReorgWrapperChooseOldestBackgroundCheck(t *testing.T) {
+	data := newDataIntegrationWithPreChecker(t, true)
+	data.mockChecker.EXPECT().GetResult().Return(nil)
+	data.mockPreChecker.EXPECT().GetResult().Return(&data.resultReorg)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1234), nil).Return(&state.Block{
+		BlockNumber: 1233,
+	}, nil)
+
+	reorgFuncBlock := &state.Block{
+		BlockNumber: 1240,
+	}
+	block, err := data.sut.CheckReorgWrapper(data.ctx, reorgFuncBlock, nil)
+	require.Equal(t, uint64(1233), block.BlockNumber)
+	require.NoError(t, err)
+}
+
+func TestIntegrationCheckReorgWrapperIgnoreReorgFuncIfError(t *testing.T) {
+	data := newDataIntegrationWithPreChecker(t, true)
+	data.mockChecker.EXPECT().GetResult().Return(nil)
+	data.mockPreChecker.EXPECT().GetResult().Return(&data.resultReorg)
+	data.mockState.EXPECT().GetPreviousBlockToBlockNumber(data.ctx, uint64(1234), nil).Return(&state.Block{
+		BlockNumber: 1233,
+	}, nil)
+
+	reorgFuncBlock := &state.Block{
+		BlockNumber: 1230,
+	}
+	reorgFuncErr := fmt.Errorf("error")
+	block, err := data.sut.CheckReorgWrapper(data.ctx, reorgFuncBlock, reorgFuncErr)
+	require.Equal(t, uint64(1233), block.BlockNumber)
+	require.NoError(t, err)
 }

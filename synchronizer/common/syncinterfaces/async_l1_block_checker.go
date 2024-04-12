@@ -35,7 +35,6 @@ type AsyncL1BlockChecker interface {
 
 type L1BlockCheckerIntegrator interface {
 	OnStart(ctx context.Context) error
-	OnStartL1Sync(ctx context.Context) bool
-	OnStartL2Sync(ctx context.Context) bool
-	OnCheckReorg(ctx context.Context, latestBlock *state.Block) bool
+	OnResetState(ctx context.Context)
+	CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *state.Block, errReportedByReorgFunc error) (*state.Block, error)
 }

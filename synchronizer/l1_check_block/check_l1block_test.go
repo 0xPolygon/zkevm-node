@@ -44,7 +44,6 @@ func newTestData(t *testing.T) *testData {
 			BlockHash:   common.HexToHash("0xb07e1289b32edefd8f3c702d016fb73c81d5950b2ebc790ad9d2cb8219066b4c"),
 		},
 	}
-
 }
 
 func TestCheckL1BlockHashNoBlocksOnDB(t *testing.T) {

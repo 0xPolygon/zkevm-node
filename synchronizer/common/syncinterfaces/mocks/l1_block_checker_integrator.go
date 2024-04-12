@@ -22,49 +22,95 @@ func (_m *L1BlockCheckerIntegrator) EXPECT() *L1BlockCheckerIntegrator_Expecter 
 	return &L1BlockCheckerIntegrator_Expecter{mock: &_m.Mock}
 }
 
-// OnCheckReorg provides a mock function with given fields: ctx, latestBlock
-func (_m *L1BlockCheckerIntegrator) OnCheckReorg(ctx context.Context, latestBlock *state.Block) bool {
-	ret := _m.Called(ctx, latestBlock)
+// CheckReorgWrapper provides a mock function with given fields: ctx, reorgFirstBlockOk, errReportedByReorgFunc
+func (_m *L1BlockCheckerIntegrator) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *state.Block, errReportedByReorgFunc error) (*state.Block, error) {
+	ret := _m.Called(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 
 	if len(ret) == 0 {
-		panic("no return value specified for OnCheckReorg")
+		panic("no return value specified for CheckReorgWrapper")
 	}
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, *state.Block) bool); ok {
-		r0 = rf(ctx, latestBlock)
+	var r0 *state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *state.Block, error) (*state.Block, error)); ok {
+		return rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *state.Block, error) *state.Block); ok {
+		r0 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
 	} else {
-		r0 = ret.Get(0).(bool)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.Block)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, *state.Block, error) error); ok {
+		r1 = rf(ctx, reorgFirstBlockOk, errReportedByReorgFunc)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-// L1BlockCheckerIntegrator_OnCheckReorg_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnCheckReorg'
-type L1BlockCheckerIntegrator_OnCheckReorg_Call struct {
+// L1BlockCheckerIntegrator_CheckReorgWrapper_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckReorgWrapper'
+type L1BlockCheckerIntegrator_CheckReorgWrapper_Call struct {
 	*mock.Call
 }
 
-// OnCheckReorg is a helper method to define mock.On call
+// CheckReorgWrapper is a helper method to define mock.On call
 //   - ctx context.Context
-//   - latestBlock *state.Block
-func (_e *L1BlockCheckerIntegrator_Expecter) OnCheckReorg(ctx interface{}, latestBlock interface{}) *L1BlockCheckerIntegrator_OnCheckReorg_Call {
-	return &L1BlockCheckerIntegrator_OnCheckReorg_Call{Call: _e.mock.On("OnCheckReorg", ctx, latestBlock)}
+//   - reorgFirstBlockOk *state.Block
+//   - errReportedByReorgFunc error
+func (_e *L1BlockCheckerIntegrator_Expecter) CheckReorgWrapper(ctx interface{}, reorgFirstBlockOk interface{}, errReportedByReorgFunc interface{}) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+	return &L1BlockCheckerIntegrator_CheckReorgWrapper_Call{Call: _e.mock.On("CheckReorgWrapper", ctx, reorgFirstBlockOk, errReportedByReorgFunc)}
 }
 
-func (_c *L1BlockCheckerIntegrator_OnCheckReorg_Call) Run(run func(ctx context.Context, latestBlock *state.Block)) *L1BlockCheckerIntegrator_OnCheckReorg_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Run(run func(ctx context.Context, reorgFirstBlockOk *state.Block, errReportedByReorgFunc error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*state.Block))
+		run(args[0].(context.Context), args[1].(*state.Block), args[2].(error))
 	})
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_OnCheckReorg_Call) Return(_a0 bool) *L1BlockCheckerIntegrator_OnCheckReorg_Call {
-	_c.Call.Return(_a0)
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) Return(_a0 *state.Block, _a1 error) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *L1BlockCheckerIntegrator_OnCheckReorg_Call) RunAndReturn(run func(context.Context, *state.Block) bool) *L1BlockCheckerIntegrator_OnCheckReorg_Call {
+func (_c *L1BlockCheckerIntegrator_CheckReorgWrapper_Call) RunAndReturn(run func(context.Context, *state.Block, error) (*state.Block, error)) *L1BlockCheckerIntegrator_CheckReorgWrapper_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OnResetState provides a mock function with given fields: ctx
+func (_m *L1BlockCheckerIntegrator) OnResetState(ctx context.Context) {
+	_m.Called(ctx)
+}
+
+// L1BlockCheckerIntegrator_OnResetState_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnResetState'
+type L1BlockCheckerIntegrator_OnResetState_Call struct {
+	*mock.Call
+}
+
+// OnResetState is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *L1BlockCheckerIntegrator_Expecter) OnResetState(ctx interface{}) *L1BlockCheckerIntegrator_OnResetState_Call {
+	return &L1BlockCheckerIntegrator_OnResetState_Call{Call: _e.mock.On("OnResetState", ctx)}
+}
+
+func (_c *L1BlockCheckerIntegrator_OnResetState_Call) Run(run func(ctx context.Context)) *L1BlockCheckerIntegrator_OnResetState_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *L1BlockCheckerIntegrator_OnResetState_Call) Return() *L1BlockCheckerIntegrator_OnResetState_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *L1BlockCheckerIntegrator_OnResetState_Call) RunAndReturn(run func(context.Context)) *L1BlockCheckerIntegrator_OnResetState_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -111,98 +157,6 @@ func (_c *L1BlockCheckerIntegrator_OnStart_Call) Return(_a0 error) *L1BlockCheck
 }
 
 func (_c *L1BlockCheckerIntegrator_OnStart_Call) RunAndReturn(run func(context.Context) error) *L1BlockCheckerIntegrator_OnStart_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// OnStartL1Sync provides a mock function with given fields: ctx
-func (_m *L1BlockCheckerIntegrator) OnStartL1Sync(ctx context.Context) bool {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OnStartL1Sync")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// L1BlockCheckerIntegrator_OnStartL1Sync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnStartL1Sync'
-type L1BlockCheckerIntegrator_OnStartL1Sync_Call struct {
-	*mock.Call
-}
-
-// OnStartL1Sync is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *L1BlockCheckerIntegrator_Expecter) OnStartL1Sync(ctx interface{}) *L1BlockCheckerIntegrator_OnStartL1Sync_Call {
-	return &L1BlockCheckerIntegrator_OnStartL1Sync_Call{Call: _e.mock.On("OnStartL1Sync", ctx)}
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL1Sync_Call) Run(run func(ctx context.Context)) *L1BlockCheckerIntegrator_OnStartL1Sync_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL1Sync_Call) Return(_a0 bool) *L1BlockCheckerIntegrator_OnStartL1Sync_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL1Sync_Call) RunAndReturn(run func(context.Context) bool) *L1BlockCheckerIntegrator_OnStartL1Sync_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// OnStartL2Sync provides a mock function with given fields: ctx
-func (_m *L1BlockCheckerIntegrator) OnStartL2Sync(ctx context.Context) bool {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OnStartL2Sync")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// L1BlockCheckerIntegrator_OnStartL2Sync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnStartL2Sync'
-type L1BlockCheckerIntegrator_OnStartL2Sync_Call struct {
-	*mock.Call
-}
-
-// OnStartL2Sync is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *L1BlockCheckerIntegrator_Expecter) OnStartL2Sync(ctx interface{}) *L1BlockCheckerIntegrator_OnStartL2Sync_Call {
-	return &L1BlockCheckerIntegrator_OnStartL2Sync_Call{Call: _e.mock.On("OnStartL2Sync", ctx)}
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL2Sync_Call) Run(run func(ctx context.Context)) *L1BlockCheckerIntegrator_OnStartL2Sync_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL2Sync_Call) Return(_a0 bool) *L1BlockCheckerIntegrator_OnStartL2Sync_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *L1BlockCheckerIntegrator_OnStartL2Sync_Call) RunAndReturn(run func(context.Context) bool) *L1BlockCheckerIntegrator_OnStartL2Sync_Call {
 	_c.Call.Return(run)
 	return _c
 }

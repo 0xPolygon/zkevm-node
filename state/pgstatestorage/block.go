@@ -112,6 +112,26 @@ func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, d
 	return &block, err
 }
 
+// GetPreviousBlockToBlockNumber gets the previous L1 block respect blockNumber.
+func (p *PostgresStorage) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	var (
+		blockHash  string
+		parentHash string
+		block      state.Block
+	)
+	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked FROM state.block WHERE block_num < $1 ORDER BY block_num DESC LIMIT 1 "
+
+	q := p.getExecQuerier(dbTx)
+
+	err := q.QueryRow(ctx, getPreviousBlockSQL, blockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	}
+	block.BlockHash = common.HexToHash(blockHash)
+	block.ParentHash = common.HexToHash(parentHash)
+	return &block, err
+}
+
 // GetBlockByNumber returns the L1 block with the given number.
 func (p *PostgresStorage) GetBlockByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
 	var (

@@ -7,13 +7,20 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
+	"github.com/jackc/pgx/v4"
 )
+
+// StateForL1BlockCheckerIntegration is an interface for the state
+type StateForL1BlockCheckerIntegration interface {
+	GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
+}
 
 // L1BlockCheckerIntegration is a struct that integrates the L1BlockChecker with the synchronizer
 type L1BlockCheckerIntegration struct {
 	forceCheckOnStart  bool
 	checker            syncinterfaces.AsyncL1BlockChecker
 	preChecker         syncinterfaces.AsyncL1BlockChecker
+	state              StateForL1BlockCheckerIntegration
 	sync               SyncCheckReorger
 	timeBetweenRetries time.Duration
 }
@@ -25,11 +32,12 @@ type SyncCheckReorger interface {
 }
 
 // NewL1BlockCheckerIntegration creates a new L1BlockCheckerIntegration
-func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, preChecker syncinterfaces.AsyncL1BlockChecker, sync SyncCheckReorger, forceCheckOnStart bool, timeBetweenRetries time.Duration) *L1BlockCheckerIntegration {
+func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, preChecker syncinterfaces.AsyncL1BlockChecker, state StateForL1BlockCheckerIntegration, sync SyncCheckReorger, forceCheckOnStart bool, timeBetweenRetries time.Duration) *L1BlockCheckerIntegration {
 	return &L1BlockCheckerIntegration{
 		forceCheckOnStart:  forceCheckOnStart,
 		checker:            checker,
 		preChecker:         preChecker,
+		state:              state,
 		sync:               sync,
 		timeBetweenRetries: timeBetweenRetries,
 	}
@@ -80,9 +88,46 @@ func (v *L1BlockCheckerIntegration) OnStartL2Sync(ctx context.Context) bool {
 	return v.checkBackgroundResult(ctx, "before start 2 sync")
 }
 
-// OnCheckReorg is a method that is called when a reorg is checked
-func (v *L1BlockCheckerIntegration) OnCheckReorg(ctx context.Context, latestBlock *state.Block) bool {
-	return v.checkBackgroundResult(ctx, "OnCheckReorg")
+// OnResetState is a method that is called after a resetState
+func (v *L1BlockCheckerIntegration) OnResetState(ctx context.Context) {
+	log.Infof("%s L1BlockChecker: after a resetState relaunch background process", logPrefix)
+	v.launch(ctx)
+}
+
+// CheckReorgWrapper is a wrapper over reorg function of synchronizer.
+// it checks the result of the function and the result of background process and decides which return
+func (v *L1BlockCheckerIntegration) CheckReorgWrapper(ctx context.Context, reorgFirstBlockOk *state.Block, errReportedByReorgFunc error) (*state.Block, error) {
+	resultBackground := v.getMergedResults()
+	if resultBackground != nil && resultBackground.ReorgDetected {
+		// Background process detected a reorg, decide which return
+		firstOkBlockBackgroundCheck, err := v.state.GetPreviousBlockToBlockNumber(ctx, resultBackground.BlockNumber, nil)
+		if err != nil {
+			log.Warnf("%s Error getting previous block to block number where a reorg have been detected %d: %s. So we reorgFunc values", logPrefix, resultBackground.BlockNumber, err)
+			return reorgFirstBlockOk, errReportedByReorgFunc
+		}
+		if reorgFirstBlockOk == nil || errReportedByReorgFunc != nil {
+			log.Infof("%s Background checker detects bad block at block %d (first block ok %d) and regular reorg function no. Returning it", logPrefix,
+				resultBackground.BlockNumber, firstOkBlockBackgroundCheck.BlockNumber)
+			return firstOkBlockBackgroundCheck, nil
+		}
+		if firstOkBlockBackgroundCheck.BlockNumber < reorgFirstBlockOk.BlockNumber {
+			// Background process detected a reorg at oldest block
+			log.Warnf("%s Background checker detects bad block  at block %d (first block ok %d) and regular reorg function first block ok: %d. Returning from %d",
+				logPrefix, resultBackground.BlockNumber, firstOkBlockBackgroundCheck.BlockNumber, reorgFirstBlockOk.BlockNumber, firstOkBlockBackgroundCheck.BlockNumber)
+			return firstOkBlockBackgroundCheck, nil
+		} else {
+			// Regular reorg function detected a reorg at oldest block
+			log.Warnf("%s Background checker detects bad block  at block %d (first block ok %d) and regular reorg function first block ok: %d. Executing from %d",
+				logPrefix, resultBackground.BlockNumber, firstOkBlockBackgroundCheck.BlockNumber, reorgFirstBlockOk.BlockNumber, reorgFirstBlockOk.BlockNumber)
+			return reorgFirstBlockOk, errReportedByReorgFunc
+		}
+	}
+	if resultBackground != nil && !resultBackground.ReorgDetected {
+		// Relaunch checker, if there are a reorg is going to be relaunched after (OnResetState)
+		v.launch(ctx)
+	}
+	// Background process doesnt have anything to we return the regular reorg function result
+	return reorgFirstBlockOk, errReportedByReorgFunc
 }
 
 func (v *L1BlockCheckerIntegration) checkBackgroundResult(ctx context.Context, positionMessage string) bool {
