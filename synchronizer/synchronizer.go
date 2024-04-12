@@ -554,18 +554,35 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		// if the next info that must be stored in the db is a new sequencer or a batch. The value pos (position) tells what is the
 		// array index where this value is.
 		start := time.Now()
-		b, order, err := s.etherMan.GetRollupInfoByBlockRange(s.ctx, fromBlock, &toBlock)
+		blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(s.ctx, fromBlock, &toBlock)
 		metrics.ReadL1DataTime(time.Since(start))
 		if err != nil {
 			return lastEthBlockSynced, err
 		}
 
-		var initBlockReceived *etherman.Block = nil
-		blocks := b
-		if len(b) != 0 {
-			initBlockReceived = &b[0]
+		var initBlockReceived *etherman.Block
+		// blocks := b
+		if len(blocks) != 0 {
+			initBlockReceived = &blocks[0]
 			// First position of the array must be deleted
-			blocks = removeBlockElement(b, 0)
+			blocks = removeBlockElement(blocks, 0)
+		} else {
+			// Reorg detected
+			log.Info("Reorg detected while querying GetRollupInfoByBlockRange. Rolling back to previous block")
+			prevBlock, err := s.state.GetPreviousBlock(s.ctx, 1, nil)
+			if errors.Is(err, state.ErrNotFound) {
+				log.Warn("error checking reorg: previous block not found in db: ", err)
+				prevBlock = &state.Block{}
+			} else if err != nil {
+				log.Error("error getting previousBlock from db. Error: ", err)
+				return nil, err
+			}
+			err = s.resetState(prevBlock.BlockNumber)
+			if err != nil {
+				log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
+				return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+			}
+			return prevBlock, nil
 		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
 		block, err := s.newCheckReorg(lastEthBlockSynced, initBlockReceived)
@@ -606,32 +623,6 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		}
 
 		fromBlock = toBlock
-
-		if len(blocks) == 0 { // If there is no events in the checked blocks range and lastKnownBlock > fromBlock.
-			// Store the latest block of the block range. Get block info and process the block
-			fb, err := s.etherMan.EthBlockByNumber(s.ctx, toBlock)
-			if err != nil {
-				return lastEthBlockSynced, err
-			}
-			b := etherman.Block{
-				BlockNumber: fb.NumberU64(),
-				BlockHash:   fb.Hash(),
-				ParentHash:  fb.ParentHash(),
-				ReceivedAt:  time.Unix(int64(fb.Time()), 0),
-			}
-			err = s.ProcessBlockRange([]etherman.Block{b}, order)
-			if err != nil {
-				return lastEthBlockSynced, err
-			}
-			block := state.Block{
-				BlockNumber: fb.NumberU64(),
-				BlockHash:   fb.Hash(),
-				ParentHash:  fb.ParentHash(),
-				ReceivedAt:  time.Unix(int64(fb.Time()), 0),
-			}
-			lastEthBlockSynced = &block
-			log.Info("Storing empty block. BlockNumber: ", b.BlockNumber, ". BlockHash: ", b.BlockHash)
-		}
 	}
 
 	return lastEthBlockSynced, nil

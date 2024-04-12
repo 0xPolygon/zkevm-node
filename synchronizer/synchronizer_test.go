@@ -1263,6 +1263,7 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 			ethHeader3 := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2.Hash()}
 			ethBlock3 := ethTypes.NewBlockWithHeader(ethHeader3)
 
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
 			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
 
 			m.State.
@@ -1330,9 +1331,65 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 				Return(blocks, order, nil).
 				Once()
 
+			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
+			var depth uint64 = 1
+			stateBlock0 := &state.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, nil).
+				Return(stateBlock0, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			m.State.
+				On("Reset", ctx, ethBlock0.NumberU64(), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.EthTxManager.
+				On("Reorg", ctx, ethBlock0.NumberU64()+1, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
+
 			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
-				Return(ethBlock1, nil).
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			blocks = []etherman.Block{ethermanBlock0}
+			fromBlock = 0
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
 				Once()
 
 			m.Etherman.
