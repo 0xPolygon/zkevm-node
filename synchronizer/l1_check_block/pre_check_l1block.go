@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	errDeSync = errors.New("DeSync: a block hash is different from the state block hash")
+	ErrDeSync = errors.New("DeSync: a block hash is different from the state block hash")
 )
 
 // StatePreCheckInterfacer is an interface for the state
@@ -49,7 +49,7 @@ func NewPreCheckL1BlockHash(l1Client L1Requester, state StatePreCheckInterfacer,
 
 // Name is a method that returns the name of the checker
 func (p *PreCheckL1BlockHash) Name() string {
-	return logPrefix + ":PreCheckL1Block: "
+	return logPrefix + ":memory_check: "
 }
 
 // Step is a method that checks the L1 block hash, run until all blocks are checked and returns
@@ -61,6 +61,10 @@ func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
 	to, err := p.EndSegmentBlockNumber.GetSafeBlockNumber(ctx, p.L1Client)
 	if err != nil {
 		return err
+	}
+	if from > to {
+		log.Warnf("%s: fromBlockNumber(%s) %d is greater than toBlockNumber(%s) %d, Check configuration", p.Name(), p.InitialSegmentBlockNumber.Description(), from, p.EndSegmentBlockNumber.Description(), to)
+		return nil
 	}
 
 	blocksToCheck, err := p.State.GetUncheckedBlocks(ctx, from, to, nil)
@@ -77,17 +81,18 @@ func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
 	startTime := time.Now()
 	for _, block := range blocksToCheck {
 		// check block
-		err = CheckBlockHash(ctx, block, p.L1Client)
+		err = CheckBlockHash(ctx, block, p.L1Client, p.Name())
 		if common.IsReorgError(err) {
 			// Double-check the state block that still is the same
-			isTheSame, err := p.checkThatStateBlockIsTheSame(ctx, block)
-			if err != nil {
+			log.Debugf("%s: Reorg detected at blockNumber: %d, checking that the block on State doesn't have change", p.Name(), block.BlockNumber)
+			isTheSame, errBlockIsTheSame := p.checkThatStateBlockIsTheSame(ctx, block)
+			if errBlockIsTheSame != nil {
 				log.Warnf("%s can't double-check that blockNumber %d haven't changed, so it discard the reorg error", p.Name(), block.BlockNumber)
 				return err
 			}
 			if !isTheSame {
 				log.Infof("%s: DeSync detected, blockNumber: %d is different now that when we started the check", p.Name(), block.BlockNumber)
-				return errDeSync
+				return ErrDeSync
 			}
 			log.Infof("%s: Reorg detected and verified the state block, blockNumber: %d", p.Name(), block.BlockNumber)
 			return err
@@ -107,14 +112,25 @@ func (p *PreCheckL1BlockHash) Step(ctx context.Context) error {
 func (p *PreCheckL1BlockHash) checkThatStateBlockIsTheSame(ctx context.Context, block *state.Block) (bool, error) {
 	blocks, err := p.State.GetUncheckedBlocks(ctx, block.BlockNumber, block.BlockNumber, nil)
 	if err != nil {
+		log.Warnf("%s: Fails to get blockNumber %d in state .Err:%s", p.Name(), block.BlockNumber, err.Error())
 		return false, err
 	}
 	if len(blocks) == 0 {
-		// The block is checked, so it is not the same
+		// The block is checked or deleted, so it is not the same
+		log.Debugf("%s: The blockNumber %d is no longer in the state (or checked or deleted)", p.Name(), block.BlockNumber)
 		return false, nil
 	}
 	stateBlock := blocks[0]
+	if stateBlock.BlockNumber != block.BlockNumber {
+		msg := fmt.Sprintf("%s: The blockNumber returned by state %d is different from the state blockNumber %d",
+			p.Name(), block.BlockNumber, stateBlock.BlockNumber)
+		log.Warn(msg)
+		return false, fmt.Errorf(msg)
+	}
 	if stateBlock.BlockHash != block.BlockHash {
+		msg := fmt.Sprintf("%s: The blockNumber %d differs the hash checked %s from current in state %s",
+			p.Name(), block.BlockNumber, block.BlockHash.String(), stateBlock.BlockHash.String())
+		log.Warn(msg)
 		return false, nil
 	}
 	// The block is the same

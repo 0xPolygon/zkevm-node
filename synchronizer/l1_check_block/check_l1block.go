@@ -53,7 +53,7 @@ func NewCheckL1BlockHash(l1Client L1Requester, state StateInterfacer, safeBlockN
 
 // Name is a method that returns the name of the checker
 func (p *CheckL1BlockHash) Name() string {
-	return logPrefix + " CheckL1Block: "
+	return logPrefix + " main_checker: "
 }
 
 // Step is a method that checks the L1 block hash, run until all blocks are checked and returns
@@ -67,14 +67,14 @@ func (p *CheckL1BlockHash) Step(ctx context.Context) error {
 		return err
 	}
 	if stateBlock == nil {
-		log.Warn("%s: function CheckL1Block receive a nil pointer", p.Name())
+		log.Warnf("%s: function CheckL1Block receive a nil pointer", p.Name())
 		return nil
 	}
 	safeBlockNumber, err := p.SafeBlockNumberFetcher.GetSafeBlockNumber(ctx, p.L1Client)
 	if err != nil {
 		return err
 	}
-
+	log.Debugf("%s: checking from block (%s) %d first block to check: %d....", p.Name(), p.SafeBlockNumberFetcher.Description(), safeBlockNumber, stateBlock.BlockNumber)
 	return p.doAllBlocks(ctx, stateBlock, safeBlockNumber)
 }
 
@@ -89,7 +89,7 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Bl
 	for {
 		lastStateBlockNumber := stateBlock.BlockNumber
 		if stateBlock.BlockNumber > safeBlockNumber {
-			log.Debugf("%s: firtst block %d to check is not still safe enough %d ", p.Name(), stateBlock.BlockNumber, safeBlockNumber, logPrefix)
+			log.Debugf("%s: block %d to check is not still safe enough (%s) %d ", p.Name(), stateBlock.BlockNumber, p.SafeBlockNumberFetcher.Description(), safeBlockNumber, logPrefix)
 			return nil
 		}
 		err = p.doBlock(ctx, stateBlock)
@@ -107,7 +107,7 @@ func (p *CheckL1BlockHash) doAllBlocks(ctx context.Context, stateBlock *state.Bl
 }
 
 func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block) error {
-	err := CheckBlockHash(ctx, stateBlock, p.L1Client)
+	err := CheckBlockHash(ctx, stateBlock, p.L1Client, p.Name())
 	if err != nil {
 		return err
 	}
@@ -122,9 +122,9 @@ func (p *CheckL1BlockHash) doBlock(ctx context.Context, stateBlock *state.Block)
 }
 
 // CheckBlockHash is a method that checks the L1 block hash
-func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Requester) error {
+func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Requester, checkerName string) error {
 	if stateBlock == nil {
-		log.Warn("%s: function CheckL1Block receive a nil pointer", logPrefix)
+		log.Warn("%s function CheckL1Block receive a nil pointer", checkerName)
 		return nil
 	}
 	l1Block, err := L1Client.HeaderByNumber(ctx, big.NewInt(int64(stateBlock.BlockNumber)))
@@ -132,12 +132,12 @@ func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Req
 		return err
 	}
 	if l1Block == nil {
-		err = fmt.Errorf("%s: request of block: %d to L1 returns a nil", logPrefix, stateBlock.BlockNumber)
+		err = fmt.Errorf("%s request of block: %d to L1 returns a nil", checkerName, stateBlock.BlockNumber)
 		log.Error(err.Error())
 		return err
 	}
 	if l1Block.Hash() != stateBlock.BlockHash {
-		msg := fmt.Sprintf("%s: Reorg detected at block %d l1Block.Hash=%s != stateBlock.Hash=%s", logPrefix, stateBlock.BlockNumber,
+		msg := fmt.Sprintf("%s Reorg detected at block %d l1Block.Hash=%s != stateBlock.Hash=%s", checkerName, stateBlock.BlockNumber,
 			l1Block.Hash().String(), stateBlock.BlockHash.String())
 		log.Errorf(msg)
 		return common.NewReorgError(stateBlock.BlockNumber, fmt.Errorf(msg))
