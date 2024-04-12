@@ -39,21 +39,36 @@ func NewL1BlockCheckerIntegration(checker syncinterfaces.AsyncL1BlockChecker, pr
 func (v *L1BlockCheckerIntegration) OnStart(ctx context.Context) error {
 	if v.forceCheckOnStart {
 		log.Infof("%s Forcing L1BlockChecker check before start", logPrefix)
-		var result syncinterfaces.IterationResult
-		for {
-			result = v.checker.RunSynchronous(ctx)
-			if result.Err == nil {
-				break
-			} else {
-				time.Sleep(v.timeBetweenRetries)
-			}
-		}
+		result := v.runCheckerSync(ctx, v.checker)
 		if result.ReorgDetected {
 			v.executeResult(ctx, result)
+
+		} else {
+			log.Infof("%s Forcing L1BlockChecker check:OK ", logPrefix)
+			if v.preChecker != nil {
+				log.Infof("%s Forcing L1BlockChecker preCheck before start", logPrefix)
+				result = v.runCheckerSync(ctx, v.preChecker)
+				if result.ReorgDetected {
+					v.executeResult(ctx, result)
+				} else {
+					log.Infof("%s Forcing L1BlockChecker preCheck:OK", logPrefix)
+				}
+			}
 		}
 	}
 	v.launch(ctx)
 	return nil
+}
+
+func (v *L1BlockCheckerIntegration) runCheckerSync(ctx context.Context, checker syncinterfaces.AsyncL1BlockChecker) syncinterfaces.IterationResult {
+	for {
+		result := checker.RunSynchronous(ctx)
+		if result.Err == nil {
+			return result
+		} else {
+			time.Sleep(v.timeBetweenRetries)
+		}
+	}
 }
 
 // OnStartL1Sync is a method that is called before starting the L1 sync
