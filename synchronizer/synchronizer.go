@@ -560,8 +560,15 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			return lastEthBlockSynced, err
 		}
 
+		var initBlockReceived *etherman.Block = nil
+		blocks := b
+		if len(b) != 0 {
+			initBlockReceived = &b[0]
+			// First position of the array must be deleted
+			blocks = removeBlockElement(b, 0)
+		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
-		block, err := s.newCheckReorg(lastEthBlockSynced, &b[0])
+		block, err := s.newCheckReorg(lastEthBlockSynced, initBlockReceived)
 		if err != nil {
 			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 			return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
@@ -574,14 +581,6 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			}
 			return block, nil
 		}
-		if len(b) == 0 {
-			log.Error("block array can't be empty")
-			return lastEthBlockSynced, fmt.Errorf("b array can't be empty")
-		}
-		log.Info("Before clean array: ", len(b))
-		// First position of the array must be deleted
-		blocks := removeBlockElement(b, 0)
-		log.Info("After clean array: ", len(blocks))
 
 		start = time.Now()
 		err = s.ProcessBlockRange(blocks, order)
