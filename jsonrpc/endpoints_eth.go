@@ -68,8 +68,6 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
-		} else if blockArg == nil {
-			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 1", nil, false)
 		}
 		block, respErr := e.getBlockByArg(ctx, blockArg, dbTx)
 		if respErr != nil {
