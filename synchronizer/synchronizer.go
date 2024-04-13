@@ -561,28 +561,36 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		}
 
 		var initBlockReceived *etherman.Block
-		// blocks := b
 		if len(blocks) != 0 {
 			initBlockReceived = &blocks[0]
 			// First position of the array must be deleted
 			blocks = removeBlockElement(blocks, 0)
 		} else {
 			// Reorg detected
-			log.Info("Reorg detected while querying GetRollupInfoByBlockRange. Rolling back to previous block")
+			log.Info("Reorg detected in block %d while querying GetRollupInfoByBlockRange. Rolling back to at least the previous block", fromBlock)
 			prevBlock, err := s.state.GetPreviousBlock(s.ctx, 1, nil)
 			if errors.Is(err, state.ErrNotFound) {
 				log.Warn("error checking reorg: previous block not found in db: ", err)
 				prevBlock = &state.Block{}
 			} else if err != nil {
 				log.Error("error getting previousBlock from db. Error: ", err)
-				return nil, err
+				return lastEthBlockSynced, err
 			}
-			err = s.resetState(prevBlock.BlockNumber)
+			blockReorged, err := s.newCheckReorg(prevBlock, nil)
+			if err != nil {
+				log.Error("error checking reorgs in previous blocks. Error: ", err)
+				return lastEthBlockSynced, err
+			}
+			if blockReorged == nil {
+				blockReorged = prevBlock
+			}
+			err = s.resetState(blockReorged.BlockNumber)
 			if err != nil {
 				log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
 				return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
 			}
-			return prevBlock, nil
+			lastEthBlockSynced = prevBlock
+			return lastEthBlockSynced, nil
 		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
 		block, err := s.newCheckReorg(lastEthBlockSynced, initBlockReceived)

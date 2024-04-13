@@ -1344,6 +1344,11 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 				Return(stateBlock0, nil).
 				Once()
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
 			m.State.
 				On("BeginStateTransaction", ctx).
 				Return(m.DbTx, nil).
