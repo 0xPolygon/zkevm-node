@@ -789,7 +789,7 @@ func (s *ClientSynchronizer) resetState(blockNumber uint64) error {
 func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
 	log.Infof("Detected Reorg in background at block (mismatch)")
 	if s.l1SyncOrchestration != nil && s.l1SyncOrchestration.IsProducerRunning() {
-		log.Errorf("Stop synchronizer: because L1 sync parallel orchestration can't be aborted. Please restart process")
+		log.Errorf("Stop synchronizer: because L1 sync parallel aborting background process")
 		s.l1SyncOrchestration.Abort()
 	}
 }
@@ -822,18 +822,12 @@ func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state
 		s.CleanTrustedState()
 		err = s.resetState(block.BlockNumber)
 		if err != nil {
-			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-			return false, lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+			log.Errorf("error resetting the state to a previous block. Retrying... Err: %s", err.Error())
+			return false, lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block. Err: %w", err)
 		}
+		return true, block, nil
 	}
-
-	// Get last block from state after reset
-	currentLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
-	if err != nil {
-		log.Errorf("error getting last block synced from db. Error: %v", err)
-		return true, nil, err
-	}
-	return false, currentLastBlock, nil
+	return false, lastEthBlockSynced, nil
 }
 
 func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block, error) {

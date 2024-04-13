@@ -128,6 +128,9 @@ func TestForcedBatchEtrog(t *testing.T) {
 		SyncChunkSize:         10,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enable: false,
+		},
 	}
 
 	m := mocks{
@@ -202,7 +205,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 			m.Etherman.
 				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
 				Return(ethBlock, nil).
-				Once()
+				Times(2)
 
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
