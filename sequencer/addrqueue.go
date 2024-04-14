@@ -20,6 +20,7 @@ type addrQueue struct {
 	notReadyTxs       map[uint64]*TxTracker
 	forcedTxs         map[common.Hash]struct{}
 	pendingTxsToStore map[common.Hash]struct{}
+	executingNonce    uint64
 }
 
 // newAddrQueue creates and init a addrQueue
@@ -43,6 +44,10 @@ func newAddrQueue(addr common.Address, nonce uint64, balance *big.Int) *addrQueu
 func (a *addrQueue) addTx(tx *TxTracker) (newReadyTx, prevReadyTx, replacedTx *TxTracker, dropReason error) {
 	var repTx *TxTracker
 
+	// if GetBestFittingTx has selected this tx to execute, we refuse new one
+	if a.executingNonce == tx.Nonce && a.executingNonce > 0 {
+		return nil, nil, nil, ErrDuplicatedNonce
+	}
 	if a.currentNonce == tx.Nonce { // Is a possible readyTx
 		// We set the tx as readyTx if we do not have one assigned or if the gasPrice is better or equal than the current readyTx
 		if a.readyTx == nil || ((a.readyTx != nil) && (tx.GasPrice.Cmp(a.readyTx.GasPrice) >= 0)) {
