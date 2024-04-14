@@ -567,7 +567,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			blocks = removeBlockElement(blocks, 0)
 		} else {
 			// Reorg detected
-			log.Info("Reorg detected in block %d while querying GetRollupInfoByBlockRange. Rolling back to at least the previous block", fromBlock)
+			log.Infof("Reorg detected in block %d while querying GetRollupInfoByBlockRange. Rolling back to at least the previous block", fromBlock)
 			prevBlock, err := s.state.GetPreviousBlock(s.ctx, 1, nil)
 			if errors.Is(err, state.ErrNotFound) {
 				log.Warn("error checking reorg: previous block not found in db: ", err)
@@ -589,8 +589,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 				log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
 				return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
 			}
-			lastEthBlockSynced = prevBlock
-			return lastEthBlockSynced, nil
+			return blockReorged, nil
 		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
 		block, err := s.newCheckReorg(lastEthBlockSynced, initBlockReceived)
@@ -882,7 +881,7 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 			log.Infof("[checkReorg function] Using block %d from GetRollupInfoByBlockRange", block.BlockNumber)
 		}
 		log.Infof("[checkReorg function] BlockNumber: %d BlockHash got from L1 provider: %s", block.BlockNumber, block.BlockHash.String())
-		log.Infof("[checkReorg function] latestBlockNumber: %d latestBlockHash already synced: %s", latestStoredBlock.BlockNumber, latestStoredBlock.BlockHash.String())
+		log.Infof("[checkReorg function] reorgedBlockNumber: %d reorgedBlockHash already synced: %s", reorgedBlock.BlockNumber, reorgedBlock.BlockHash.String())
 		if block.BlockNumber != reorgedBlock.BlockNumber {
 			err := fmt.Errorf("wrong ethereum block retrieved from blockchain. Block numbers don't match. BlockNumber stored: %d. BlockNumber retrieved: %d",
 				reorgedBlock.BlockNumber, block.BlockNumber)
