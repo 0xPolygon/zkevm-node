@@ -918,8 +918,8 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 				return nil, errC
 			}
 			if errors.Is(err, state.ErrNotFound) {
-				log.Warn("error checking reorg: previous block not found in db: ", err)
-				return &state.Block{}, nil
+				log.Warn("error checking reorg: previous block not found in db. Reorg reached the genesis block: %v.Genesis block can't be reorged, using genesis block as starting point. Error: %v", reorgedBlock, err)
+				return &reorgedBlock, nil
 			} else if err != nil {
 				log.Error("error getting previousBlock from db. Error: ", err)
 				return nil, err
