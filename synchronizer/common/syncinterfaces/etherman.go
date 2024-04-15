@@ -19,6 +19,7 @@ type EthermanFullInterface interface {
 	GetLatestVerifiedBatchNum() (uint64, error)
 
 	EthermanGetLatestBatchNumber
+	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
 }
 
 type EthermanGetLatestBatchNumber interface {
