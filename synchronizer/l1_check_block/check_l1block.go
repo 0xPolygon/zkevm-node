@@ -137,7 +137,8 @@ func CheckBlockHash(ctx context.Context, stateBlock *state.Block, L1Client L1Req
 		msg := fmt.Sprintf("%s Reorg detected at block %d l1Block.Hash=%s != stateBlock.Hash=%s. ", checkerName, stateBlock.BlockNumber,
 			l1Block.Hash().String(), stateBlock.BlockHash.String())
 		if l1Block.ParentHash != stateBlock.ParentHash {
-			msg += fmt.Sprintf(" ParentHash are also different. l1Block.ParentHash=%s !=  stateBlock.ParentHash=%s",l1Block.ParentHash.String(), stateBlock.ParentHash.String())
+			msg += fmt.Sprintf(" ParentHash are also different. l1Block.ParentHash=%s !=  stateBlock.ParentHash=%s", l1Block.ParentHash.String(), stateBlock.ParentHash.String())
+		}
 		log.Errorf(msg)
 		return common.NewReorgError(stateBlock.BlockNumber, fmt.Errorf(msg))
 	}
