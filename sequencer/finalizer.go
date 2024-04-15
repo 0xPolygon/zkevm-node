@@ -268,9 +268,9 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 			log.Infof("received new L1InfoRoot, l1InfoTreeIndex: %d, l1InfoTreeRoot: %s, l1Block: %d",
 				l1InfoRoot.L1InfoTreeIndex, l1InfoRoot.L1InfoTreeRoot, l1InfoRoot.BlockNumber)
 
-			// Sanity check l1BlockState (l1InfoRoot.BlockNumber) blockhash matches blockhash on ethereum. We skip it if l1InfoRoot.BlockNumber == 0 (empty tree)
-			if l1InfoRoot.BlockNumber > 0 {
-				l1BlockState, err := f.stateIntf.GetBlockByNumber(ctx, l1InfoRoot.BlockNumber, nil)
+			// Check if new l1InfoRoot is valid. We skip it if l1InfoTreeIndex is 0 (it's a special case)
+			if l1InfoRoot.L1InfoTreeIndex > 0 {
+				valid, err := f.checkValidL1InfoRoot(ctx, l1InfoRoot)
 				if err != nil {
 					log.Errorf("error getting L1 block %d from the state, error: %v", l1InfoRoot.BlockNumber, err)
 					continue
