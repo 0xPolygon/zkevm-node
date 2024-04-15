@@ -1705,6 +1705,10 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enable: false,
+		},
+		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
