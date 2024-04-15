@@ -29,7 +29,7 @@ decode-l2block: ## Runs the tool to decode a given L2 block
 
 .PHONY: decode-batch
 decode-l2block: ## Runs the tool to decode a given batch
-go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
+	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
 
 .PHONY: decode-entry-offline
 decode-entry-offline: ## Runs the offline tool to decode a given entry number
