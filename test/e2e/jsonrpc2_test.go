@@ -686,7 +686,6 @@ func TestEstimateGas(t *testing.T) {
 				setGasPrice:   true,
 				expectedError: types.NewRPCError(-32000, "gas required exceeds allowance"),
 			},
-			/*
 			{
 				name:          "with gasPrice set and without from address",
 				address:       nil,
