@@ -165,7 +165,7 @@ func NewSynchronizer(
 	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks)
 	switch cfg.L1SynchronizationMode {
 	case ParallelMode:
-		log.Info("L1SynchronizationMode is parallel")
+		log.Fatal("L1SynchronizationMode is parallel. Not yet suported, please use sequential mode to sync")
 		res.l1SyncOrchestration = newL1SyncParallel(ctx, cfg, etherManForL1, res, runInDevelopmentMode)
 	case SequentialMode:
 		log.Info("L1SynchronizationMode is sequential")
