@@ -461,7 +461,7 @@ func (s *ClientSynchronizer) Sync() error {
 					s.l1SyncOrchestration = nil
 				}
 				log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				_, err = s.syncBlocksSequential(lastEthBlockSynced)
+				lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
 			}
 			metrics.FullL1SyncTime(time.Since(startL1))
 			if err != nil {
