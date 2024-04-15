@@ -13,7 +13,9 @@ import (
 	"strings"
 	"time"
 
+	beaconclient "github.com/0xPolygonHermez/zkevm-node/beacon_client"
 	"github.com/0xPolygonHermez/zkevm-node/encoding"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/eip4844"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/etherscan"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/ethgasstation"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/metrics"
@@ -201,9 +203,10 @@ type Client struct {
 
 	GasProviders externalGasProviders
 
-	l1Cfg L1Config
-	cfg   Config
-	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
+	l1Cfg   L1Config
+	cfg     Config
+	auth    map[common.Address]bind.TransactOpts // empty in case of read-only client
+	EIP4844 *eip4844.EthermanEIP4844
 }
 
 // NewClient creates a new etherman.
@@ -214,7 +217,12 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		log.Errorf("error connecting to %s: %+v", cfg.URL, err)
 		return nil, err
 	}
-
+	beaconClient := beaconclient.NewBeaconAPIClient(cfg.ConsensusL1URL)
+	eip4844 := eip4844.NewEthermanEIP4844(beaconClient)
+	if err := eip4844.Initialize(context.Background()); err != nil {
+		log.Errorf("error initializing EIP-4844, URL:%s : %+v", cfg.ConsensusL1URL, err)
+		return nil, err
+	}
 	// Create smc clients
 	etrogZkevm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(l1Config.ZkEVMAddr, ethClient)
 	if err != nil {
@@ -288,9 +296,10 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 			MultiGasProvider: cfg.MultiGasProvider,
 			Providers:        gProviders,
 		},
-		l1Cfg: l1Config,
-		cfg:   cfg,
-		auth:  map[common.Address]bind.TransactOpts{},
+		l1Cfg:   l1Config,
+		cfg:     cfg,
+		auth:    map[common.Address]bind.TransactOpts{},
+		EIP4844: eip4844,
 	}
 	return client, nil
 }
