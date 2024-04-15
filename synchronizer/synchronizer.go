@@ -428,10 +428,14 @@ func (s *ClientSynchronizer) Sync() error {
 						if errors.Is(err, syncinterfaces.ErrFatalDesyncFromL1) {
 							l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
 							log.Error("Trusted and permissionless desync! reseting to last common point: L1Block (%d-1)", l1BlockNumber)
-							err = s.resetState(l1BlockNumber - 1)
-							if err != nil {
-								log.Errorf("error resetting the state to a discrepancy block. Retrying... Err: %v", err)
-								continue
+							for {
+								resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
+								if resetDone {
+									break
+								} else {
+									log.Errorf("reorg doesnt done, retrying...")
+									time.Sleep(time.Second)
+								}
 							}
 						} else if errors.Is(err, syncinterfaces.ErrMissingSyncFromL1) {
 							log.Info("Syncing from trusted node need data from L1")
@@ -467,6 +471,19 @@ func (s *ClientSynchronizer) Sync() error {
 				lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
 			}
 			metrics.FullL1SyncTime(time.Since(startL1))
+			if syncCommon.IsReorgError(err) {
+				log.Warnf("error syncing blocks: %s", err.Error())
+				for {
+					resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
+					if resetDone {
+						break
+					} else {
+						log.Errorf("reorg doesnt done, retrying...")
+						time.Sleep(time.Second)
+					}
+				}
+				continue
+			}
 			if err != nil {
 				log.Warn("error syncing blocks: ", err)
 				s.CleanTrustedState()
@@ -812,50 +829,87 @@ func (s *ClientSynchronizer) OnDetectedMismatchL1BlockReorg() {
 	}
 }
 
-// ExecuteReorg function will reset the state to the block before the reorg
-func (s *ClientSynchronizer) ExecuteReorg(blockNumber uint64, reason string) error {
+// ExecuteReorgFromMismatchBlock function will reset the state to the block before the bad block
+func (s *ClientSynchronizer) ExecuteReorgFromMismatchBlock(blockNumber uint64, reason string) error {
 	log.Info("Detected reorg at block (mismatch): ", blockNumber, " reason: ", reason, " resetting the state to block:", blockNumber-1)
 	s.CleanTrustedState()
 	return s.resetState(blockNumber - 1)
+}
+func (s *ClientSynchronizer) detectedReorgBadBlockExecuteReset(lastEthBlockSynced *state.Block, badBlockNumber uint64) (bool, *state.Block, error) {
+	firstBlockOK, err := s.checkReorg(lastEthBlockSynced, nil)
+	if err != nil {
+		log.Warnf("error checking reorgs. using badBlock detected: %d Err: %v", badBlockNumber, err)
+		firstBlockOK = nil
+	}
+	if firstBlockOK != nil && firstBlockOK.BlockNumber >= badBlockNumber {
+		log.Warnf("Reorg detected firstBlockOk: %d. But oldest bad block detected: %d", firstBlockOK.BlockNumber, badBlockNumber)
+		firstBlockOK = nil
+	}
+	// We already known a bad block, reset from there
+	if firstBlockOK == nil {
+		firstBlockOK, err = s.state.GetPreviousBlockToBlockNumber(s.ctx, badBlockNumber, nil)
+		if err != nil {
+			log.Errorf("error getting previous block %d from db. Can't execute REORG. Error: %v", badBlockNumber, err)
+			return false, lastEthBlockSynced, err
+		}
+	}
+	newFirstBlock, err := s.executeReorgFromFirstValidBlock(lastEthBlockSynced, firstBlockOK)
+	if err != nil {
+		log.Errorf("error executing reorg. Retrying... Err: %v", err)
+		return false, lastEthBlockSynced, fmt.Errorf("error executing reorg. Err: %w", err)
+	}
+	return true, newFirstBlock, nil
 }
 
 // checkReorgAndExecuteReset function will check if there is a reorg and execute the reset
 // returns true is reset have been done
 func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state.Block) (bool, *state.Block, error) {
 	var err error
-	if lastEthBlockSynced == nil {
-		err = fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
-		log.Errorf("%s, it never have to happens", err.Error())
-		return false, nil, err
-	}
+
 	block, err := s.checkReorg(lastEthBlockSynced, nil)
 	if err != nil {
 		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 		return false, lastEthBlockSynced, fmt.Errorf("error checking reorgs")
 	}
 	if block != nil {
-		log.Infof("reorg detected. Resetting the state from block %v to block %v", lastEthBlockSynced.BlockNumber, block.BlockNumber)
-		s.CleanTrustedState()
-		err = s.resetState(block.BlockNumber)
+		newFirstBlock, err := s.executeReorgFromFirstValidBlock(lastEthBlockSynced, block)
 		if err != nil {
-			log.Errorf("error resetting the state to a previous block. Retrying... Err: %s", err.Error())
-			return false, lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block. Err: %w", err)
+			log.Errorf("error executing reorg. Retrying... Err: %v", err)
+			return false, lastEthBlockSynced, fmt.Errorf("error executing reorg. Err: %w", err)
 		}
-		newLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
-		if err != nil {
-			log.Warnf("error getting last block synced from db, returning expected block %d. Error: %v", block.BlockNumber, err)
-			return false, block, err
-		}
-		if newLastBlock.BlockNumber != block.BlockNumber {
-			log.Warnf("Doesnt match LastBlock on State and expecting one after a resetState. The block in state is %d and the expected block is %d", newLastBlock.BlockNumber, block.BlockNumber)
-		}
-		return true, newLastBlock, nil
+		return true, newFirstBlock, nil
 	}
 
 	return false, lastEthBlockSynced, nil
 }
 
+func (s *ClientSynchronizer) executeReorgFromFirstValidBlock(lastEthBlockSynced *state.Block, firstValidBlock *state.Block) (*state.Block, error) {
+	log.Infof("reorg detected. Resetting the state from block %v to block %v", lastEthBlockSynced.BlockNumber, firstValidBlock.BlockNumber)
+	s.CleanTrustedState()
+	err := s.resetState(firstValidBlock.BlockNumber)
+	if err != nil {
+		log.Errorf("error resetting the state to a previous block. Retrying... Err: %s", err.Error())
+		return nil, fmt.Errorf("error resetting the state to a previous block. Err: %w", err)
+	}
+	newLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
+	if err != nil {
+		log.Warnf("error getting last block synced from db, returning expected block %d. Error: %v", firstValidBlock.BlockNumber, err)
+		return firstValidBlock, nil
+	}
+	if newLastBlock.BlockNumber != firstValidBlock.BlockNumber {
+		log.Warnf("Doesnt match LastBlock on State and expecting one after a resetState. The block in state is %d and the expected block is %d", newLastBlock.BlockNumber,
+			firstValidBlock.BlockNumber)
+		return firstValidBlock, nil
+	}
+	return newLastBlock, nil
+}
+
 func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block, syncedBlock *etherman.Block) (*state.Block, error) {
+	if latestBlock == nil {
+		err := fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
+		log.Errorf("%s, it never have to happens", err.Error())
+		return nil, err
+	}
 	block, errReturnedReorgFunction := s.newCheckReorg(latestBlock, syncedBlock)
 	if s.asyncL1BlockChecker != nil {
 		return s.asyncL1BlockChecker.CheckReorgWrapper(s.ctx, block, errReturnedReorgFunction)

@@ -17,12 +17,12 @@ func (_m *SyncCheckReorger) EXPECT() *SyncCheckReorger_Expecter {
 	return &SyncCheckReorger_Expecter{mock: &_m.Mock}
 }
 
-// ExecuteReorg provides a mock function with given fields: blockNumber, reason
-func (_m *SyncCheckReorger) ExecuteReorg(blockNumber uint64, reason string) error {
+// ExecuteReorgFromMismatchBlock provides a mock function with given fields: blockNumber, reason
+func (_m *SyncCheckReorger) ExecuteReorgFromMismatchBlock(blockNumber uint64, reason string) error {
 	ret := _m.Called(blockNumber, reason)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ExecuteReorg")
+		panic("no return value specified for ExecuteReorgFromMismatchBlock")
 	}
 
 	var r0 error
@@ -35,31 +35,31 @@ func (_m *SyncCheckReorger) ExecuteReorg(blockNumber uint64, reason string) erro
 	return r0
 }
 
-// SyncCheckReorger_ExecuteReorg_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExecuteReorg'
-type SyncCheckReorger_ExecuteReorg_Call struct {
+// SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExecuteReorgFromMismatchBlock'
+type SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call struct {
 	*mock.Call
 }
 
-// ExecuteReorg is a helper method to define mock.On call
+// ExecuteReorgFromMismatchBlock is a helper method to define mock.On call
 //   - blockNumber uint64
 //   - reason string
-func (_e *SyncCheckReorger_Expecter) ExecuteReorg(blockNumber interface{}, reason interface{}) *SyncCheckReorger_ExecuteReorg_Call {
-	return &SyncCheckReorger_ExecuteReorg_Call{Call: _e.mock.On("ExecuteReorg", blockNumber, reason)}
+func (_e *SyncCheckReorger_Expecter) ExecuteReorgFromMismatchBlock(blockNumber interface{}, reason interface{}) *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call {
+	return &SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call{Call: _e.mock.On("ExecuteReorgFromMismatchBlock", blockNumber, reason)}
 }
 
-func (_c *SyncCheckReorger_ExecuteReorg_Call) Run(run func(blockNumber uint64, reason string)) *SyncCheckReorger_ExecuteReorg_Call {
+func (_c *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call) Run(run func(blockNumber uint64, reason string)) *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(uint64), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *SyncCheckReorger_ExecuteReorg_Call) Return(_a0 error) *SyncCheckReorger_ExecuteReorg_Call {
+func (_c *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call) Return(_a0 error) *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *SyncCheckReorger_ExecuteReorg_Call) RunAndReturn(run func(uint64, string) error) *SyncCheckReorger_ExecuteReorg_Call {
+func (_c *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call) RunAndReturn(run func(uint64, string) error) *SyncCheckReorger_ExecuteReorgFromMismatchBlock_Call {
 	_c.Call.Return(run)
 	return _c
 }

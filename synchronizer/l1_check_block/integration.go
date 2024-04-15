@@ -27,7 +27,7 @@ type L1BlockCheckerIntegration struct {
 
 // SyncCheckReorger is an interface that defines the methods required from Synchronizer object
 type SyncCheckReorger interface {
-	ExecuteReorg(blockNumber uint64, reason string) error
+	ExecuteReorgFromMismatchBlock(blockNumber uint64, reason string) error
 	OnDetectedMismatchL1BlockReorg()
 }
 
@@ -193,7 +193,7 @@ func (v *L1BlockCheckerIntegration) launch(ctx context.Context) {
 func (v *L1BlockCheckerIntegration) executeResult(ctx context.Context, result syncinterfaces.IterationResult) bool {
 	if result.ReorgDetected {
 		for {
-			err := v.sync.ExecuteReorg(result.BlockNumber, result.ReorgMessage)
+			err := v.sync.ExecuteReorgFromMismatchBlock(result.BlockNumber, result.ReorgMessage)
 			if err == nil {
 				return true
 			}

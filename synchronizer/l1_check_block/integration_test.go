@@ -86,7 +86,7 @@ func TestIntegrationIfForceCheckRunsSynchronousOneTimeAndAfterLaunchBackgroudChe
 func TestIntegrationIfSyncCheckReturnsReorgExecuteIt(t *testing.T) {
 	data := newDataIntegration(t, true)
 	data.mockChecker.EXPECT().RunSynchronous(data.ctx).Return(data.resultReorg)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), "").Return(nil)
+	data.mockSync.EXPECT().ExecuteReorgFromMismatchBlock(uint64(1234), "").Return(nil)
 	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	err := data.sut.OnStart(data.ctx)
 	require.NoError(t, err)
@@ -104,8 +104,8 @@ func TestIntegrationIfSyncCheckReturnErrorRetry(t *testing.T) {
 func TestIntegrationIfSyncCheckReturnsReorgExecuteItAndFailsRetry(t *testing.T) {
 	data := newDataIntegration(t, true)
 	data.mockChecker.EXPECT().RunSynchronous(data.ctx).Return(data.resultReorg)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(genericErrorToTest).Once()
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(nil).Once()
+	data.mockSync.EXPECT().ExecuteReorgFromMismatchBlock(uint64(1234), mock.Anything).Return(genericErrorToTest).Once()
+	data.mockSync.EXPECT().ExecuteReorgFromMismatchBlock(uint64(1234), mock.Anything).Return(nil).Once()
 	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	err := data.sut.OnStart(data.ctx)
 	require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestIntegrationCheckAndPreCheckOnStartForceCheck(t *testing.T) {
 func TestIntegrationCheckAndPreCheckOnStartMainCheckerReturnReorg(t *testing.T) {
 	data := newDataIntegrationWithPreChecker(t, true)
 	data.mockChecker.EXPECT().RunSynchronous(data.ctx).Return(data.resultReorg)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(nil).Once()
+	data.mockSync.EXPECT().ExecuteReorgFromMismatchBlock(uint64(1234), mock.Anything).Return(nil).Once()
 	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	err := data.sut.OnStart(data.ctx)
@@ -138,7 +138,7 @@ func TestIntegrationCheckAndPreCheckOnStartPreCheckerReturnReorg(t *testing.T) {
 	data := newDataIntegrationWithPreChecker(t, true)
 	data.mockChecker.EXPECT().RunSynchronous(data.ctx).Return(data.resultOk)
 	data.mockPreChecker.EXPECT().RunSynchronous(data.ctx).Return(data.resultReorg)
-	data.mockSync.EXPECT().ExecuteReorg(uint64(1234), mock.Anything).Return(nil).Once()
+	data.mockSync.EXPECT().ExecuteReorgFromMismatchBlock(uint64(1234), mock.Anything).Return(nil).Once()
 	data.mockChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	data.mockPreChecker.EXPECT().Run(data.ctx, mock.Anything).Return()
 	err := data.sut.OnStart(data.ctx)
