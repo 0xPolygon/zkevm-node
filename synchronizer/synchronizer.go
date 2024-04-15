@@ -799,11 +799,9 @@ func (s *ClientSynchronizer) ExecuteReorg(blockNumber uint64, reason string) err
 func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state.Block) (bool, *state.Block, error) {
 	var err error
 	if lastEthBlockSynced == nil {
-		lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
-		if err != nil {
-			log.Errorf("error getting last block synced from db. Error: %v", err)
-			return true, nil, err
-		}
+		err = fmt.Errorf("lastEthBlockSynced is nil calling checkReorgAndExecuteReset")
+		log.Errorf("%s, it never have to happens", err.Error())
+		return false, nil, err
 	}
 	block, err := s.checkReorg(lastEthBlockSynced)
 	if err != nil {
