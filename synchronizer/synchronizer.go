@@ -412,10 +412,13 @@ func (s *ClientSynchronizer) Sync() error {
 				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
 					log.Info("Syncing trusted state (permissionless)")
 					//Sync Trusted State
-					resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
-					if resetDone || err != nil {
-						log.Infof("Reset done before L2 sync")
-						continue
+					if !s.cfg.dontDoReorgCheckBeforeL2Sync {
+						log.Debug("Doing reorg check before L2 sync")
+						resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
+						if resetDone || err != nil {
+							log.Infof("Reset done before L2 sync")
+							continue
+						}
 					}
 					err = s.syncTrustedState(latestSyncedBatch)
 					metrics.FullTrustedSyncTime(time.Since(startTrusted))
@@ -588,7 +591,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 				log.Error("error getting previousBlock from db. Error: ", err)
 				return lastEthBlockSynced, err
 			}
-			blockReorged, err := s.newCheckReorg(prevBlock, nil)
+			blockReorged, err := s.checkReorg(prevBlock, nil)
 			if err != nil {
 				log.Error("error checking reorgs in previous blocks. Error: ", err)
 				return lastEthBlockSynced, err
@@ -604,7 +607,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			return blockReorged, nil
 		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
-		block, err := s.newCheckReorg(lastEthBlockSynced, initBlockReceived)
+		block, err := s.checkReorg(lastEthBlockSynced, initBlockReceived)
 		if err != nil {
 			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 			return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
@@ -825,7 +828,7 @@ func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state
 		log.Errorf("%s, it never have to happens", err.Error())
 		return false, nil, err
 	}
-	block, err := s.checkReorg(lastEthBlockSynced)
+	block, err := s.checkReorg(lastEthBlockSynced, nil)
 	if err != nil {
 		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 		return false, lastEthBlockSynced, fmt.Errorf("error checking reorgs")
@@ -843,14 +846,17 @@ func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state
 			log.Warnf("error getting last block synced from db, returning expected block %d. Error: %v", block.BlockNumber, err)
 			return false, block, err
 		}
+		if newLastBlock.BlockNumber != block.BlockNumber {
+			log.Warnf("Doesnt match LastBlock on State and expecting one after a resetState. The block in state is %d and the expected block is %d", newLastBlock.BlockNumber, block.BlockNumber)
+		}
 		return true, newLastBlock, nil
 	}
 
 	return false, lastEthBlockSynced, nil
 }
 
-func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block, error) {
-	block, errReturnedReorgFunction := s.checkReorgRegularFlow(latestBlock)
+func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block, syncedBlock *etherman.Block) (*state.Block, error) {
+	block, errReturnedReorgFunction := s.newCheckReorg(latestBlock, syncedBlock)
 	if s.asyncL1BlockChecker != nil {
 		return s.asyncL1BlockChecker.CheckReorgWrapper(s.ctx, block, errReturnedReorgFunction)
 	}
@@ -865,76 +871,6 @@ If hash or hash parent don't match, reorg detected and the function will return 
 must be reverted. Then, check the previous ethereum block synced, get block info from the blockchain and check
 hash and has parent. This operation has to be done until a match is found.
 */
-// TODO This function will be deprecated
-func (s *ClientSynchronizer) oldCheckReorg(latestBlock *state.Block) (*state.Block, error) { //nolint:unused
-	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.
-	latestEthBlockSynced := *latestBlock
-	reorgedBlock := *latestBlock
-	var depth uint64
-	for {
-		block, err := s.etherMan.EthBlockByNumber(s.ctx, reorgedBlock.BlockNumber)
-		if err != nil {
-			log.Errorf("error getting latest block synced from blockchain. Block: %d, error: %v", reorgedBlock.BlockNumber, err)
-			return nil, err
-		}
-		log.Infof("[checkReorg function] BlockNumber: %d BlockHash got from L1 provider: %s", block.Number().Uint64(), block.Hash().String())
-		log.Infof("[checkReorg function] latestBlockNumber: %d latestBlockHash already synced: %s", latestBlock.BlockNumber, latestBlock.BlockHash.String())
-		if block.NumberU64() != reorgedBlock.BlockNumber {
-			err = fmt.Errorf("wrong ethereum block retrieved from blockchain. Block numbers don't match. BlockNumber stored: %d. BlockNumber retrieved: %d",
-				reorgedBlock.BlockNumber, block.NumberU64())
-			log.Error("error: ", err)
-			return nil, err
-		}
-		// Compare hashes
-		if (block.Hash() != reorgedBlock.BlockHash || block.ParentHash() != reorgedBlock.ParentHash) && reorgedBlock.BlockNumber > s.genesis.BlockNumber {
-			log.Infof("checkReorg: Bad block %d hashOk %t parentHashOk %t", reorgedBlock.BlockNumber, block.Hash() == reorgedBlock.BlockHash, block.ParentHash() == reorgedBlock.ParentHash)
-			log.Debug("[checkReorg function] => latestBlockNumber: ", reorgedBlock.BlockNumber)
-			log.Debug("[checkReorg function] => latestBlockHash: ", reorgedBlock.BlockHash)
-			log.Debug("[checkReorg function] => latestBlockHashParent: ", reorgedBlock.ParentHash)
-			log.Debug("[checkReorg function] => BlockNumber: ", reorgedBlock.BlockNumber, block.NumberU64())
-			log.Debug("[checkReorg function] => BlockHash: ", block.Hash())
-			log.Debug("[checkReorg function] => BlockHashParent: ", block.ParentHash())
-			depth++
-			log.Debug("REORG: Looking for the latest correct ethereum block. Depth: ", depth)
-			// Reorg detected. Getting previous block
-			dbTx, err := s.state.BeginStateTransaction(s.ctx)
-			if err != nil {
-				log.Errorf("error creating db transaction to get prevoius blocks")
-				return nil, err
-			}
-			lb, err := s.state.GetPreviousBlock(s.ctx, depth, dbTx)
-			errC := dbTx.Commit(s.ctx)
-			if errC != nil {
-				log.Errorf("error committing dbTx, err: %v", errC)
-				rollbackErr := dbTx.Rollback(s.ctx)
-				if rollbackErr != nil {
-					log.Errorf("error rolling back state. RollbackErr: %v", rollbackErr)
-					return nil, rollbackErr
-				}
-				log.Errorf("error committing dbTx, err: %v", errC)
-				return nil, errC
-			}
-			if errors.Is(err, state.ErrNotFound) {
-				log.Warn("error checking reorg: previous block not found in db: ", err)
-				return &state.Block{}, nil
-			} else if err != nil {
-				log.Error("error getting previousBlock from db. Error: ", err)
-				return nil, err
-			}
-			reorgedBlock = *lb
-		} else {
-			log.Debugf("checkReorg: Block %d hashOk %t parentHashOk %t", reorgedBlock.BlockNumber, block.Hash() == reorgedBlock.BlockHash, block.ParentHash() == reorgedBlock.ParentHash)
-			break
-		}
-	}
-	if latestEthBlockSynced.BlockHash != reorgedBlock.BlockHash {
-		latestBlock = &reorgedBlock
-		log.Info("Reorg detected in block: ", latestEthBlockSynced.BlockNumber, " last block OK: ", latestBlock.BlockNumber)
-		return latestBlock, nil
-	}
-	log.Debugf("No reorg detected in block: %d. BlockHash: %s", latestEthBlockSynced.BlockNumber, latestEthBlockSynced.BlockHash.String())
-	return nil, nil
-}
 
 func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, syncedBlock *etherman.Block) (*state.Block, error) {
 	// This function only needs to worry about reorgs if some of the reorganized blocks contained rollup info.

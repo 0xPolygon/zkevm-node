@@ -928,6 +928,10 @@ func TestReorg(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enable: false,
+		},
+		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1229,6 +1233,10 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enable: false,
+		},
+		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1430,6 +1438,10 @@ func TestRegularReorg(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enable: false,
+		},
+		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1485,6 +1497,12 @@ func TestRegularReorg(t *testing.T) {
 				Return(lastBlock1, nil).
 				Once()
 
+			// After a ResetState get lastblock that must be block 0
+			m.State.
+				On("GetLastBlock", ctx, nil).
+				Return(lastBlock0, nil).
+				Once()
+
 			m.State.
 				On("GetLastBatchNumber", ctx, m.DbTx).
 				Return(uint64(10), nil).
@@ -1518,10 +1536,6 @@ func TestRegularReorg(t *testing.T) {
 				Return(nil)
 
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
-			m.Etherman.
-				On("HeaderByNumber", mock.Anything, n).
-				Return(ethHeader2bis, nil).
-				Once()
 
 			m.Etherman.
 				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).

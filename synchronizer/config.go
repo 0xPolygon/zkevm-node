@@ -33,6 +33,10 @@ type Config struct {
 	L1ParallelSynchronization L1ParallelSynchronizationConfig
 	// L2Synchronization Configuration for L2 synchronization
 	L2Synchronization l2_sync.Config `mapstructure:"L2Synchronization"`
+
+	// dontDoReorgCheckBeforeL2Sync if is true then the reorg check is not done before the L2 sync
+	// this is a private field, can not be configured
+	dontDoReorgCheckBeforeL2Sync bool
 }
 
 // L1BlockCheckConfig Configuration for L1 Block Checker
