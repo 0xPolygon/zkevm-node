@@ -127,13 +127,7 @@ func NewSynchronizer(
 	}
 	if cfg.L1BlockCheck.Enable {
 		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
-		l1requester, ok := res.etherMan.(l1_check_block.L1Requester)
-		if !ok {
-			log.Errorf("error casting etherMan to L1Requester")
-			cancel()
-			return nil, fmt.Errorf("error casting etherMan to L1Requester")
-		}
-		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(l1requester, res.state,
+		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(ethMan, res.state,
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
 		var preCheckAsync syncinterfaces.AsyncL1BlockChecker
@@ -141,7 +135,7 @@ func NewSynchronizer(
 			log.Infof("L1BlockChecker enabled precheck from: %s/%d to: %s/%d",
 				cfg.L1BlockCheck.L1SafeBlockPoint, cfg.L1BlockCheck.L1SafeBlockOffset,
 				cfg.L1BlockCheck.L1PreSafeBlockPoint, cfg.L1BlockCheck.L1PreSafeBlockOffset)
-			l1BlockPreChecker := l1_check_block.NewPreCheckL1BlockHash(l1requester, res.state,
+			l1BlockPreChecker := l1_check_block.NewPreCheckL1BlockHash(ethMan, res.state,
 				l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset),
 				l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1PreSafeBlockPoint), cfg.L1BlockCheck.L1PreSafeBlockOffset),
 			)
@@ -451,7 +445,7 @@ func (s *ClientSynchronizer) Sync() error {
 				waitDuration = s.cfg.SyncInterval.Duration
 			}
 			//Sync L1Blocks
-			resetDone, lastEthBlockSynced, err := s.checkReorgAndExecuteReset(lastEthBlockSynced)
+			resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
 			if resetDone || err != nil {
 				continue
 			}
@@ -459,7 +453,7 @@ func (s *ClientSynchronizer) Sync() error {
 			startL1 := time.Now()
 			if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
 				log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				_, err = s.syncBlocksParallel(lastEthBlockSynced)
+				lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
 			} else {
 				if s.l1SyncOrchestration != nil {
 					log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
@@ -540,7 +534,6 @@ func sanityCheckForGenesisBlockRollupInfo(blocks []etherman.Block, order map[com
 // This function syncs the node from a specific block to the latest
 // lastEthBlockSynced -> last block synced in the db
 func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block) (*state.Block, error) {
-	// MOVED checkReorg to main sync function
 	log.Infof("Starting L1 sync orchestrator in parallel block: %d", lastEthBlockSynced.BlockNumber)
 	return s.l1SyncOrchestration.Start(lastEthBlockSynced)
 }
@@ -554,7 +547,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		return lastEthBlockSynced, err
 	}
 	lastKnownBlock := header.Number
-	// MOVED checkReorg function to main sync function
+
 	var fromBlock uint64
 	if lastEthBlockSynced.BlockNumber > 0 {
 		fromBlock = lastEthBlockSynced.BlockNumber + 1
@@ -825,8 +818,14 @@ func (s *ClientSynchronizer) checkReorgAndExecuteReset(lastEthBlockSynced *state
 			log.Errorf("error resetting the state to a previous block. Retrying... Err: %s", err.Error())
 			return false, lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block. Err: %w", err)
 		}
-		return true, block, nil
+		newLastBlock, err := s.state.GetLastBlock(s.ctx, nil)
+		if err != nil {
+			log.Warnf("error getting last block synced from db, returning expected block %d. Error: %v", block.BlockNumber, err)
+			return false, block, err
+		}
+		return true, newLastBlock, nil
 	}
+
 	return false, lastEthBlockSynced, nil
 }
 

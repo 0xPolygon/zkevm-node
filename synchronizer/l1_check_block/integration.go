@@ -123,7 +123,7 @@ func (v *L1BlockCheckerIntegration) CheckReorgWrapper(ctx context.Context, reorg
 		}
 	}
 	if resultBackground != nil && !resultBackground.ReorgDetected {
-		// Relaunch checker, if there are a reorg is going to be relaunched after (OnResetState)
+		// Relaunch checker, if there is a reorg, It is going to be relaunched after (OnResetState)
 		v.launch(ctx)
 	}
 	// Background process doesnt have anything to we return the regular reorg function result
