@@ -364,6 +364,11 @@ message ProcessBatchResponseV2 {
     uint32 cnt_reserve_steps = 31;
     uint32 cnt_reserve_sha256_hashes = 32;
     bytes old_state_root = 33;
+    ResponseDebug debug = 34;
+}
+
+message ResponseDebug {
+    string error_log = 1;
 }
 
 // Trace configuration request params
@@ -932,6 +937,18 @@ enum ExecutorError {
     EXECUTOR_ERROR_INVALID_POINT_Z = 130;
     // EXECUTOR_ERROR_INVALID_POINT_Y indicates that the input parameter point_y is invalid
     EXECUTOR_ERROR_INVALID_POINT_Y = 131;
+    // EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH indicates that the input parameter point_z is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH = 132;
+    // EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH indicates that the input parameter blob L2 data hash is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH = 133;
+    // EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH indicates that the input parameter batch data hash is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH = 134;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE indicates that the input parameter blob type is invalid
+    EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE = 135;
+    // EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT indicates that at least one saved context was not restored before finishing the execution
+    EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT = 136;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX indicates that the memory context polynomial was assigned an invalid value
+    EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX = 137; 
 }
 
 ////////////////////////////////////////////////
@@ -1017,6 +1034,7 @@ message ProcessBatchResponseV3 {
     uint32 cnt_reserve_steps = 33;
     uint32 cnt_reserve_sha256_hashes = 34;
     bytes old_state_root = 35;
+    ResponseDebug debug = 36;
 }
 
 message ForcedData {
@@ -1045,6 +1063,8 @@ message ProcessBlobInnerRequestV3 {
     bytes forced_hash_data = 15;
     string context_id = 16;
     DebugV3 debug = 17;
+    map<string, string> db = 18;
+    map<string, string> contracts_bytecode = 19; // For debug/testing purpposes only. Don't fill this on production
 }
 
 message DebugV3 {
@@ -1065,6 +1085,7 @@ message ProcessBlobInnerResponseV3 {
     repeated bytes batch_data = 7;
     ExecutorError error = 8;
     RomBlobError error_rom_blob = 9;
+    ResponseDebug debug = 10;
 }
 
 enum RomBlobError {
@@ -1081,4 +1102,8 @@ enum RomBlobError {
     ROM_BLOB_ERROR_INVALID_BLOB_TYPE = 5;
     // ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE compression type not supported
     ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE = 6;
+    // ROM_BLOB_ERROR_INVALID_FORCED_BATCHES blobtype = 2 and numBatches > 1
+    ROM_BLOB_ERROR_INVALID_FORCED_BATCHES = 7;
+    // ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)
+    ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN = 8;
 }

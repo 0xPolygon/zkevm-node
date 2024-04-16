@@ -496,6 +496,19 @@ func ExecutorErr(errorCode ExecutorError) error {
 	case ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Z:
 		return runtime.ErrExecutorErrorInvalidPointZ
 	case ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Y:
+		return runtime.ErrExecutorErrorInvalidPointY
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainPointZMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainBlobL2HashDataMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainBatchHashDataMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE:
+		return runtime.ErrExecutorErrorSMMainInvalidBlobType
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT:
+		return runtime.ErrExecutorErrorSMMainUnrestoredSavedContext
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX:
+		return runtime.ErrExecutorErrorSMMainInvalidMemoryCtx
 	}
 
 	return ErrExecutorUnknown
@@ -766,6 +779,20 @@ func ExecutorErrorCode(err error) ExecutorError {
 		return ExecutorError_EXECUTOR_ERROR_INVALID_ZK_GAS_LIMIT
 	case runtime.ErrExecutorErrorInvalidPointZ:
 		return ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Z
+	case runtime.ErrExecutorErrorInvalidPointY:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Y
+	case runtime.ErrExecutorErrorSMMainPointZMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH
+	case runtime.ErrExecutorErrorSMMainBlobL2HashDataMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH
+	case runtime.ErrExecutorErrorSMMainBatchHashDataMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH
+	case runtime.ErrExecutorErrorSMMainInvalidBlobType:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE
+	case runtime.ErrExecutorErrorSMMainUnrestoredSavedContext:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT
+	case runtime.ErrExecutorErrorSMMainInvalidMemoryCtx:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX
 	}
 
 	return ErrCodeExecutorUnknown
@@ -788,6 +815,10 @@ func RomBlobErr(errorCode RomBlobError) error {
 		return runtime.ErrROMBlobInvalidBlobType
 	case RomBlobError_ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE:
 		return runtime.ErrROMBlobInvalidCompressionType
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_FORCED_BATCHES:
+		return runtime.ErrROMBlobInvalidForcedBatches
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN:
+		return runtime.ErrROMBlobInvalidTotalBodyLen
 	}
 	return ErrROMBlobUnknown
 }
@@ -807,6 +838,10 @@ func RomBlobErrorCode(err error) RomBlobError {
 		return RomBlobError_ROM_BLOB_ERROR_INVALID_BLOB_TYPE
 	case runtime.ErrROMBlobInvalidCompressionType:
 		return RomBlobError_ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE
+	case runtime.ErrROMBlobInvalidForcedBatches:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_FORCED_BATCHES
+	case runtime.ErrROMBlobInvalidTotalBodyLen:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN
 	}
 	return ErrCodeROMBlobUnknown
 }

@@ -355,6 +355,20 @@ var (
 	ErrExecutorErrorInvalidZKGasLimit = errors.New("zk_gas_limit is invalid")
 	// ErrExecutorErrorInvalidPointZ indicates that the input parameter point_z is invalid
 	ErrExecutorErrorInvalidPointZ = errors.New("point_z is invalid")
+	// ErrExecutorErrorInvalidPointY indicates that the input parameter point_y is invalid
+	ErrExecutorErrorInvalidPointY = errors.New("point_y is invalid")
+	// ErrExecutorErrorSMMainPointZMismatch indicates that the input parameter point_z is different from the one calculated by the executor
+	ErrExecutorErrorSMMainPointZMismatch = errors.New("point_z mismatch")
+	// ErrExecutorErrorSMMainBlobL2HashDataMismatch indicates that the input parameter blob L2 data hash is different from the one calculated by the executor
+	ErrExecutorErrorSMMainBlobL2HashDataMismatch = errors.New("blob L2 hash data mismatch")
+	// ErrExecutorErrorSMMainBatchHashDataMismatch indicates that the input parameter batch data hash is different from the one calculated by the executor
+	ErrExecutorErrorSMMainBatchHashDataMismatch = errors.New("batch hash data mismatch")
+	// ErrExecutorErrorSMMainInvalidBlobType indicates that the input parameter blob type is invalid
+	ErrExecutorErrorSMMainInvalidBlobType = errors.New("invalid blob type")
+	// ErrExecutorErrorSMMainUnrestoredSavedContext indicates that at least one saved context was not restored before finishing the execution
+	ErrExecutorErrorSMMainUnrestoredSavedContext = errors.New("unrestored saved context")
+	// ErrExecutorErrorSMMainInvalidMemoryCtx indicates that the memory context polynomial was assigned an invalid value
+	ErrExecutorErrorSMMainInvalidMemoryCtx = errors.New("invalid memory ctx")
 
 	// ROM BLOB ERRORS
 	// ===============
@@ -369,6 +383,10 @@ var (
 	ErrROMBlobInvalidBlobType = errors.New("blob_type not supported")
 	// ErrROMBlobInvalidCompressionType compression type not supported
 	ErrROMBlobInvalidCompressionType = errors.New("compression type not supported")
+	// ErrROMBlobInvalidForcedBatches fblobtype = 2 and numBatches > 1
+	ErrROMBlobInvalidForcedBatches = errors.New("fblobtype = 2 and numBatches > 1")
+	// ErrROMBlobInvalidTotalBodyLen totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)
+	ErrROMBlobInvalidTotalBodyLen = errors.New("totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)")
 
 	// GRPC ERRORS
 	// ===========
