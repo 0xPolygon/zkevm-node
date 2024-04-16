@@ -431,7 +431,7 @@ func (s *ClientSynchronizer) Sync() error {
 								if resetDone {
 									break
 								} else {
-									log.Errorf("reorg doesnt done, retrying...")
+									log.Error("reorg isn't done, retrying...")
 									time.Sleep(time.Second)
 								}
 							}
@@ -476,7 +476,7 @@ func (s *ClientSynchronizer) Sync() error {
 					if resetDone {
 						break
 					} else {
-						log.Errorf("reorg doesnt done, retrying...")
+						log.Error("reorg isn't done, retrying...")
 						time.Sleep(time.Second)
 					}
 				}
