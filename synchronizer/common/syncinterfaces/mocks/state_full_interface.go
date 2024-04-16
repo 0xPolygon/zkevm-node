@@ -336,6 +336,66 @@ func (_c *StateFullInterface_AddL1InfoTreeLeaf_Call) RunAndReturn(run func(conte
 	return _c
 }
 
+// AddL1InfoTreeRecursiveLeaf provides a mock function with given fields: ctx, L1InfoTreeLeaf, dbTx
+func (_m *StateFullInterface) AddL1InfoTreeRecursiveLeaf(ctx context.Context, L1InfoTreeLeaf *state.L1InfoTreeLeaf, dbTx pgx.Tx) (*state.L1InfoTreeExitRootStorageEntry, error) {
+	ret := _m.Called(ctx, L1InfoTreeLeaf, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddL1InfoTreeRecursiveLeaf")
+	}
+
+	var r0 *state.L1InfoTreeExitRootStorageEntry
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *state.L1InfoTreeLeaf, pgx.Tx) (*state.L1InfoTreeExitRootStorageEntry, error)); ok {
+		return rf(ctx, L1InfoTreeLeaf, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *state.L1InfoTreeLeaf, pgx.Tx) *state.L1InfoTreeExitRootStorageEntry); ok {
+		r0 = rf(ctx, L1InfoTreeLeaf, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.L1InfoTreeExitRootStorageEntry)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *state.L1InfoTreeLeaf, pgx.Tx) error); ok {
+		r1 = rf(ctx, L1InfoTreeLeaf, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddL1InfoTreeRecursiveLeaf'
+type StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call struct {
+	*mock.Call
+}
+
+// AddL1InfoTreeRecursiveLeaf is a helper method to define mock.On call
+//   - ctx context.Context
+//   - L1InfoTreeLeaf *state.L1InfoTreeLeaf
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) AddL1InfoTreeRecursiveLeaf(ctx interface{}, L1InfoTreeLeaf interface{}, dbTx interface{}) *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call {
+	return &StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call{Call: _e.mock.On("AddL1InfoTreeRecursiveLeaf", ctx, L1InfoTreeLeaf, dbTx)}
+}
+
+func (_c *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call) Run(run func(ctx context.Context, L1InfoTreeLeaf *state.L1InfoTreeLeaf, dbTx pgx.Tx)) *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*state.L1InfoTreeLeaf), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call) Return(_a0 *state.L1InfoTreeExitRootStorageEntry, _a1 error) *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call) RunAndReturn(run func(context.Context, *state.L1InfoTreeLeaf, pgx.Tx) (*state.L1InfoTreeExitRootStorageEntry, error)) *StateFullInterface_AddL1InfoTreeRecursiveLeaf_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddSequence provides a mock function with given fields: ctx, sequence, dbTx
 func (_m *StateFullInterface) AddSequence(ctx context.Context, sequence state.Sequence, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, sequence, dbTx)
@@ -2339,6 +2399,53 @@ func (_c *StateFullInterface_ResetForkID_Call) Return(_a0 error) *StateFullInter
 }
 
 func (_c *StateFullInterface_ResetForkID_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) error) *StateFullInterface_ResetForkID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ResetL1InfoTree provides a mock function with given fields: ctx, dbTx
+func (_m *StateFullInterface) ResetL1InfoTree(ctx context.Context, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetL1InfoTree")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
+		r0 = rf(ctx, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StateFullInterface_ResetL1InfoTree_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetL1InfoTree'
+type StateFullInterface_ResetL1InfoTree_Call struct {
+	*mock.Call
+}
+
+// ResetL1InfoTree is a helper method to define mock.On call
+//   - ctx context.Context
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) ResetL1InfoTree(ctx interface{}, dbTx interface{}) *StateFullInterface_ResetL1InfoTree_Call {
+	return &StateFullInterface_ResetL1InfoTree_Call{Call: _e.mock.On("ResetL1InfoTree", ctx, dbTx)}
+}
+
+func (_c *StateFullInterface_ResetL1InfoTree_Call) Run(run func(ctx context.Context, dbTx pgx.Tx)) *StateFullInterface_ResetL1InfoTree_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_ResetL1InfoTree_Call) Return(_a0 error) *StateFullInterface_ResetL1InfoTree_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StateFullInterface_ResetL1InfoTree_Call) RunAndReturn(run func(context.Context, pgx.Tx) error) *StateFullInterface_ResetL1InfoTree_Call {
 	_c.Call.Return(run)
 	return _c
 }

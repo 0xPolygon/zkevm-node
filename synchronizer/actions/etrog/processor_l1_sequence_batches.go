@@ -55,9 +55,9 @@ func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
 	timeProvider syncCommon.TimeProvider,
 	halter syncinterfaces.CriticalErrorHandler) *ProcessorL1SequenceBatchesEtrog {
 	return &ProcessorL1SequenceBatchesEtrog{
-		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatchesEtrog]{
-			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder, etherman.InitialSequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdOnlyEtrog},
+		ProcessorBase: *actions.NewProcessorBase[ProcessorL1SequenceBatchesEtrog](
+			[]etherman.EventOrder{etherman.SequenceBatchesOrder, etherman.InitialSequenceBatchesOrder},
+			actions.ForksIdOnlyEtrog),
 		state:        state,
 		sync:         sync,
 		timeProvider: timeProvider,
@@ -391,7 +391,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) checkTrustedState(ctx context.Context,
 		reason := reorgReasons.String()
 
 		if p.sync.IsTrustedSequencer() {
-			log.Errorf("TRUSTED REORG DETECTED! Batch: %d reson:%s", batch.BatchNumber, reason)
+			log.Errorf("TRUSTED REORG DETECTED! Batch: %d reason:%s", batch.BatchNumber, reason)
 			// Halt function never have to return! it must blocks the process
 			p.halt(ctx, fmt.Errorf("TRUSTED REORG DETECTED! Batch: %d", batch.BatchNumber))
 			log.Errorf("CRITICAL!!!: Never have to execute this code. Halt function never have to return! it must blocks the process")

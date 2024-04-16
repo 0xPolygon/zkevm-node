@@ -63,6 +63,13 @@ var (
 		Required: true,
 	}
 
+	batchFlag = cli.Uint64Flag{
+		Name:     "batch",
+		Aliases:  []string{"bn"},
+		Usage:    "batch `NUMBER`",
+		Required: true,
+	}
+
 	updateFileFlag = cli.BoolFlag{
 		Name:     "update",
 		Aliases:  []string{"u"},
@@ -119,6 +126,16 @@ func main() {
 			},
 		},
 		{
+			Name:    "decode-batch-offline",
+			Aliases: []string{},
+			Usage:   "Decodes a batch offline",
+			Action:  decodeBatchOffline,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
+			},
+		},
+		{
 			Name:    "decode-entry",
 			Aliases: []string{},
 			Usage:   "Decodes an entry",
@@ -136,6 +153,16 @@ func main() {
 			Flags: []cli.Flag{
 				&configFileFlag,
 				&l2blockFlag,
+			},
+		},
+		{
+			Name:    "decode-batch",
+			Aliases: []string{},
+			Usage:   "Decodes a batch",
+			Action:  decodeBatch,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
 			},
 		},
 		{
@@ -207,7 +234,7 @@ func generate(cliCtx *cli.Context) error {
 	stateTree := merkletree.NewStateTree(mtDBServiceClient)
 	log.Debug("Connected to the merkle tree")
 
-	stateDB := state.NewState(state.Config{}, stateDBStorage, nil, stateTree, nil, nil)
+	stateDB := state.NewState(state.Config{}, stateDBStorage, nil, stateTree, nil, nil, nil)
 
 	// Calculate intermediate state roots
 	var imStateRoots map[uint64][]byte
@@ -630,6 +657,71 @@ func decodeL2Block(cliCtx *cli.Context) error {
 	return nil
 }
 
+func decodeBatch(cliCtx *cli.Context) error {
+	c, err := config.Load(cliCtx)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	log.Init(c.Log)
+
+	client, err := datastreamer.NewClient(c.Online.URI, c.Online.StreamType)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	err = client.Start()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	batchNumber := cliCtx.Uint64("batch")
+
+	bookMark := state.DSBookMark{
+		Type:  state.BookMarkTypeBatch,
+		Value: batchNumber,
+	}
+
+	firstEntry, err := client.ExecCommandGetBookmark(bookMark.Encode())
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(firstEntry)
+
+	secondEntry, err := client.ExecCommandGetEntry(firstEntry.Number + 1)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(secondEntry)
+
+	i := uint64(2) //nolint:gomnd
+	for {
+		entry, err := client.ExecCommandGetEntry(firstEntry.Number + i)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
+		if entry.Type == state.EntryTypeBookMark {
+			bookMark := state.DSBookMark{}.Decode(entry.Data)
+			if bookMark.Type == state.BookMarkTypeBatch {
+				break
+			}
+		}
+
+		secondEntry = entry
+		printEntry(secondEntry)
+		i++
+	}
+
+	return nil
+}
+
 func decodeEntryOffline(cliCtx *cli.Context) error {
 	c, err := config.Load(cliCtx)
 	if err != nil {
@@ -706,6 +798,64 @@ func decodeL2BlockOffline(cliCtx *cli.Context) error {
 	return nil
 }
 
+func decodeBatchOffline(cliCtx *cli.Context) error {
+	c, err := config.Load(cliCtx)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	log.Init(c.Log)
+
+	streamServer, err := initializeStreamServer(c)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	batchNumber := cliCtx.Uint64("batch")
+
+	bookMark := state.DSBookMark{
+		Type:  state.BookMarkTypeL2Block,
+		Value: batchNumber,
+	}
+
+	firstEntry, err := streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(firstEntry)
+
+	secondEntry, err := streamServer.GetEntry(firstEntry.Number + 1)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	i := uint64(2) //nolint:gomnd
+	printEntry(secondEntry)
+	for {
+		secondEntry, err = streamServer.GetEntry(firstEntry.Number + i)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
+		if secondEntry.Type == state.EntryTypeBookMark {
+			bookMark := state.DSBookMark{}.Decode(secondEntry.Data)
+			if bookMark.Type == state.BookMarkTypeBatch {
+				break
+			}
+		}
+
+		printEntry(secondEntry)
+		i++
+	}
+
+	return nil
+}
+
 func truncate(cliCtx *cli.Context) error {
 	c, err := config.Load(cliCtx)
 	if err != nil {
@@ -775,8 +925,6 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", blockStart.ForkID))
 		printColored(color.FgGreen, "Chain ID........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", blockStart.ChainID))
-		printColored(color.FgGreen, "Local Exit Root.: ")
-		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", blockStart.LocalExitRoot))
 	case state.EntryTypeL2Tx:
 		dsTx := state.DSL2Transaction{}.Decode(entry.Data)
 		printColored(color.FgGreen, "Entry Type......: ")

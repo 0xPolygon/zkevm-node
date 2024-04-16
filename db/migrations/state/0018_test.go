@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type migrationTest0018 struct{}
+type migrationTest0018 struct {
+	migrationBase
+}
 
 func (m migrationTest0018) InsertData(db *sql.DB) error {
 	const insertBatch1 = `
@@ -46,16 +48,7 @@ func (m migrationTest0018) InsertData(db *sql.DB) error {
 }
 
 func (m migrationTest0018) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
-	assertTableNotExists(t, db, "state", "proof")
-
-	assertTableExists(t, db, "state", "blob_inner")
-	assertTableExists(t, db, "state", "batch_proof")
-	assertTableExists(t, db, "state", "blob_inner_proof")
-	assertTableExists(t, db, "state", "blob_outer_proof")
-
-	assertColumnExists(t, db, "state", "virtual_batch", "blob_inner_num")
-	assertColumnExists(t, db, "state", "virtual_batch", "prev_l1_it_root")
-	assertColumnExists(t, db, "state", "virtual_batch", "prev_l1_it_index")
+	m.AssertNewAndRemovedItemsAfterMigrationUp(t, db)
 
 	// Insert blobInner 1
 	const insertBlobInner = `INSERT INTO state.blob_inner (blob_inner_num, data, block_num) VALUES (1, E'\\x1234', 1);`
@@ -80,16 +73,7 @@ func (m migrationTest0018) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) 
 func (m migrationTest0018) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
 	var result int
 
-	assertTableExists(t, db, "state", "proof")
-
-	assertTableNotExists(t, db, "state", "blob_inner")
-	assertTableNotExists(t, db, "state", "batch_proof")
-	assertTableNotExists(t, db, "state", "blob_inner_proof")
-	assertTableNotExists(t, db, "state", "blob_outer_proof")
-
-	assertColumnNotExists(t, db, "state", "virtual_batch", "blob_inner_num")
-	assertColumnNotExists(t, db, "state", "virtual_batch", "prev_l1_it_root")
-	assertColumnNotExists(t, db, "state", "virtual_batch", "prev_l1_it_index")
+	m.AssertNewAndRemovedItemsAfterMigrationDown(t, db)
 
 	// Check column blob_inner_num doesn't exists in state.virtual_batch table
 	const getBlobInnerNumColumn = `SELECT count(*) FROM information_schema.columns WHERE table_name='virtual_batch' and column_name='blob_inner_num'`
@@ -111,5 +95,25 @@ func (m migrationTest0018) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB
 }
 
 func TestMigration0018(t *testing.T) {
-	runMigrationTest(t, 18, migrationTest0018{})
+	m := migrationTest0018{
+		migrationBase: migrationBase{
+			removedTables: []tableMetadata{
+				{"state", "proof"},
+			},
+
+			newTables: []tableMetadata{
+				{"state", "blob_inner"},
+				{"state", "batch_proof"},
+				{"state", "blob_inner_proof"},
+				{"state", "blob_outer_proof"},
+			},
+
+			newColumns: []columnMetadata{
+				{"state", "virtual_batch", "blob_inner_num"},
+				{"state", "virtual_batch", "prev_l1_it_root"},
+				{"state", "virtual_batch", "prev_l1_it_index"},
+			},
+		},
+	}
+	runMigrationTest(t, 18, m)
 }
