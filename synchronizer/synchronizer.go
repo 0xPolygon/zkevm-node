@@ -412,13 +412,11 @@ func (s *ClientSynchronizer) Sync() error {
 				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
 					log.Info("Syncing trusted state (permissionless)")
 					//Sync Trusted State
-					if !s.cfg.dontDoReorgCheckBeforeL2Sync {
-						log.Debug("Doing reorg check before L2 sync")
-						resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
-						if resetDone || err != nil {
-							log.Infof("Reset done before L2 sync")
-							continue
-						}
+					log.Debug("Doing reorg check before L2 sync")
+					resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
+					if resetDone || err != nil {
+						log.Infof("Reset done before L2 sync")
+						continue
 					}
 					err = s.syncTrustedState(latestSyncedBatch)
 					metrics.FullTrustedSyncTime(time.Since(startTrusted))

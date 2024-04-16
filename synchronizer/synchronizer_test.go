@@ -931,7 +931,6 @@ func TestReorg(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
-		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1019,6 +1018,16 @@ func TestReorg(t *testing.T) {
 				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
 				Return(nil)
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
+
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
 				On("HeaderByNumber", mock.Anything, n).
@@ -1102,6 +1111,16 @@ func TestReorg(t *testing.T) {
 			m.DbTx.
 				On("Commit", ctx).
 				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
 				Once()
 
 			m.Etherman.
@@ -1204,17 +1223,13 @@ func TestReorg(t *testing.T) {
 				Return(nil).
 				Once()
 
-			m.ZKEVMClient.
-				On("BatchNumber", ctx).
-				Return(uint64(1), nil)
-
 			m.DbTx.
 				On("Commit", ctx).
+				Return(nil).
 				Run(func(args mock.Arguments) {
 					sync.Stop()
 					ctx.Done()
 				}).
-				Return(nil).
 				Once()
 		}).
 		Return(m.DbTx, nil).
@@ -1236,7 +1251,6 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
-		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1318,6 +1332,16 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
 				Return(nil)
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
+
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
 				On("HeaderByNumber", mock.Anything, n).
@@ -1380,6 +1404,11 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 				Return(nil).
 				Once()
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
 			m.ZKEVMClient.
 				On("BatchNumber", ctx).
 				Return(uint64(1), nil).
@@ -1411,15 +1440,10 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 			m.Etherman.
 				On("GetFinalizedBlockNumber", ctx).
 				Return(ethBlock3.NumberU64(), nil).
-				Once()
-
-			m.ZKEVMClient.
-				On("BatchNumber", ctx).
 				Run(func(args mock.Arguments) {
 					sync.Stop()
 					ctx.Done()
 				}).
-				Return(uint64(1), nil).
 				Once()
 		}).
 		Return(m.DbTx, nil).
@@ -1441,7 +1465,6 @@ func TestRegularReorg(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
-		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1483,10 +1506,6 @@ func TestRegularReorg(t *testing.T) {
 
 			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
 			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
-
-			m.ZKEVMClient.
-				On("BatchNumber", ctx).
-				Return(uint64(1), nil)
 
 			m.State.
 				On("GetForkIDByBatchNumber", mock.Anything).
@@ -1534,6 +1553,16 @@ func TestRegularReorg(t *testing.T) {
 			m.State.
 				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
 				Return(nil)
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
 
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 
@@ -1588,6 +1617,16 @@ func TestRegularReorg(t *testing.T) {
 			m.DbTx.
 				On("Commit", ctx).
 				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
 				Once()
 
 			m.Etherman.
@@ -1708,7 +1747,6 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
-		dontDoReorgCheckBeforeL2Sync: true,
 	}
 
 	m := mocks{
@@ -1792,6 +1830,16 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 			m.State.
 				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
 				Return(nil)
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock2.BlockNumber).
+				Return(ethBlock2, nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
 
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
@@ -1881,6 +1929,11 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 				Return(nil).
 				Once()
 
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
 			m.ZKEVMClient.
 				On("BatchNumber", ctx).
 				Return(uint64(1), nil).
@@ -1945,15 +1998,10 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 			m.DbTx.
 				On("Commit", ctx).
 				Return(nil).
-				Once()
-
-			m.ZKEVMClient.
-				On("BatchNumber", ctx).
 				Run(func(args mock.Arguments) {
 					sync.Stop()
 					ctx.Done()
 				}).
-				Return(uint64(1), nil).
 				Once()
 		}).
 		Return(m.DbTx, nil).
