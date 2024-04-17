@@ -64,6 +64,11 @@
 					"description": "URL is the URL of the Ethereum node for L1",
 					"default": "http://localhost:8545"
 				},
+				"ConsensusL1URL": {
+					"type": "string",
+					"description": "ConsensusL1URL is the URL of the consensus L1 RPC endpoint",
+					"default": ""
+				},
 				"ForkIDChunkSize": {
 					"type": "integer",
 					"description": "ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs",
