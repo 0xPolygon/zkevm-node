@@ -590,11 +590,17 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			return lastEthBlockSynced, err
 		}
 
-		var initBlockReceived *etherman.Block
+		var initBlockReceived etherman.Block
 		if len(blocks) != 0 {
-			initBlockReceived = &blocks[0]
+			for _, b := range blocks {
+				log.Debug("Before removing Block Number: ", b.BlockNumber)
+			}
+			initBlockReceived = blocks[0]
 			// First position of the array must be deleted
 			blocks = removeBlockElement(blocks, 0)
+			for _, b := range blocks {
+				log.Debug("After removing Block Number: ", b.BlockNumber)
+			}
 		} else {
 			// Reorg detected
 			log.Infof("Reorg detected in block %d while querying GetRollupInfoByBlockRange. Rolling back to at least the previous block", fromBlock)
@@ -622,7 +628,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 			return blockReorged, nil
 		}
 		// Check reorg again to be sure that the chain has not changed between the previous checkReorg and the call GetRollupInfoByBlockRange
-		block, err := s.checkReorg(lastEthBlockSynced, initBlockReceived)
+		block, err := s.checkReorg(lastEthBlockSynced, &initBlockReceived)
 		if err != nil {
 			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
 			return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
