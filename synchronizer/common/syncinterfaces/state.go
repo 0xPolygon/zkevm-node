@@ -25,6 +25,14 @@ type StateLastBlockGetter interface {
 	GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error)
 }
 
+type StateBlobSequencerReader interface {
+	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error)
+}
+
+type StateBlobSequenceWriter interface {
+	AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error
+}
+
 // StateFullInterface gathers the methods required to interact with the state.
 type StateFullInterface interface {
 	GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error)
@@ -78,4 +86,6 @@ type StateFullInterface interface {
 	UpdateForkIDBlockNumber(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx) error
 	GetLastL2BlockNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetL2BlockByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.L2Block, error)
+	StateBlobSequencerReader
+	StateBlobSequenceWriter
 }

@@ -15,7 +15,7 @@ import (
 // -H 'accept: application/json'
 const configSpecPath = "/eth/v1/config/spec"
 
-// SpecificationConfigurationNodeResponse represents the response of the config spec endpoint
+// ConfigSpecNodeResponse represents the response of the config spec endpoint
 type ConfigSpecNodeResponse struct {
 	SecondsPerSlot      uint64
 	SecondsPerEth1Block uint64
@@ -42,6 +42,7 @@ func convertConfigSpecResponseInternal(data configSpecNodeResponseInternal) (Con
 	return res, nil
 }
 
+// ConfigSpec returns the current beacon chain configuration
 func (c *BeaconAPIClient) ConfigSpec(ctx context.Context) (*ConfigSpecNodeResponse, error) {
 	response, err := JSONRPCBeaconCall(ctx, c.urlBase, configSpecPath)
 	if err != nil {

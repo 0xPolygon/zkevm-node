@@ -10,11 +10,12 @@ import (
 
 const beaconBlobSidecarsPath = "/eth/v1/beacon/blob_sidecars/"
 
+// BeaconBlobSidecarsResponse represents the response of the beacon blob sidecars endpoint
 type BeaconBlobSidecarsResponse struct {
 	Sidecars map[uint64]BeaconBlobSidecarResponse
 }
 
-// SpecificationConfigurationNodeResponse represents the response of the config spec endpoint
+// BeaconBlobSidecarResponse represents the response of the config spec endpoint
 type BeaconBlobSidecarResponse struct {
 	Index         uint64
 	KzgCommitment string

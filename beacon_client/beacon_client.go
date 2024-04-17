@@ -9,21 +9,20 @@ import (
 	"net/http"
 )
 
-const jsonRPCVersion = "2.0"
-
 // BeaconAPIClient client of Beacon API
 // https://ethereum.github.io/beacon-APIs/
 type BeaconAPIClient struct {
 	urlBase string
 }
 
-// NewClient creates an instance of client
+// NewBeaconAPIClient creates an instance of client
 func NewBeaconAPIClient(url string) *BeaconAPIClient {
 	return &BeaconAPIClient{
 		urlBase: url,
 	}
 }
 
+// BeaconAPIResponse represents the response of the beacon API
 type BeaconAPIResponse struct {
 	Result json.RawMessage
 }
