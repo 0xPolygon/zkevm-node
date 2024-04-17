@@ -925,17 +925,18 @@ func (s *ClientSynchronizer) newCheckReorg(latestStoredBlock *state.Block, synce
 				BlockHash:   b.Hash(),
 				ParentHash:  b.ParentHash(),
 			}
+			if block.BlockNumber != reorgedBlock.BlockNumber {
+				err := fmt.Errorf("wrong ethereum block retrieved from blockchain. Block numbers don't match. BlockNumber stored: %d. BlockNumber retrieved: %d",
+					reorgedBlock.BlockNumber, block.BlockNumber)
+				log.Error("error: ", err)
+				return nil, err
+			}
 		} else {
 			log.Infof("[checkReorg function] Using block %d from GetRollupInfoByBlockRange", block.BlockNumber)
 		}
 		log.Infof("[checkReorg function] BlockNumber: %d BlockHash got from L1 provider: %s", block.BlockNumber, block.BlockHash.String())
 		log.Infof("[checkReorg function] reorgedBlockNumber: %d reorgedBlockHash already synced: %s", reorgedBlock.BlockNumber, reorgedBlock.BlockHash.String())
-		if block.BlockNumber != reorgedBlock.BlockNumber {
-			err := fmt.Errorf("wrong ethereum block retrieved from blockchain. Block numbers don't match. BlockNumber stored: %d. BlockNumber retrieved: %d",
-				reorgedBlock.BlockNumber, block.BlockNumber)
-			log.Error("error: ", err)
-			return nil, err
-		}
+
 		// Compare hashes
 		if (block.BlockHash != reorgedBlock.BlockHash || block.ParentHash != reorgedBlock.ParentHash) && reorgedBlock.BlockNumber > s.genesis.BlockNumber {
 			log.Infof("checkReorg: Bad block %d hashOk %t parentHashOk %t", reorgedBlock.BlockNumber, block.BlockHash == reorgedBlock.BlockHash, block.ParentHash == reorgedBlock.ParentHash)
