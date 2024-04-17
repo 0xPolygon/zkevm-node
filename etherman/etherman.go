@@ -219,11 +219,18 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		log.Errorf("error connecting to %s: %+v", cfg.URL, err)
 		return nil, err
 	}
+	if cfg.ConsensusL1URL == "" {
+		log.Warn("ConsensusL1URL is not set, so Feijoa is not going to work")
+	}
+	feijoaEnabled := true
 	beaconClient := beaconclient.NewBeaconAPIClient(cfg.ConsensusL1URL)
 	eip4844 := eip4844.NewEthermanEIP4844(beaconClient)
 	if err := eip4844.Initialize(context.Background()); err != nil {
-		log.Errorf("error initializing EIP-4844, URL:%s : %+v", cfg.ConsensusL1URL, err)
-		return nil, err
+		// TODO: Must be mandatory to have a consensusL1URL configured, but
+		// for maintain compatibility allow to disable Feijoa
+		// so the log.Warnf must be an Errorf and must return  nil, err
+		log.Warnf("error initializing EIP-4844,Feijoa is going to be disabled.  URL:%s : %+v", cfg.ConsensusL1URL, err)
+		feijoaEnabled = false
 	}
 	// Create smc clients
 	etrogZkevm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(l1Config.ZkEVMAddr, ethClient)
@@ -308,10 +315,11 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		auth:    map[common.Address]bind.TransactOpts{},
 		EIP4844: eip4844,
 	}
-	eventFeijoaManager := NewEventManager(client, NewCallDataExtratorGeth(ethClient))
-	eventFeijoaManager.AddProcessor(NewEventFeijoaSequenceBlobsProcessor(feijoaContracts))
-	client.eventFeijoaManager = eventFeijoaManager
-
+	if feijoaEnabled {
+		eventFeijoaManager := NewEventManager(client, NewCallDataExtratorGeth(ethClient))
+		eventFeijoaManager.AddProcessor(NewEventFeijoaSequenceBlobsProcessor(feijoaContracts))
+		client.eventFeijoaManager = eventFeijoaManager
+	}
 	return client, nil
 }
 
