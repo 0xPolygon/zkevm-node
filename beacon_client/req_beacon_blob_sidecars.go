@@ -79,7 +79,7 @@ func (c *BeaconAPIClient) BeaconBlobSidecars(ctx context.Context, blockID uint64
 		return nil, err
 	}
 
-	internalStruct, err := unserializeGenericResponse2[beaconBlobSidecarsResponseInternal](response)
+	internalStruct, err := unserializeGenericResponse[beaconBlobSidecarsResponseInternal](response)
 	if err != nil {
 		return nil, err
 	}

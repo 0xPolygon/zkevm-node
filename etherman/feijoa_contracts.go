@@ -17,7 +17,7 @@ type FeijoaContracts struct {
 
 // NewFeijoaContracts creates a new FeijoaContracts
 func NewFeijoaContracts(ethClient bind.ContractBackend, l1Config L1Config) (*FeijoaContracts, error) {
-	FeijoaZKEVMAddress := l1Config.RollupManagerAddr
+	FeijoaZKEVMAddress := l1Config.ZkEVMAddr
 	FeijoaZKEVM, err := feijoapolygonzkevm.NewFeijoapolygonzkevm(FeijoaZKEVMAddress, ethClient)
 	if err != nil {
 		log.Errorf("error creating FeijoaZKEVM client (addr: %s). Error: %w", FeijoaZKEVMAddress.String(), err)

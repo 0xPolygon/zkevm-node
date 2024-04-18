@@ -22,16 +22,18 @@ type ConfigSpecNodeResponse struct {
 }
 
 type configSpecNodeResponseInternal struct {
-	SecondsPerSlot      string `json:"SECONDS_PER_SLOT"`
-	SecondsPerEth1Block string `json:"SECONDS_PER_ETH1_BLOCK"`
+	Data struct {
+		SecondsPerSlot      string `json:"SECONDS_PER_SLOT"`
+		SecondsPerEth1Block string `json:"SECONDS_PER_ETH1_BLOCK"`
+	}
 }
 
 func convertConfigSpecResponseInternal(data configSpecNodeResponseInternal) (ConfigSpecNodeResponse, error) {
-	tmpSecondsPerSlot, err := strconv.ParseUint(data.SecondsPerSlot, 0, hex.BitSize64)
+	tmpSecondsPerSlot, err := strconv.ParseUint(data.Data.SecondsPerSlot, 0, hex.BitSize64)
 	if err != nil {
 		return ConfigSpecNodeResponse{}, fmt.Errorf("error parsing SecondsPerSlot: %v", err)
 	}
-	tmpSecondsPerEth1Block, err := strconv.ParseUint(data.SecondsPerEth1Block, 0, hex.BitSize64)
+	tmpSecondsPerEth1Block, err := strconv.ParseUint(data.Data.SecondsPerEth1Block, 0, hex.BitSize64)
 	if err != nil {
 		return ConfigSpecNodeResponse{}, fmt.Errorf("error parsing SecondsPerSlot: %v", err)
 	}

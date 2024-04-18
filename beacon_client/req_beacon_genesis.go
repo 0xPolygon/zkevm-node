@@ -47,7 +47,7 @@ func (c *BeaconAPIClient) BeaconGenesis(ctx context.Context) (*BeaconGenesisResp
 		return nil, err
 	}
 
-	internalStruct, err := unserializeGenericResponse2[beaconGenesisResponseInternal](response)
+	internalStruct, err := unserializeGenericResponse[beaconGenesisResponseInternal](response)
 	if err != nil {
 		return nil, err
 	}

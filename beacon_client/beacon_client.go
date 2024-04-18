@@ -58,18 +58,6 @@ func JSONRPCBeaconCall(ctx context.Context, urlBase, methodPath string) (BeaconA
 }
 
 func unserializeGenericResponse[T any](response BeaconAPIResponse) (T, error) {
-	result := struct {
-		Data T `json:"data"`
-	}{}
-	err := json.Unmarshal(response.Result, &result)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-	return result.Data, nil
-}
-
-func unserializeGenericResponse2[T any](response BeaconAPIResponse) (T, error) {
 	var result T
 	err := json.Unmarshal(response.Result, &result)
 	if err != nil {
