@@ -210,7 +210,7 @@ func Test_Filters(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEqual(t, blockBeforeFilterHash.String(), blockFilterChanges[0].String())
-		assert.Equal(t, blockAfterFilterHash.String(), blockFilterChanges[len(blockFilterChanges)-1].String())
+		assert.Equal(t, blockAfterFilterHash.String(), blockFilterChanges[len(blockFilterChanges)-1].String(), "network: "+network.Name+"blockAfterFilterHash")
 
 		// test getFilterChanges for a logFilter ID
 		// create a SC to emit some logs
@@ -276,7 +276,7 @@ func Test_Filters(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 30, len(logs))
-		assert.Equal(t, 20, len(logFilterChanges))
+		assert.Equal(t, 20, len(logFilterChanges), "network: "+network.Name+" logFilterChanges")
 	}
 }
 
