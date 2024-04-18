@@ -242,15 +242,15 @@ func (f *finalizer) checkValidL1InfoRoot(ctx context.Context, l1InfoRoot state.L
 		return false, nil
 	}
 
-	// Check l1InfoRootIndex and GER matches. We retrieve the info of the last l1InfoTree event in the block, since in the case we have several l1InfoTree events
-	// in the same block, the function checkL1InfoTreeUpdate retrieves only the last one and skips the others
+	// Check l1InfoRootIndex and GER matches
+	// We retrieve first the info of the last l1InfoTree event in the block
 	log.Debugf("getting l1InfoRoot events for L1 block %d, hash: %s", l1InfoRoot.BlockNumber, l1BlockState.BlockHash)
 	blocks, eventsOrder, err := f.etherman.GetRollupInfoByBlockRange(ctx, l1InfoRoot.BlockNumber, &l1InfoRoot.BlockNumber)
 	if err != nil {
 		return false, err
 	}
 
-	//Get L1InfoTree events of the L1 block where the l1InforRoot we need to check was synced
+	// Since in the case we have several l1InfoTree events in the same block, we retrieve only the GER of last one and skips the others
 	lastGER := state.ZeroHash
 	for _, block := range blocks {
 		blockEventsOrder := eventsOrder[block.BlockHash]
