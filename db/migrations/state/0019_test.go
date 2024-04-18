@@ -3,53 +3,62 @@ package migrations_test
 import (
 	"database/sql"
 	"testing"
-	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/require"
 )
 
+type migrationTest0019TestCase struct {
+	Name  string
+	Block migrationTest0019TestCaseBlock
+}
+
+type migrationTest0019TestCaseBlock struct {
+	Transactions []migrationTest0019TestCaseTransaction
+}
+
+type migrationTest0019TestCaseTransaction struct {
+	CurrentIndex uint
+}
+
 type migrationTest0019 struct {
-	migrationBase
-
-	blockHashValue         string
-	mainExitRootValue      string
-	rollupExitRootValue    string
-	globalExitRootValue    string
-	previousBlockHashValue string
-	l1InfoRootValue        string
-}
-
-func (m migrationTest0019) insertBlock(blockNumber uint64, db *sql.DB) error {
-	const addBlock = "INSERT INTO state.block (block_num, received_at, block_hash) VALUES ($1, $2, $3)"
-	if _, err := db.Exec(addBlock, blockNumber, time.Now(), m.blockHashValue); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m migrationTest0019) insertRowInOldTable(db *sql.DB, args ...interface{}) error {
-	sql := `
-    INSERT INTO state.exit_root (block_num, "timestamp", mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index)
-                         VALUES (       $1,          $2,                $3,               $4,               $5,              $6,           $7,                 $8);`
-
-	_, err := db.Exec(sql, args...)
-	return err
-}
-
-func (m migrationTest0019) insertRowInMigratedTable(db *sql.DB, args ...interface{}) error {
-	sql := `
-    INSERT INTO state.exit_root (block_num, "timestamp", mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index, l1_info_tree_recursive_index)
-                         VALUES (       $1,          $2,                $3,               $4,               $5,              $6,           $7,                 $8,                        $9);`
-
-	_, err := db.Exec(sql, args...)
-	return err
+	TestCases []migrationTest0019TestCase
 }
 
 func (m migrationTest0019) InsertData(db *sql.DB) error {
-	var err error
-	for i := uint64(1); i <= 6; i++ {
-		if err = m.insertBlock(i, db); err != nil {
+	const addBlock0 = "INSERT INTO state.block (block_num, received_at, block_hash) VALUES (0, now(), '0x0')"
+	if _, err := db.Exec(addBlock0); err != nil {
+		return err
+	}
+
+	const addBatch0 = `
+		INSERT INTO state.batch (batch_num, global_exit_root, local_exit_root, acc_input_hash, state_root, timestamp, coinbase, raw_txs_data, forced_batch_num, wip) 
+		VALUES (0,'0x0000', '0x0000', '0x0000', '0x0000', now(), '0x0000', null, null, true)`
+	if _, err := db.Exec(addBatch0); err != nil {
+		return err
+	}
+
+	const addL2Block = "INSERT INTO state.l2block (block_num, block_hash, header, uncles, parent_hash, state_root, received_at, batch_num, created_at) VALUES ($1, $2, '{}', '{}', '0x0', '0x0', now(), 0, now())"
+	const addTransaction = "INSERT INTO state.transaction (hash, encoded, decoded, l2_block_num, effective_percentage, l2_hash) VALUES ($1, 'ABCDEF', '{}', $2, 255, $1)"
+	const addReceipt = "INSERT INTO state.receipt (tx_hash, type, post_state, status, cumulative_gas_used, gas_used, effective_gas_price, block_num, tx_index, contract_address) VALUES ($1, 1, null, 1, 1234, 1234, 1, $2, $3, '')"
+
+	txUnique := 0
+	for tci, testCase := range m.TestCases {
+		blockNum := uint64(tci + 1)
+		blockHash := common.HexToHash(hex.EncodeUint64(blockNum)).String()
+		if _, err := db.Exec(addL2Block, blockNum, blockHash); err != nil {
 			return err
+		}
+		for _, tx := range testCase.Block.Transactions {
+			txUnique++
+			txHash := common.HexToHash(hex.EncodeUint64(uint64(txUnique))).String()
+			if _, err := db.Exec(addTransaction, txHash, blockNum); err != nil {
+				return err
+			}
+			if _, err := db.Exec(addReceipt, txHash, blockNum, tx.CurrentIndex); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -57,50 +66,80 @@ func (m migrationTest0019) InsertData(db *sql.DB) error {
 }
 
 func (m migrationTest0019) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
-	m.AssertNewAndRemovedItemsAfterMigrationUp(t, db)
+	const getReceiptsByBlock = "SELECT r.tx_index FROM state.receipt r WHERE r.block_num = $1 ORDER BY r.tx_index"
 
-	var nilL1InfoTreeIndex *uint = nil
-	err := m.insertRowInOldTable(db, 1, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, nilL1InfoTreeIndex)
-	assert.NoError(t, err)
+	for tci := range m.TestCases {
+		blockNum := uint64(tci + 1)
 
-	err = m.insertRowInOldTable(db, 2, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, uint(1))
-	assert.NoError(t, err)
+		rows, err := db.Query(getReceiptsByBlock, blockNum)
+		require.NoError(t, err)
 
-	err = m.insertRowInMigratedTable(db, 3, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, nilL1InfoTreeIndex, 1)
-	assert.NoError(t, err)
+		var expectedIndex = uint(0)
+		var txIndex uint
+		for rows.Next() {
+			err := rows.Scan(&txIndex)
+			require.NoError(t, err)
+			require.Equal(t, expectedIndex, txIndex)
+			expectedIndex++
+		}
+	}
 }
 
 func (m migrationTest0019) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
-	m.AssertNewAndRemovedItemsAfterMigrationDown(t, db)
-
-	var nilL1InfoTreeIndex *uint = nil
-	err := m.insertRowInOldTable(db, 4, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, nilL1InfoTreeIndex)
-	assert.NoError(t, err)
-
-	err = m.insertRowInOldTable(db, 5, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, uint(2))
-	assert.NoError(t, err)
-
-	err = m.insertRowInMigratedTable(db, 6, time.Now().UTC(), m.mainExitRootValue, m.rollupExitRootValue, m.globalExitRootValue, m.previousBlockHashValue, m.l1InfoRootValue, nilL1InfoTreeIndex, 2)
-	assert.Error(t, err)
+	m.RunAssertsAfterMigrationUp(t, db)
 }
 
 func TestMigration0019(t *testing.T) {
-	m := migrationTest0019{
-		migrationBase: migrationBase{
-			newIndexes: []string{
-				"idx_exit_root_l1_info_tree_recursive_index",
+	runMigrationTest(t, 19, migrationTest0019{
+		TestCases: []migrationTest0019TestCase{
+			{
+				Name: "single tx with correct index",
+				Block: migrationTest0019TestCaseBlock{
+					Transactions: []migrationTest0019TestCaseTransaction{
+						{CurrentIndex: 0},
+					},
+				},
 			},
-			newColumns: []columnMetadata{
-				{"state", "exit_root", "l1_info_tree_recursive_index"},
+			{
+				Name: "multiple txs indexes are correct",
+				Block: migrationTest0019TestCaseBlock{
+					Transactions: []migrationTest0019TestCaseTransaction{
+						{CurrentIndex: 0},
+						{CurrentIndex: 1},
+						{CurrentIndex: 2},
+					},
+				},
+			},
+			{
+				Name: "single tx with wrong tx index",
+				Block: migrationTest0019TestCaseBlock{
+					Transactions: []migrationTest0019TestCaseTransaction{
+						{CurrentIndex: 3},
+					},
+				},
+			},
+			{
+				Name: "multiple txs missing 0 index",
+				Block: migrationTest0019TestCaseBlock{
+					Transactions: []migrationTest0019TestCaseTransaction{
+						{CurrentIndex: 1},
+						{CurrentIndex: 2},
+						{CurrentIndex: 3},
+						{CurrentIndex: 4},
+					},
+				},
+			},
+			{
+				Name: "multiple has index 0 but also txs index gap",
+				Block: migrationTest0019TestCaseBlock{
+					Transactions: []migrationTest0019TestCaseTransaction{
+						{CurrentIndex: 0},
+						{CurrentIndex: 2},
+						{CurrentIndex: 4},
+						{CurrentIndex: 6},
+					},
+				},
 			},
 		},
-
-		blockHashValue:         "0x29e885edaf8e4b51e1d2e05f9da28161d2fb4f6b1d53827d9b80a23cf2d7d9f1",
-		mainExitRootValue:      "0x83fc198de31e1b2b1a8212d2430fbb7766c13d9ad305637dea3759065606475d",
-		rollupExitRootValue:    "0xadb91a6a1fce56eaea561002bc9a993f4e65a7710bd72f4eee3067cbd73a743c",
-		globalExitRootValue:    "0x5bf4af1a651a2a74b36e6eb208481f94c69fc959f756223dfa49608061937585",
-		previousBlockHashValue: "0xe865e912b504572a4d80ad018e29797e3c11f00bf9ae2549548a25779c9d7e57",
-		l1InfoRootValue:        "0x2b9484b83c6398033241865b015fb9430eb3e159182a6075d00c924845cc393e",
-	}
-	runMigrationTest(t, 19, m)
+	})
 }

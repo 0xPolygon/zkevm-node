@@ -2,10 +2,9 @@ package sequencer
 
 import (
 	"github.com/0xPolygonHermez/zkevm-node/state"
-	"github.com/ethereum/go-ethereum/common"
 )
 
-func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32, localExitRoot common.Hash) error {
+func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32) error {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
 
 	// Send data to streamer
@@ -21,7 +20,6 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 			ForkID:          uint16(forkID),
 			BlockHash:       blockResponse.BlockHash,
 			StateRoot:       blockResponse.BlockHash, //From etrog, the blockhash is the block root
-			LocalExitRoot:   localExitRoot,
 		}
 
 		l2Transactions := []state.DSL2Transaction{}

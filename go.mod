@@ -19,7 +19,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/prometheus/client_model v0.6.1
-	github.com/prometheus/common v0.52.2
+	github.com/prometheus/common v0.52.3
 	github.com/rubenv/sql-migrate v1.6.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/viper v1.17.0
@@ -29,8 +29,8 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.22.0
 	golang.org/x/net v0.24.0
-	golang.org/x/sync v0.6.0
-	google.golang.org/grpc v1.63.0
+	golang.org/x/sync v0.7.0
+	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1

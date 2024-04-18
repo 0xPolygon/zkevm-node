@@ -141,7 +141,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 		}
 
 		// firstTxToInsert := len(existingTxs)
-
+		txIndex := 0
 		for i := 0; i < len(processedTxs); i++ {
 			processedTx := processedTxs[i]
 			// if the transaction has an intrinsic invalid tx error it means
@@ -169,7 +169,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			header.BlockInfoRoot = processedBlock.BlockInfoRoot
 			transactions := []*types.Transaction{&processedTx.Tx}
 
-			receipt := GenerateReceipt(header.Number, processedTx, uint(i), forkID)
+			receipt := GenerateReceipt(header.Number, processedTx, uint(txIndex), forkID)
 			if !CheckLogOrder(receipt.Logs) {
 				return fmt.Errorf("error: logs received from executor are not in order")
 			}
@@ -193,6 +193,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
 				return err
 			}
+			txIndex++
 		}
 	}
 	return nil
@@ -599,7 +600,7 @@ func (s *State) internalProcessUnsignedTransactionV2(ctx context.Context, tx *ty
 
 	if err == nil && processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 		err = executor.ExecutorErr(processBatchResponseV2.Error)
-		s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
+		s.eventLog.LogExecutorError(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 		return nil, err
 	}
 
@@ -1039,7 +1040,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	}
 	if processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 		err = executor.ExecutorErr(processBatchResponseV2.Error)
-		s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
+		s.eventLog.LogExecutorError(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 		return false, false, gasUsed, nil, err
 	}
 	if processBatchResponseV2.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR {

@@ -421,7 +421,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	// Send L2 block to data streamer
-	err = f.DSSendL2Block(f.wipBatch.batchNumber, blockResponse, l2Block.getL1InfoTreeIndex(), l2Block.batchResponse.NewLocalExitRoot)
+	err = f.DSSendL2Block(f.wipBatch.batchNumber, blockResponse, l2Block.getL1InfoTreeIndex())
 	if err != nil {
 		//TODO: we need to halt/rollback the L2 block if we had an error sending to the data streamer?
 		log.Errorf("error sending L2 block %d [%d] to data streamer, error: %v", blockResponse.BlockNumber, l2Block.trackingNum, err)

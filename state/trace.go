@@ -307,7 +307,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 			return nil, err
 		} else if processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 			err = executor.ExecutorErr(processBatchResponseV2.Error)
-			s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
+			s.eventLog.LogExecutorError(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 			return nil, err
 		}
 

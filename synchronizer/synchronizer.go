@@ -140,9 +140,9 @@ func NewSynchronizer(
 
 		syncTrustedStateEtrog := l2_shared.NewTrustedBatchesRetrieve(executor, zkEVMClient, res.state, *sync, *l2_shared.NewTrustedStateManager(syncCommon.DefaultTimeProvider{}, timeOfLiveBatchOnCache))
 		res.syncTrustedStateExecutor = l2_shared.NewSyncTrustedStateExecutorSelector(map[uint64]syncinterfaces.SyncTrustedStateExecutor{
-			uint64(state.FORKID_ETROG):      syncTrustedStateEtrog,
-			uint64(state.FORKID_ELDERBERRY): syncTrustedStateEtrog,
-			uint64(state.FORKID_9):          syncTrustedStateEtrog,
+			uint64(state.FORKID_ETROG):        syncTrustedStateEtrog,
+			uint64(state.FORKID_ELDERBERRY):   syncTrustedStateEtrog,
+			uint64(state.FORKID_ELDERBERRY_2): syncTrustedStateEtrog,
 		}, res.state)
 	}
 	var l1checkerL2Blocks *actions.CheckL2BlockHash

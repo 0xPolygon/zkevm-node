@@ -11,7 +11,7 @@ import (
 
 // GetDSGenesisBlock returns the genesis block
 func (p *PostgresStorage) GetDSGenesisBlock(ctx context.Context, dbTx pgx.Tx) (*state.DSL2Block, error) {
-	const genesisL2BlockSQL = `SELECT 0 as batch_num, l2b.block_num, l2b.received_at, '0x0000000000000000000000000000000000000000' as global_exit_root, '0x0000000000000000000000000000000000000000' as block_global_exit_root, l2b.header->>'miner' AS coinbase, 0 as fork_id, l2b.block_hash, l2b.state_root, '0x0000000000000000000000000000000000000000' as local_exit_root
+	const genesisL2BlockSQL = `SELECT 0 as batch_num, l2b.block_num, l2b.received_at, '0x0000000000000000000000000000000000000000' as global_exit_root, '0x0000000000000000000000000000000000000000' as block_global_exit_root, l2b.header->>'miner' AS coinbase, 0 as fork_id, l2b.block_hash, l2b.state_root
 							FROM state.l2block l2b
 							WHERE l2b.block_num  = 0`
 
@@ -29,7 +29,7 @@ func (p *PostgresStorage) GetDSGenesisBlock(ctx context.Context, dbTx pgx.Tx) (*
 
 // GetDSL2Blocks returns the L2 blocks
 func (p *PostgresStorage) GetDSL2Blocks(ctx context.Context, firstBatchNumber, lastBatchNumber uint64, dbTx pgx.Tx) ([]*state.DSL2Block, error) {
-	const l2BlockSQL = `SELECT l2b.batch_num, l2b.block_num, l2b.received_at, b.global_exit_root, COALESCE(l2b.header->>'globalExitRoot', '') AS block_global_exit_root, l2b.header->>'miner' AS coinbase, f.fork_id, l2b.block_hash, l2b.state_root, b.local_exit_root
+	const l2BlockSQL = `SELECT l2b.batch_num, l2b.block_num, l2b.received_at, b.global_exit_root, COALESCE(l2b.header->>'globalExitRoot', '') AS block_global_exit_root, l2b.header->>'miner' AS coinbase, f.fork_id, l2b.block_hash, l2b.state_root
 						FROM state.l2block l2b, state.batch b, state.fork_id f
 						WHERE l2b.batch_num BETWEEN $1 AND $2 AND l2b.batch_num = b.batch_num AND l2b.batch_num between f.from_batch_num AND f.to_batch_num
 						ORDER BY l2b.block_num ASC`
@@ -56,13 +56,12 @@ func (p *PostgresStorage) GetDSL2Blocks(ctx context.Context, firstBatchNumber, l
 func scanL2Block(row pgx.Row) (*state.DSL2Block, error) {
 	l2Block := state.DSL2Block{}
 	var (
-		gerStr           string
-		blockGERStr      string
-		coinbaseStr      string
-		timestamp        time.Time
-		blockHashStr     string
-		stateRootStr     string
-		localExitRootStr string
+		gerStr       string
+		blockGERStr  string
+		coinbaseStr  string
+		timestamp    time.Time
+		blockHashStr string
+		stateRootStr string
 	)
 	if err := row.Scan(
 		&l2Block.BatchNumber,
@@ -74,7 +73,6 @@ func scanL2Block(row pgx.Row) (*state.DSL2Block, error) {
 		&l2Block.ForkID,
 		&blockHashStr,
 		&stateRootStr,
-		&localExitRootStr,
 	); err != nil {
 		return &l2Block, err
 	}
@@ -83,7 +81,6 @@ func scanL2Block(row pgx.Row) (*state.DSL2Block, error) {
 	l2Block.Timestamp = timestamp.Unix()
 	l2Block.BlockHash = common.HexToHash(blockHashStr)
 	l2Block.StateRoot = common.HexToHash(stateRootStr)
-	l2Block.LocalExitRoot = common.HexToHash(localExitRootStr)
 
 	if l2Block.ForkID >= state.FORKID_ETROG {
 		l2Block.GlobalExitRoot = common.HexToHash(blockGERStr)

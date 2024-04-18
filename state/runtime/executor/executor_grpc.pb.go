@@ -20,9 +20,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	ExecutorService_ProcessBatch_FullMethodName   = "/executor.v1.ExecutorService/ProcessBatch"
-	ExecutorService_ProcessBatchV2_FullMethodName = "/executor.v1.ExecutorService/ProcessBatchV2"
-	ExecutorService_GetFlushStatus_FullMethodName = "/executor.v1.ExecutorService/GetFlushStatus"
+	ExecutorService_ProcessBatch_FullMethodName            = "/executor.v1.ExecutorService/ProcessBatch"
+	ExecutorService_ProcessBatchV2_FullMethodName          = "/executor.v1.ExecutorService/ProcessBatchV2"
+	ExecutorService_ProcessBatchV3_FullMethodName          = "/executor.v1.ExecutorService/ProcessBatchV3"
+	ExecutorService_ProcessBlobInnerV3_FullMethodName      = "/executor.v1.ExecutorService/ProcessBlobInnerV3"
+	ExecutorService_ProcessStatelessBatchV2_FullMethodName = "/executor.v1.ExecutorService/ProcessStatelessBatchV2"
+	ExecutorService_GetFlushStatus_FullMethodName          = "/executor.v1.ExecutorService/GetFlushStatus"
 )
 
 // ExecutorServiceClient is the client API for ExecutorService service.
@@ -32,6 +35,9 @@ type ExecutorServiceClient interface {
 	// / Processes a batch
 	ProcessBatch(ctx context.Context, in *ProcessBatchRequest, opts ...grpc.CallOption) (*ProcessBatchResponse, error)
 	ProcessBatchV2(ctx context.Context, in *ProcessBatchRequestV2, opts ...grpc.CallOption) (*ProcessBatchResponseV2, error)
+	ProcessBatchV3(ctx context.Context, in *ProcessBatchRequestV3, opts ...grpc.CallOption) (*ProcessBatchResponseV3, error)
+	ProcessBlobInnerV3(ctx context.Context, in *ProcessBlobInnerRequestV3, opts ...grpc.CallOption) (*ProcessBlobInnerResponseV3, error)
+	ProcessStatelessBatchV2(ctx context.Context, in *ProcessStatelessBatchRequestV2, opts ...grpc.CallOption) (*ProcessBatchResponseV2, error)
 	GetFlushStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetFlushStatusResponse, error)
 }
 
@@ -61,6 +67,33 @@ func (c *executorServiceClient) ProcessBatchV2(ctx context.Context, in *ProcessB
 	return out, nil
 }
 
+func (c *executorServiceClient) ProcessBatchV3(ctx context.Context, in *ProcessBatchRequestV3, opts ...grpc.CallOption) (*ProcessBatchResponseV3, error) {
+	out := new(ProcessBatchResponseV3)
+	err := c.cc.Invoke(ctx, ExecutorService_ProcessBatchV3_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *executorServiceClient) ProcessBlobInnerV3(ctx context.Context, in *ProcessBlobInnerRequestV3, opts ...grpc.CallOption) (*ProcessBlobInnerResponseV3, error) {
+	out := new(ProcessBlobInnerResponseV3)
+	err := c.cc.Invoke(ctx, ExecutorService_ProcessBlobInnerV3_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *executorServiceClient) ProcessStatelessBatchV2(ctx context.Context, in *ProcessStatelessBatchRequestV2, opts ...grpc.CallOption) (*ProcessBatchResponseV2, error) {
+	out := new(ProcessBatchResponseV2)
+	err := c.cc.Invoke(ctx, ExecutorService_ProcessStatelessBatchV2_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *executorServiceClient) GetFlushStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetFlushStatusResponse, error) {
 	out := new(GetFlushStatusResponse)
 	err := c.cc.Invoke(ctx, ExecutorService_GetFlushStatus_FullMethodName, in, out, opts...)
@@ -77,6 +110,9 @@ type ExecutorServiceServer interface {
 	// / Processes a batch
 	ProcessBatch(context.Context, *ProcessBatchRequest) (*ProcessBatchResponse, error)
 	ProcessBatchV2(context.Context, *ProcessBatchRequestV2) (*ProcessBatchResponseV2, error)
+	ProcessBatchV3(context.Context, *ProcessBatchRequestV3) (*ProcessBatchResponseV3, error)
+	ProcessBlobInnerV3(context.Context, *ProcessBlobInnerRequestV3) (*ProcessBlobInnerResponseV3, error)
+	ProcessStatelessBatchV2(context.Context, *ProcessStatelessBatchRequestV2) (*ProcessBatchResponseV2, error)
 	GetFlushStatus(context.Context, *emptypb.Empty) (*GetFlushStatusResponse, error)
 	mustEmbedUnimplementedExecutorServiceServer()
 }
@@ -90,6 +126,15 @@ func (UnimplementedExecutorServiceServer) ProcessBatch(context.Context, *Process
 }
 func (UnimplementedExecutorServiceServer) ProcessBatchV2(context.Context, *ProcessBatchRequestV2) (*ProcessBatchResponseV2, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessBatchV2 not implemented")
+}
+func (UnimplementedExecutorServiceServer) ProcessBatchV3(context.Context, *ProcessBatchRequestV3) (*ProcessBatchResponseV3, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessBatchV3 not implemented")
+}
+func (UnimplementedExecutorServiceServer) ProcessBlobInnerV3(context.Context, *ProcessBlobInnerRequestV3) (*ProcessBlobInnerResponseV3, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessBlobInnerV3 not implemented")
+}
+func (UnimplementedExecutorServiceServer) ProcessStatelessBatchV2(context.Context, *ProcessStatelessBatchRequestV2) (*ProcessBatchResponseV2, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessStatelessBatchV2 not implemented")
 }
 func (UnimplementedExecutorServiceServer) GetFlushStatus(context.Context, *emptypb.Empty) (*GetFlushStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlushStatus not implemented")
@@ -143,6 +188,60 @@ func _ExecutorService_ProcessBatchV2_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExecutorService_ProcessBatchV3_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessBatchRequestV3)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServiceServer).ProcessBatchV3(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExecutorService_ProcessBatchV3_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServiceServer).ProcessBatchV3(ctx, req.(*ProcessBatchRequestV3))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ExecutorService_ProcessBlobInnerV3_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessBlobInnerRequestV3)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServiceServer).ProcessBlobInnerV3(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExecutorService_ProcessBlobInnerV3_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServiceServer).ProcessBlobInnerV3(ctx, req.(*ProcessBlobInnerRequestV3))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ExecutorService_ProcessStatelessBatchV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessStatelessBatchRequestV2)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServiceServer).ProcessStatelessBatchV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExecutorService_ProcessStatelessBatchV2_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServiceServer).ProcessStatelessBatchV2(ctx, req.(*ProcessStatelessBatchRequestV2))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ExecutorService_GetFlushStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -175,6 +274,18 @@ var ExecutorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessBatchV2",
 			Handler:    _ExecutorService_ProcessBatchV2_Handler,
+		},
+		{
+			MethodName: "ProcessBatchV3",
+			Handler:    _ExecutorService_ProcessBatchV3_Handler,
+		},
+		{
+			MethodName: "ProcessBlobInnerV3",
+			Handler:    _ExecutorService_ProcessBlobInnerV3_Handler,
+		},
+		{
+			MethodName: "ProcessStatelessBatchV2",
+			Handler:    _ExecutorService_ProcessStatelessBatchV2_Handler,
 		},
 		{
 			MethodName: "GetFlushStatus",
