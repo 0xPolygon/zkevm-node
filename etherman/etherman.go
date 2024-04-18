@@ -1860,7 +1860,7 @@ func (etherman *Client) DepositCount(ctx context.Context, blockNumber *uint64) (
 		opts.BlockNumber = new(big.Int).SetUint64(*blockNumber)
 	}
 
-	return etherman.GlobalExitRootManager.DepositCount(opts)
+	return etherman.EtrogGlobalExitRootManager.DepositCount(opts)
 }
 
 // CheckTxWasMined check if a tx was already mined
