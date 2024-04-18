@@ -345,8 +345,8 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 		if firstL1InfoRootUpdate || l1InfoRoot.L1InfoTreeIndex > f.lastL1InfoTree.L1InfoTreeIndex {
 			log.Infof("received new l1InfoRoot %s, index: %d, l1Block: %d", l1InfoRoot.L1InfoTreeRoot, l1InfoRoot.L1InfoTreeIndex, l1InfoRoot.BlockNumber)
 
-			// Check if new l1InfoRoot is valid. We skip it if l1InfoRoot.BlockNumber == 0 (empty tree)
-			if l1InfoRoot.BlockNumber > 0 {
+			// Check if new l1InfoRoot is valid. We skip it if l1InfoTreeIndex is 0 (it's a special case)
+			if l1InfoRoot.L1InfoTreeIndex > 0 {
 				valid, err := f.checkValidL1InfoRoot(ctx, l1InfoRoot)
 				if err != nil {
 					log.Errorf("error validating new l1InfoRoot, index: %d, error: %v", l1InfoRoot.L1InfoTreeIndex, err)
