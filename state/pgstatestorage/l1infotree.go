@@ -73,7 +73,7 @@ func (p *PostgresStorage) GetLatestL1InfoRootVx(ctx context.Context, maxBlockNum
 	const getL1InfoRootSQL = `SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, %s
 		FROM state.exit_root 
 		WHERE %s IS NOT NULL AND block_num <= $1
-		ORDER BY %s DESC`
+		ORDER BY %s DESC LIMIT 1`
 
 	sql := fmt.Sprintf(getL1InfoRootSQL, indexFieldName, indexFieldName, indexFieldName)
 

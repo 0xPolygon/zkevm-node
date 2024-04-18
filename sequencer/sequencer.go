@@ -27,7 +27,7 @@ type Sequencer struct {
 	pool      txPool
 	stateIntf stateInterface
 	eventLog  *event.EventLog
-	etherman  etherman
+	etherman  ethermanInterface
 	worker    *Worker
 	finalizer *finalizer
 
@@ -42,7 +42,7 @@ type Sequencer struct {
 }
 
 // New init sequencer
-func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman etherman, eventLog *event.EventLog) (*Sequencer, error) {
+func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman ethermanInterface, eventLog *event.EventLog) (*Sequencer, error) {
 	addr, err := etherman.TrustedSequencer()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
