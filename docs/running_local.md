@@ -192,7 +192,7 @@ To configure your Metamask to use your local environment, follow these steps:
 | Address | Description |
 |---|---|
 | 0x8dAF17A20c9DBA35f005b6324F493785D239719d | Polygon ZKEVM |
-| 0x40E0576c0A7dff9dc460B29ba73e79aBf73dD2a9 | Polygon Bridge |
+| 0x8C879ABd0aa2ec9608EdD17F3134dFC4db0C37FC | Polygon Bridge |
 | 0x5FbDB2315678afecb367f032d93F642f64180aa3 | Pol token |
 | 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 | Polygon GlobalExitRootManager |
 | 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e | Polygon RollupManager |
@@ -209,11 +209,16 @@ To configure your Metamask to use your local environment, follow these steps:
 |---|---|
 | 0x617b3a3528F9cDd6630fd3301B9c8911F7Bf063D | 0x28b2b0318721be8c8339199172cd7cc8f5e273800a35616ec893083a4b32c02e |
 
-## Accounts
+## Aggregator Account
 
 | Address | Private Key |
 |---|---|
 | 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 | 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d |
+
+## Accounts
+
+| Address | Private Key |
+|---|---|
 | 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC | 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a |
 | 0x90F79bf6EB2c4f870365E785982E1f101E93b906 | 0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6 |
 | 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 | 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a |
