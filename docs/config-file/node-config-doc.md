@@ -1419,29 +1419,29 @@ SyncBlockProtection="safe"
 
 **Type:** : `boolean`
 
-**Default:** `false`
+**Default:** `true`
 
 **Description:** L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
 
-**Example setting the default value** (false):
+**Example setting the default value** (true):
 ```
 [Synchronizer]
-L1SyncCheckL2BlockHash=false
+L1SyncCheckL2BlockHash=true
 ```
 
 ### <a name="Synchronizer_L1SyncCheckL2BlockNumberhModulus"></a>9.6. `Synchronizer.L1SyncCheckL2BlockNumberhModulus`
 
 **Type:** : `integer`
 
-**Default:** `30`
+**Default:** `600`
 
 **Description:** L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check
 a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
 
-**Example setting the default value** (30):
+**Example setting the default value** (600):
 ```
 [Synchronizer]
-L1SyncCheckL2BlockNumberhModulus=30
+L1SyncCheckL2BlockNumberhModulus=600
 ```
 
 ### <a name="Synchronizer_L1BlockCheck"></a>9.7. `[Synchronizer.L1BlockCheck]`
