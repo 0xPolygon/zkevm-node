@@ -517,7 +517,7 @@ func (f *finalizer) processTransaction(ctx context.Context, tx *TxTracker, first
 		if f.effectiveGasPrice.IsEnabled() {
 			return nil, err
 		} else {
-			log.Warnf("effectiveGasPrice is disabled, but failed to to calculate efftive gas price percentage (#1), error: %v", err)
+			log.Warnf("effectiveGasPrice is disabled, but failed to calculate efftive gas price percentage (#1), error: %v", err)
 			tx.EGPLog.Error = fmt.Sprintf("%s; CalculateEffectiveGasPricePercentage#1: %s", tx.EGPLog.Error, err)
 		}
 	} else {

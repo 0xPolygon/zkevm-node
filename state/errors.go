@@ -39,7 +39,7 @@ var (
 	// ErrExistingTxGreaterThanProcessedTx indicates that we have more txs stored
 	// in db than the txs we want to process.
 	ErrExistingTxGreaterThanProcessedTx = errors.New("there are more transactions in the database than in the processed transaction set")
-	// ErrOutOfOrderProcessedTx indicates the the processed transactions of an
+	// ErrOutOfOrderProcessedTx indicates the processed transactions of an
 	// ongoing batch are not in the same order as the transactions stored in the
 	// database for the same batch.
 	ErrOutOfOrderProcessedTx = errors.New("the processed transactions are not in the same order as the stored transactions")

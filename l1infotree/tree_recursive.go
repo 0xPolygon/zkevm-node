@@ -72,7 +72,7 @@ func (mt *L1InfoTreeRecursive) AddLeaf(index uint32, leaf [32]byte) (common.Hash
 
 // GetRoot returns the root of the L1InfoTreeRecursive
 func (mt *L1InfoTreeRecursive) GetRoot() common.Hash {
-	// if the historicL1InfoTree is empty and the the current leaf is also empty
+	// if the historicL1InfoTree is empty and the current leaf is also empty
 	// returns the root as all zeros 0x0000...0000
 	if mt.historicL1InfoTree.GetRoot().String() == emptyHistoricL1InfoTreeRoot &&
 		mt.currentLeaf.Cmp(common.Hash{}) == 0 {

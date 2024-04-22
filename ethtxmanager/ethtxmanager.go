@@ -525,7 +525,7 @@ func (c *Client) monitorTx(ctx context.Context, mTx monitoredTx, logger *log.Log
 	}
 }
 
-// shouldContinueToMonitorThisTx checks the the tx receipt and decides if it should
+// shouldContinueToMonitorThisTx checks the tx receipt and decides if it should
 // continue or not to monitor the monitored tx related to the tx from this receipt
 func (c *Client) shouldContinueToMonitorThisTx(ctx context.Context, receipt types.Receipt) bool {
 	// if the receipt has a is successful result, stop monitoring
