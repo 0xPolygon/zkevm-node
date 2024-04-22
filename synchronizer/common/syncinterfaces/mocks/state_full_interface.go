@@ -2584,38 +2584,6 @@ func (_c *StateFullInterface_ResetForkID_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
-// ResetL1InfoTree provides a mock function with given fields:
-func (_m *StateFullInterface) ResetL1InfoTree() {
-	_m.Called()
-}
-
-// StateFullInterface_ResetL1InfoTree_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetL1InfoTree'
-type StateFullInterface_ResetL1InfoTree_Call struct {
-	*mock.Call
-}
-
-// ResetL1InfoTree is a helper method to define mock.On call
-func (_e *StateFullInterface_Expecter) ResetL1InfoTree() *StateFullInterface_ResetL1InfoTree_Call {
-	return &StateFullInterface_ResetL1InfoTree_Call{Call: _e.mock.On("ResetL1InfoTree")}
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) Run(run func()) *StateFullInterface_ResetL1InfoTree_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) Return() *StateFullInterface_ResetL1InfoTree_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) RunAndReturn(run func()) *StateFullInterface_ResetL1InfoTree_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ResetTrustedState provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StateFullInterface) ResetTrustedState(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, dbTx)
