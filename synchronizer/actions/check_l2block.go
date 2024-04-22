@@ -36,13 +36,16 @@ type CheckL2BlockHash struct {
 func NewCheckL2BlockHash(state stateGetL2Block,
 	trustedClient trustedRPCGetL2Block,
 	initialL2BlockNumber uint64,
-	modulusBlockNumber uint64) *CheckL2BlockHash {
+	modulusBlockNumber uint64) (*CheckL2BlockHash, error) {
+	if modulusBlockNumber == 0 {
+		return nil, fmt.Errorf("error: modulusBlockNumber is zero")
+	}
 	return &CheckL2BlockHash{
 		state:                 state,
 		trustedClient:         trustedClient,
 		lastL2BlockChecked:    initialL2BlockNumber,
 		modulusL2BlockToCheck: modulusBlockNumber,
-	}
+	}, nil
 }
 
 // CheckL2Block checks the  L2Block hash between the local and the trusted

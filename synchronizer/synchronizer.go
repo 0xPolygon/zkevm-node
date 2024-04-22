@@ -183,7 +183,11 @@ func NewSynchronizer(
 				log.Errorf("error getting last L2Block number from state. Error: %v", err)
 				return nil, err
 			}
-			l1checkerL2Blocks = actions.NewCheckL2BlockHash(res.state, res.zkEVMClientEthereumCompatible, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
+			l1checkerL2Blocks, err = actions.NewCheckL2BlockHash(res.state, res.zkEVMClientEthereumCompatible, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
+			if err != nil {
+				log.Error("error creating new instance of checkL2BlockHash. Error: ", err)
+				return nil, err
+			}
 		} else {
 			log.Infof("Trusted Node can't check L2Block hash, ignoring parameter")
 		}
