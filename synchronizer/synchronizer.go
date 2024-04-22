@@ -574,7 +574,12 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 
 	for {
 		if toBlock > lastKnownBlock.Uint64() {
+			log.Debug("Setting toBlock to the lastKnownBlock")
 			toBlock = lastKnownBlock.Uint64()
+		}
+		if fromBlock > toBlock {
+			log.Debug("FromBlock is higher than toBlock. Skipping...")
+			return lastEthBlockSynced, nil
 		}
 		log.Infof("Syncing block %d of %d", fromBlock, lastKnownBlock.Uint64())
 		log.Infof("Getting rollup info from block %d to block %d", fromBlock, toBlock)
