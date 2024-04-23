@@ -161,6 +161,7 @@ type storage interface {
 	AddL1InfoTreeRecursiveRootToExitRoot(ctx context.Context, exitRoot *L1InfoTreeRecursiveExitRootStorageEntry, dbTx pgx.Tx) error
 	GetAllL1InfoTreeRecursiveRootEntries(ctx context.Context, dbTx pgx.Tx) ([]L1InfoTreeRecursiveExitRootStorageEntry, error)
 	GetLatestL1InfoTreeRecursiveRoot(ctx context.Context, maxBlockNumber uint64, dbTx pgx.Tx) (L1InfoTreeRecursiveExitRootStorageEntry, error)
+	UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error
 	storeblobsequences
 }
 

@@ -2900,6 +2900,11 @@ func (_m *StateFullInterface) UpdateForkIDBlockNumber(ctx context.Context, forkd
 	return r0
 }
 
+// UpdateBatchTimestamp provides a mock function with given fields: ctx, batchNumber, batchTime, dbTx
+func (_m *StateFullInterface) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error {
+	return nil
+}
+
 // StateFullInterface_UpdateForkIDBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateForkIDBlockNumber'
 type StateFullInterface_UpdateForkIDBlockNumber_Call struct {
 	*mock.Call

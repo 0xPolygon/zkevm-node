@@ -51,6 +51,10 @@ func (_m *StorageMock) AddAccumulatedInputHash(ctx context.Context, batchNum uin
 	return r0
 }
 
+func (_m *StorageMock) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error {
+	return nil
+}
+
 // StorageMock_AddAccumulatedInputHash_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddAccumulatedInputHash'
 type StorageMock_AddAccumulatedInputHash_Call struct {
 	*mock.Call

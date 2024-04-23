@@ -32,6 +32,7 @@ type stateProcessSequenceBatches interface {
 	AddVirtualBatch(ctx context.Context, virtualBatch *state.VirtualBatch, dbTx pgx.Tx) error
 	AddTrustedReorg(ctx context.Context, trustedReorg *state.TrustedReorg, dbTx pgx.Tx) error
 	GetL1InfoTreeDataFromBatchL2Data(ctx context.Context, batchL2Data []byte, dbTx pgx.Tx) (map[uint32]state.L1DataV2, common.Hash, common.Hash, error)
+	UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error
 }
 
 type syncProcessSequenceBatchesInterface interface {
@@ -276,6 +277,12 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 				}
 				return err
 			}
+
+			// Update the existing batch with L1's MaxSequenceTimestamp
+			err = p.updatePermissionLessBatchTimestamp(ctx, batch.BatchNumber, l1BlockTimestamp, dbTx)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Call the check trusted state method to compare trusted and virtual state
@@ -418,4 +425,24 @@ func (p *ProcessorL1SequenceBatchesEtrog) checkTrustedState(ctx context.Context,
 // halt halts the Synchronizer
 func (p *ProcessorL1SequenceBatchesEtrog) halt(ctx context.Context, err error) {
 	p.halter.CriticalError(ctx, err)
+}
+
+// updatePermissionLessBatchTimestamp updates the batch timestamp for permission less rpc
+func (p *ProcessorL1SequenceBatchesEtrog) updatePermissionLessBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error {
+	if p.sync.IsTrustedSequencer() {
+		return nil
+	}
+
+	log.Infof("Permission less rpc updates batch timestamp for batch: %v with new timestamp:%v", batchNumber, batchTime)
+	err := p.state.UpdateBatchTimestamp(ctx, batchNumber, batchTime, dbTx)
+	if err != nil {
+		log.Errorf("error update batch timestamp for batch: %v, batchTime:%v, . Error; %v", batchNumber, batchTime, err)
+		rollbackErr := dbTx.Rollback(ctx)
+		if rollbackErr != nil {
+			log.Errorf("error rolling back state. BatchNumber: %d, batchTime:%v, rollbackErr: %v", batchNumber, batchTime, rollbackErr)
+			return rollbackErr
+		}
+		return err
+	}
+	return nil
 }
