@@ -161,6 +161,10 @@ func (s *TrustedBatchesRetrieve) syncTrustedBatchesToFrom(ctx context.Context, l
 			s.TrustedStateMngr.Clear()
 		}
 		batchNumberToSync++
+		if !batchToSync.Closed && batchNumberToSync <= lastTrustedStateBatchNumber {
+			log.Infof("%s Batch %d is not closed. so we break synchronization from Trusted Node because can only have 1 WIP batch on state", debugPrefix, batchToSync.Number)
+			return nil
+		}
 	}
 
 	log.Infof("syncTrustedState: Trusted state fully synchronized from %d to %d", latestSyncedBatch, lastTrustedStateBatchNumber)
