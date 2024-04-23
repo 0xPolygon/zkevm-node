@@ -9,24 +9,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type migrationTest0019TestCase struct {
+type migrationTest0020TestCase struct {
 	Name  string
-	Block migrationTest0019TestCaseBlock
+	Block migrationTest0020TestCaseBlock
 }
 
-type migrationTest0019TestCaseBlock struct {
-	Transactions []migrationTest0019TestCaseTransaction
+type migrationTest0020TestCaseBlock struct {
+	Transactions []migrationTest0020TestCaseTransaction
 }
 
-type migrationTest0019TestCaseTransaction struct {
+type migrationTest0020TestCaseTransaction struct {
 	CurrentIndex uint
 }
 
-type migrationTest0019 struct {
-	TestCases []migrationTest0019TestCase
+type migrationTest0020 struct {
+	TestCases []migrationTest0020TestCase
 }
 
-func (m migrationTest0019) InsertData(db *sql.DB) error {
+func (m migrationTest0020) InsertData(db *sql.DB) error {
 	const addBlock0 = "INSERT INTO state.block (block_num, received_at, block_hash) VALUES (0, now(), '0x0')"
 	if _, err := db.Exec(addBlock0); err != nil {
 		return err
@@ -65,7 +65,7 @@ func (m migrationTest0019) InsertData(db *sql.DB) error {
 	return nil
 }
 
-func (m migrationTest0019) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
+func (m migrationTest0020) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
 	const getReceiptsByBlock = "SELECT r.tx_index FROM state.receipt r WHERE r.block_num = $1 ORDER BY r.tx_index"
 
 	for tci := range m.TestCases {
@@ -85,25 +85,25 @@ func (m migrationTest0019) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) 
 	}
 }
 
-func (m migrationTest0019) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
+func (m migrationTest0020) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
 	m.RunAssertsAfterMigrationUp(t, db)
 }
 
-func TestMigration0019(t *testing.T) {
-	runMigrationTest(t, 19, migrationTest0019{
-		TestCases: []migrationTest0019TestCase{
+func TestMigration0020(t *testing.T) {
+	runMigrationTest(t, 20, migrationTest0020{
+		TestCases: []migrationTest0020TestCase{
 			{
 				Name: "single tx with correct index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
+				Block: migrationTest0020TestCaseBlock{
+					Transactions: []migrationTest0020TestCaseTransaction{
 						{CurrentIndex: 0},
 					},
 				},
 			},
 			{
 				Name: "multiple txs indexes are correct",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
+				Block: migrationTest0020TestCaseBlock{
+					Transactions: []migrationTest0020TestCaseTransaction{
 						{CurrentIndex: 0},
 						{CurrentIndex: 1},
 						{CurrentIndex: 2},
@@ -112,16 +112,16 @@ func TestMigration0019(t *testing.T) {
 			},
 			{
 				Name: "single tx with wrong tx index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
+				Block: migrationTest0020TestCaseBlock{
+					Transactions: []migrationTest0020TestCaseTransaction{
 						{CurrentIndex: 3},
 					},
 				},
 			},
 			{
 				Name: "multiple txs missing 0 index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
+				Block: migrationTest0020TestCaseBlock{
+					Transactions: []migrationTest0020TestCaseTransaction{
 						{CurrentIndex: 1},
 						{CurrentIndex: 2},
 						{CurrentIndex: 3},
@@ -131,8 +131,8 @@ func TestMigration0019(t *testing.T) {
 			},
 			{
 				Name: "multiple has index 0 but also txs index gap",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
+				Block: migrationTest0020TestCaseBlock{
+					Transactions: []migrationTest0020TestCaseTransaction{
 						{CurrentIndex: 0},
 						{CurrentIndex: 2},
 						{CurrentIndex: 4},

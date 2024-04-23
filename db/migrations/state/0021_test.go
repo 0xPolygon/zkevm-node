@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type migrationTest0020 struct {
+type migrationTest0021 struct {
 	migrationBase
 
 	blockHashValue         string
@@ -19,7 +19,7 @@ type migrationTest0020 struct {
 	l1InfoRootValue        string
 }
 
-func (m migrationTest0020) insertBlock(blockNumber uint64, db *sql.DB) error {
+func (m migrationTest0021) insertBlock(blockNumber uint64, db *sql.DB) error {
 	const addBlock = "INSERT INTO state.block (block_num, received_at, block_hash) VALUES ($1, $2, $3)"
 	if _, err := db.Exec(addBlock, blockNumber, time.Now(), m.blockHashValue); err != nil {
 		return err
@@ -27,7 +27,7 @@ func (m migrationTest0020) insertBlock(blockNumber uint64, db *sql.DB) error {
 	return nil
 }
 
-func (m migrationTest0020) insertRowInOldTable(db *sql.DB, args ...interface{}) error {
+func (m migrationTest0021) insertRowInOldTable(db *sql.DB, args ...interface{}) error {
 	sql := `
     INSERT INTO state.exit_root (block_num, "timestamp", mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index)
                          VALUES (       $1,          $2,                $3,               $4,               $5,              $6,           $7,                 $8);`
@@ -36,7 +36,7 @@ func (m migrationTest0020) insertRowInOldTable(db *sql.DB, args ...interface{}) 
 	return err
 }
 
-func (m migrationTest0020) insertRowInMigratedTable(db *sql.DB, args ...interface{}) error {
+func (m migrationTest0021) insertRowInMigratedTable(db *sql.DB, args ...interface{}) error {
 	sql := `
     INSERT INTO state.exit_root (block_num, "timestamp", mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index, l1_info_tree_recursive_index)
                          VALUES (       $1,          $2,                $3,               $4,               $5,              $6,           $7,                 $8,                        $9);`
@@ -45,7 +45,7 @@ func (m migrationTest0020) insertRowInMigratedTable(db *sql.DB, args ...interfac
 	return err
 }
 
-func (m migrationTest0020) InsertData(db *sql.DB) error {
+func (m migrationTest0021) InsertData(db *sql.DB) error {
 	var err error
 	for i := uint64(1); i <= 6; i++ {
 		if err = m.insertBlock(i, db); err != nil {
@@ -56,7 +56,7 @@ func (m migrationTest0020) InsertData(db *sql.DB) error {
 	return nil
 }
 
-func (m migrationTest0020) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
+func (m migrationTest0021) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
 	m.AssertNewAndRemovedItemsAfterMigrationUp(t, db)
 
 	var nilL1InfoTreeIndex *uint = nil
@@ -70,7 +70,7 @@ func (m migrationTest0020) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) 
 	assert.NoError(t, err)
 }
 
-func (m migrationTest0020) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
+func (m migrationTest0021) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
 	m.AssertNewAndRemovedItemsAfterMigrationDown(t, db)
 
 	var nilL1InfoTreeIndex *uint = nil
@@ -84,8 +84,8 @@ func (m migrationTest0020) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB
 	assert.Error(t, err)
 }
 
-func TestMigration0020(t *testing.T) {
-	m := migrationTest0020{
+func TestMigration0021(t *testing.T) {
+	m := migrationTest0021{
 		migrationBase: migrationBase{
 			newIndexes: []string{
 				"idx_exit_root_l1_info_tree_recursive_index",
@@ -102,5 +102,5 @@ func TestMigration0020(t *testing.T) {
 		previousBlockHashValue: "0xe865e912b504572a4d80ad018e29797e3c11f00bf9ae2549548a25779c9d7e57",
 		l1InfoRootValue:        "0x2b9484b83c6398033241865b015fb9430eb3e159182a6075d00c924845cc393e",
 	}
-	runMigrationTest(t, 20, m)
+	runMigrationTest(t, 21, m)
 }
