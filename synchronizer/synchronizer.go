@@ -157,7 +157,11 @@ func NewSynchronizer(
 				log.Errorf("error getting last L2Block number from state. Error: %v", err)
 				return nil, err
 			}
-			l1checkerL2Blocks = actions.NewCheckL2BlockHash(res.state, res.zkEVMClientEthereumCompatible, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
+			l1checkerL2Blocks, err = actions.NewCheckL2BlockHash(res.state, res.zkEVMClientEthereumCompatible, initialL2Block, cfg.L1SyncCheckL2BlockNumberhModulus)
+			if err != nil {
+				log.Error("error creating new instance of checkL2BlockHash. Error: ", err)
+				return nil, err
+			}
 		} else {
 			log.Infof("Trusted Node can't check L2Block hash, ignoring parameter")
 		}
@@ -592,7 +596,12 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 
 	for {
 		if toBlock > lastKnownBlock.Uint64() {
+			log.Debug("Setting toBlock to the lastKnownBlock")
 			toBlock = lastKnownBlock.Uint64()
+		}
+		if fromBlock > toBlock {
+			log.Debug("FromBlock is higher than toBlock. Skipping...")
+			return lastEthBlockSynced, nil
 		}
 		log.Infof("Syncing block %d of %d", fromBlock, lastKnownBlock.Uint64())
 		log.Infof("Getting rollup info from block %d to block %d", fromBlock, toBlock)
@@ -718,6 +727,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 		// Add block information
 		err = s.state.AddBlock(s.ctx, &b, dbTx)
 		if err != nil {
+			// If any goes wrong we ensure that the state is rollbacked
 			log.Errorf("error storing block. BlockNumber: %d, error: %v", blocks[i].BlockNumber, err)
 			rollbackErr := dbTx.Rollback(s.ctx)
 			if rollbackErr != nil {
@@ -754,6 +764,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 		log.Debug("Checking FlushID to commit L1 data to db")
 		err = s.checkFlushID(dbTx)
 		if err != nil {
+			// If any goes wrong we ensure that the state is rollbacked
 			log.Errorf("error checking flushID. Error: %v", err)
 			rollbackErr := dbTx.Rollback(s.ctx)
 			if rollbackErr != nil {
@@ -764,6 +775,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 		}
 		err = dbTx.Commit(s.ctx)
 		if err != nil {
+			// If any goes wrong we ensure that the state is rollbacked
 			log.Errorf("error committing state to store block. BlockNumber: %d, err: %v", blocks[i].BlockNumber, err)
 			rollbackErr := dbTx.Rollback(s.ctx)
 			if rollbackErr != nil {
