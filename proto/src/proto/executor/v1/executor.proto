@@ -313,6 +313,9 @@ message ProcessStatelessBatchRequestV2 {
     // Debug
     string context_id = 8; // batch ID to be shown in the executor traces, for your convenience: "Erigon_candidate_batch_N"
     TraceConfigV2 trace_config = 9;
+
+    // Mapping to provide minTimestamp for each l1InfoTreeIndex in a batch
+    map<uint64, uint64> l1_info_tree_index_min_timestamp = 10;
 }
 
 message L1DataV2 {
@@ -948,7 +951,13 @@ enum ExecutorError {
     // EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT indicates that at least one saved context was not restored before finishing the execution
     EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT = 136;
     // EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX indicates that the memory context polynomial was assigned an invalid value
-    EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX = 137; 
+    EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX = 137;
+    // EXECUTOR_ERROR_INVALID_VERSIONED_HASH indicates that the input parameter versioned_hash is invalid
+    EXECUTOR_ERROR_INVALID_VERSIONED_HASH = 138;
+    // EXECUTOR_ERROR_INVALID_KZG_COMMITMENT indicates that the input parameter kzg_commitment is invalid
+    EXECUTOR_ERROR_INVALID_KZG_COMMITMENT = 139;
+    // EXECUTOR_ERROR_INVALID_KZG_PROOF indicates that the input parameter kzg_proof is invalid
+    EXECUTOR_ERROR_INVALID_KZG_PROOF = 140;
 }
 
 ////////////////////////////////////////////////
@@ -1057,14 +1066,17 @@ message ProcessBlobInnerRequestV3 {
     string coinbase = 9;
     uint64 zk_gas_limit = 10;
     uint32 blob_type = 11;
-    bytes point_z = 12;
-    bytes point_y = 13;
-    bytes blob_data = 14;
-    bytes forced_hash_data = 15;
-    string context_id = 16;
-    DebugV3 debug = 17;
-    map<string, string> db = 18;
-    map<string, string> contracts_bytecode = 19; // For debug/testing purpposes only. Don't fill this on production
+    bytes versioned_hash = 12;
+    bytes kzg_commitment = 13;
+    bytes kzg_proof = 14;
+    bytes point_z = 15;
+    bytes point_y = 16;
+    bytes blob_data = 17;
+    bytes forced_hash_data = 18;
+    string context_id = 19;
+    DebugV3 debug = 20;
+    map<string, string> db = 21;
+    map<string, string> contracts_bytecode = 22; // For debug/testing purpposes only. Don't fill this on production
 }
 
 message DebugV3 {

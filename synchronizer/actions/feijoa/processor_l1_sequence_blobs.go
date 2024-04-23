@@ -2,13 +2,15 @@ package feijoa
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions"
+	commonsync "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -16,60 +18,151 @@ import (
 type stateProcessorSequenceBlobsInterface interface {
 	AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error
 	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error)
+	GetL1InfoRecursiveRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error)
+}
+
+type stateBlobInnerProcessor interface {
+	ProcessBlobInner(ctx context.Context, request state.ProcessBlobInnerProcessRequest, data []byte) (*state.ProcessBlobInnerResponse, error)
 }
 
 // ProcessorSequenceBlobs processor for SequenceBlobs
 type ProcessorSequenceBlobs struct {
 	actions.ProcessorBase[ProcessorL1InfoTreeUpdate]
-	state stateProcessorSequenceBlobsInterface
+	state                   stateProcessorSequenceBlobsInterface
+	stateBlobInnerProcessor stateBlobInnerProcessor
+	timeProvider            commonsync.TimeProvider
 }
 
 // NewProcessorSequenceBlobs new processor for SequenceBlobs
-func NewProcessorSequenceBlobs(state stateProcessorSequenceBlobsInterface) *ProcessorSequenceBlobs {
+func NewProcessorSequenceBlobs(state stateProcessorSequenceBlobsInterface, stateBlobInnerProcessor stateBlobInnerProcessor, timeProvider commonsync.TimeProvider) *ProcessorSequenceBlobs {
+	if timeProvider == nil {
+		timeProvider = &commonsync.DefaultTimeProvider{}
+	}
 	return &ProcessorSequenceBlobs{
 		ProcessorBase: *actions.NewProcessorBase[ProcessorL1InfoTreeUpdate](
 			[]etherman.EventOrder{etherman.SequenceBlobsOrder},
 			actions.ForksIdOnlyFeijoa),
-		state: state}
+		state:                   state,
+		stateBlobInnerProcessor: stateBlobInnerProcessor,
+		timeProvider:            timeProvider,
+	}
 }
 
 // Process process event
 // - Store BlobSequence
-// - Split Data into BlobInner (executor)
+// - Split BlobInner into Batches (executor)
 // - Store BlobInner
 func (p *ProcessorSequenceBlobs) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
-	seqBlobs := l1Block.SequenceBlobs[order.Pos]
-
-	err := p.storeBlobSequence(ctx, dbTx, &seqBlobs, l1Block.ReceivedAt)
+	seqBlobs := &l1Block.SequenceBlobs[order.Pos]
+	previousBlobSequence, newBlobSequence, err := p.doBlobSequence(ctx, seqBlobs, l1Block, dbTx)
 	if err != nil {
 		return err
 	}
 
 	for idx := range seqBlobs.Blobs {
-		log.Infof("Blob %d: %s", idx, seqBlobs.Blobs[idx].String())
+		blobNum := newBlobSequence.FirstBlobSequenced + uint64(idx)
+		log.Infof("Blob %d: blobNum:%d", idx, blobNum)
+		err := p.doBlobInner(ctx, blobNum, &seqBlobs.Blobs[idx], newBlobSequence, previousBlobSequence, dbTx)
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
-
-func (p *ProcessorSequenceBlobs) storeBlobSequence(ctx context.Context, dbTx pgx.Tx, seqBlobs *etherman.SequenceBlobs, createAt time.Time) error {
-	if seqBlobs == nil || seqBlobs.EventData == nil {
-		return fmt.Errorf("sequence blobs is nil or EventData is nil")
-	}
-
-	nextIndex := uint64(1)
-	previousBlobSequenceOnState, err := p.state.GetLastBlobSequence(ctx, dbTx)
+func (p *ProcessorSequenceBlobs) doBlobInner(ctx context.Context, blobNum uint64, blob *etherman.SequenceBlob, newBlobSequence, previousBlobSequence *state.BlobSequence, dbTx pgx.Tx) error {
+	// TODO: We have to choose which tree depending on ForkID?
+	leaf, err := p.state.GetL1InfoRecursiveRootLeafByIndex(ctx, blob.Params.L1InfoLeafIndex, dbTx)
 	if err != nil {
 		return err
 	}
-	if previousBlobSequenceOnState != nil {
-		nextIndex = previousBlobSequenceOnState.Index + 1
+
+	stateBlob, err := p.convertToStateBlobInner(blob, blobNum, newBlobSequence.BlobSequenceIndex, leaf.L1InfoTreeRoot)
+	if err != nil {
+		log.Errorf("Error converting blob to state: %v", err)
+		return err
 	}
-	stateBlobSequence := state.BlobSequence{
-		Index:             nextIndex,
-		L2Coinbase:        seqBlobs.L2Coinbase,
-		FinalAccInputHash: seqBlobs.FinalAccInputHash,
-		LastBlobSequenced: seqBlobs.EventData.LastBlobSequenced,
-		CreateAt:          createAt,
+	//p.sate.AddBlobInner(ctx, stateBlob, dbTx)
+
+	processBuilder := state.NewProcessBlobInnerProcessRequestBuilder(uint64(10), stateBlob, previousBlobSequence, *newBlobSequence)
+	processRequest, err := processBuilder.Build()
+	if err != nil {
+		return err
 	}
-	return p.state.AddBlobSequence(ctx, &stateBlobSequence, dbTx)
+	response, err := p.stateBlobInnerProcessor.ProcessBlobInner(ctx, processRequest, blob.Data)
+	if err != nil {
+		return err
+	}
+	log.Infof("Blob %d: response: %v", blobNum, response)
+	return nil
+}
+
+// returns previousBlobSequence and new one
+func (p *ProcessorSequenceBlobs) doBlobSequence(ctx context.Context,
+	incommingSequenceBlobs *etherman.SequenceBlobs, l1Block *etherman.Block, dbTx pgx.Tx) (*state.BlobSequence, *state.BlobSequence, error) {
+	previousBlobSequence, err := p.state.GetLastBlobSequence(ctx, dbTx)
+	if err != nil {
+		return nil, nil, err
+	}
+	blobSequenceIndex := p.calculateBlobSequenceIndex(previousBlobSequence)
+	newBlobSequence := p.convertToStateBlobSequence(incommingSequenceBlobs, blobSequenceIndex, l1Block.ReceivedAt, p.timeProvider.Now(), l1Block.BlockNumber)
+	p.state.AddBlobSequence(ctx, newBlobSequence, dbTx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return previousBlobSequence, newBlobSequence, nil
+}
+
+func (p *ProcessorSequenceBlobs) calculateBlobSequenceIndex(previousBlobSequence *state.BlobSequence) uint64 {
+	nextIndex := uint64(1)
+	if previousBlobSequence != nil {
+		nextIndex = previousBlobSequence.BlobSequenceIndex + 1
+	}
+	return nextIndex
+}
+
+func (p *ProcessorSequenceBlobs) convertToStateBlobInner(blobInner *etherman.SequenceBlob, blobInnerNum uint64, blobSequenceIndex uint64, l1InfoTreeRoot common.Hash) (*state.BlobInner, error) {
+	res := &state.BlobInner{
+		BlobSequenceIndex:    blobSequenceIndex,
+		BlobInnerNum:         blobInnerNum, // ho trect del previousBlobSequence
+		Type:                 p.convertBlobType(blobInner.Type),
+		MaxSequenceTimestamp: time.Unix(int64(blobInner.Params.MaxSequenceTimestamp), 0),
+		ZkGasLimit:           blobInner.Params.ZkGasLimit,
+		L1InfoLeafIndex:      blobInner.Params.L1InfoLeafIndex,
+		L1InfoTreeRoot:       l1InfoTreeRoot,
+	}
+	if res.Type == state.TypeBlobTransaction {
+		if blobInner.BlobBlobTypeParams == nil {
+			return nil, errors.New("BlobBlobTypeParams from etherman is required for BlobTransaction")
+		}
+		res.BlobBlobTypeParams = &state.BlobBlobTypeParams{
+			BlobIndex:  blobInner.BlobBlobTypeParams.BlobIndex.Uint64(),
+			Z:          blobInner.BlobBlobTypeParams.Z,
+			Y:          blobInner.BlobBlobTypeParams.Y,
+			Commitment: blobInner.BlobBlobTypeParams.Commitment,
+			Proof:      blobInner.BlobBlobTypeParams.Proof,
+		}
+	}
+	return res, nil
+}
+
+func (p *ProcessorSequenceBlobs) convertBlobType(value etherman.BlobType) state.BlobType {
+	return state.BlobType(value)
+}
+
+func (p *ProcessorSequenceBlobs) convertToStateBlobSequence(etherSeqBlobs *etherman.SequenceBlobs,
+	nextIndex uint64,
+	createAt time.Time,
+	receviedAt time.Time,
+	l1BlockNumber uint64) *state.BlobSequence {
+	return &state.BlobSequence{
+		BlobSequenceIndex:  nextIndex,
+		L2Coinbase:         etherSeqBlobs.L2Coinbase,
+		FirstBlobSequenced: etherSeqBlobs.EventData.LastBlobSequenced - uint64(len(etherSeqBlobs.Blobs)),
+		LastBlobSequenced:  etherSeqBlobs.EventData.LastBlobSequenced,
+		FinalAccInputHash:  etherSeqBlobs.FinalAccInputHash,
+		CreateAt:           createAt,
+		ReceivedAt:         receviedAt,
+		BlockNumber:        l1BlockNumber,
+	}
 }

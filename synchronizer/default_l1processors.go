@@ -26,6 +26,6 @@ func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions
 	p.Register(actions.NewCheckL2BlockDecorator(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state), l2Blockchecker))
 	// intialSequence is process in ETROG by the same class, this is just a wrapper to pass directly to ETROG
 	p.Register(elderberry.NewProcessorL1InitialSequenceBatchesElderberry(sequenceBatchesProcessor))
-	p.Register(feijoa.NewProcessorSequenceBlobs(sync.state))
+	p.Register(feijoa.NewProcessorSequenceBlobs(sync.state, sync.state, nil))
 	return p.Build()
 }

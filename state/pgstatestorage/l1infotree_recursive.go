@@ -40,3 +40,7 @@ func (p *PostgresStorage) GetLatestL1InfoTreeRecursiveRoot(ctx context.Context, 
 func (p *PostgresStorage) GetLatestL1InfoTreeRecursiveIndex(ctx context.Context, dbTx pgx.Tx) (uint32, error) {
 	return p.GetLatestIndexVx(ctx, dbTx, l1InfoTreeRecursiveIndexFieldName)
 }
+
+func (p *PostgresStorage) GetL1InfoRecursiveRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error) {
+	return p.GetL1InfoRootLeafByIndexVx(ctx, l1InfoTreeIndex, dbTx, l1InfoTreeIndexFieldName)
+}

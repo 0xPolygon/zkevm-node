@@ -161,10 +161,17 @@ type storage interface {
 	AddL1InfoTreeRecursiveRootToExitRoot(ctx context.Context, exitRoot *L1InfoTreeRecursiveExitRootStorageEntry, dbTx pgx.Tx) error
 	GetAllL1InfoTreeRecursiveRootEntries(ctx context.Context, dbTx pgx.Tx) ([]L1InfoTreeRecursiveExitRootStorageEntry, error)
 	GetLatestL1InfoTreeRecursiveRoot(ctx context.Context, maxBlockNumber uint64, dbTx pgx.Tx) (L1InfoTreeRecursiveExitRootStorageEntry, error)
+	GetL1InfoRecursiveRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (L1InfoTreeExitRootStorageEntry, error)
+
 	storeblobsequences
+	storeblobinner
 }
 
 type storeblobsequences interface {
 	AddBlobSequence(ctx context.Context, blobSequence *BlobSequence, dbTx pgx.Tx) error
 	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*BlobSequence, error)
+}
+
+type storeblobinner interface {
+	AddBlobInner(ctx context.Context, blobInner *BlobInner, dbTx pgx.Tx) error
 }

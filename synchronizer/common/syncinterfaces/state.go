@@ -25,12 +25,7 @@ type StateLastBlockGetter interface {
 	GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error)
 }
 
-type StateBlobSequencerReader interface {
-	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error)
-}
-
-type StateBlobSequenceWriter interface {
-	AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error
+type StateBlobSequencer interface {
 }
 
 // StateFullInterface gathers the methods required to interact with the state.
@@ -86,6 +81,8 @@ type StateFullInterface interface {
 	UpdateForkIDBlockNumber(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx) error
 	GetLastL2BlockNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetL2BlockByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.L2Block, error)
-	StateBlobSequencerReader
-	StateBlobSequenceWriter
+	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error)
+	AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error
+	GetL1InfoRecursiveRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error)
+	ProcessBlobInner(ctx context.Context, request state.ProcessBlobInnerProcessRequest, data []byte) (*state.ProcessBlobInnerResponse, error)
 }
