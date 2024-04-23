@@ -150,6 +150,7 @@ Outputs=["stderr"]
 | Property                                          | Pattern | Type    | Deprecated | Definition | Title/Description                                                                       |
 | ------------------------------------------------- | ------- | ------- | ---------- | ---------- | --------------------------------------------------------------------------------------- |
 | - [URL](#Etherman_URL )                           | No      | string  | No         | -          | URL is the URL of the Ethereum node for L1                                              |
+| - [ConsensusL1URL](#Etherman_ConsensusL1URL )     | No      | string  | No         | -          | ConsensusL1URL is the URL of the consensus L1 RPC endpoint                              |
 | - [ForkIDChunkSize](#Etherman_ForkIDChunkSize )   | No      | integer | No         | -          | ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs     |
 | - [MultiGasProvider](#Etherman_MultiGasProvider ) | No      | boolean | No         | -          | allow that L1 gas price calculation use multiples sources                               |
 | - [Etherscan](#Etherman_Etherscan )               | No      | object  | No         | -          | Configuration for use Etherscan as used as gas provider, basically it needs the API-KEY |
@@ -168,7 +169,21 @@ Outputs=["stderr"]
 URL="http://localhost:8545"
 ```
 
-### <a name="Etherman_ForkIDChunkSize"></a>5.2. `Etherman.ForkIDChunkSize`
+### <a name="Etherman_ConsensusL1URL"></a>5.2. `Etherman.ConsensusL1URL`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ConsensusL1URL is the URL of the consensus L1 RPC endpoint
+
+**Example setting the default value** (""):
+```
+[Etherman]
+ConsensusL1URL=""
+```
+
+### <a name="Etherman_ForkIDChunkSize"></a>5.3. `Etherman.ForkIDChunkSize`
 
 **Type:** : `integer`
 
@@ -182,7 +197,7 @@ URL="http://localhost:8545"
 ForkIDChunkSize=20000
 ```
 
-### <a name="Etherman_MultiGasProvider"></a>5.3. `Etherman.MultiGasProvider`
+### <a name="Etherman_MultiGasProvider"></a>5.4. `Etherman.MultiGasProvider`
 
 **Type:** : `boolean`
 
@@ -196,7 +211,7 @@ ForkIDChunkSize=20000
 MultiGasProvider=false
 ```
 
-### <a name="Etherman_Etherscan"></a>5.4. `[Etherman.Etherscan]`
+### <a name="Etherman_Etherscan"></a>5.5. `[Etherman.Etherscan]`
 
 **Type:** : `object`
 **Description:** Configuration for use Etherscan as used as gas provider, basically it needs the API-KEY
@@ -206,7 +221,7 @@ MultiGasProvider=false
 | - [ApiKey](#Etherman_Etherscan_ApiKey ) | No      | string | No         | -          | Need API key to use etherscan, if it's empty etherscan is not used                                                                    |
 | - [Url](#Etherman_Etherscan_Url )       | No      | string | No         | -          | URL of the etherscan API. Overwritten with a hardcoded URL: "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" |
 
-#### <a name="Etherman_Etherscan_ApiKey"></a>5.4.1. `Etherman.Etherscan.ApiKey`
+#### <a name="Etherman_Etherscan_ApiKey"></a>5.5.1. `Etherman.Etherscan.ApiKey`
 
 **Type:** : `string`
 
@@ -220,7 +235,7 @@ MultiGasProvider=false
 ApiKey=""
 ```
 
-#### <a name="Etherman_Etherscan_Url"></a>5.4.2. `Etherman.Etherscan.Url`
+#### <a name="Etherman_Etherscan_Url"></a>5.5.2. `Etherman.Etherscan.Url`
 
 **Type:** : `string`
 

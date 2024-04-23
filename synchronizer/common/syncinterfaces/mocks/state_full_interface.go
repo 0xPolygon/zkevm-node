@@ -84,6 +84,54 @@ func (_c *StateFullInterface_AddAccumulatedInputHash_Call) RunAndReturn(run func
 	return _c
 }
 
+// AddBlobSequence provides a mock function with given fields: ctx, blobSequence, dbTx
+func (_m *StateFullInterface) AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, blobSequence, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddBlobSequence")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *state.BlobSequence, pgx.Tx) error); ok {
+		r0 = rf(ctx, blobSequence, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StateFullInterface_AddBlobSequence_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddBlobSequence'
+type StateFullInterface_AddBlobSequence_Call struct {
+	*mock.Call
+}
+
+// AddBlobSequence is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blobSequence *state.BlobSequence
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) AddBlobSequence(ctx interface{}, blobSequence interface{}, dbTx interface{}) *StateFullInterface_AddBlobSequence_Call {
+	return &StateFullInterface_AddBlobSequence_Call{Call: _e.mock.On("AddBlobSequence", ctx, blobSequence, dbTx)}
+}
+
+func (_c *StateFullInterface_AddBlobSequence_Call) Run(run func(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx)) *StateFullInterface_AddBlobSequence_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*state.BlobSequence), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_AddBlobSequence_Call) Return(_a0 error) *StateFullInterface_AddBlobSequence_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StateFullInterface_AddBlobSequence_Call) RunAndReturn(run func(context.Context, *state.BlobSequence, pgx.Tx) error) *StateFullInterface_AddBlobSequence_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddBlock provides a mock function with given fields: ctx, block, dbTx
 func (_m *StateFullInterface) AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, block, dbTx)
@@ -1393,6 +1441,65 @@ func (_c *StateFullInterface_GetLastBatchNumber_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// GetLastBlobSequence provides a mock function with given fields: ctx, dbTx
+func (_m *StateFullInterface) GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error) {
+	ret := _m.Called(ctx, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastBlobSequence")
+	}
+
+	var r0 *state.BlobSequence
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (*state.BlobSequence, error)); ok {
+		return rf(ctx, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) *state.BlobSequence); ok {
+		r0 = rf(ctx, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.BlobSequence)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, pgx.Tx) error); ok {
+		r1 = rf(ctx, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetLastBlobSequence_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastBlobSequence'
+type StateFullInterface_GetLastBlobSequence_Call struct {
+	*mock.Call
+}
+
+// GetLastBlobSequence is a helper method to define mock.On call
+//   - ctx context.Context
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetLastBlobSequence(ctx interface{}, dbTx interface{}) *StateFullInterface_GetLastBlobSequence_Call {
+	return &StateFullInterface_GetLastBlobSequence_Call{Call: _e.mock.On("GetLastBlobSequence", ctx, dbTx)}
+}
+
+func (_c *StateFullInterface_GetLastBlobSequence_Call) Run(run func(ctx context.Context, dbTx pgx.Tx)) *StateFullInterface_GetLastBlobSequence_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetLastBlobSequence_Call) Return(_a0 *state.BlobSequence, _a1 error) *StateFullInterface_GetLastBlobSequence_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetLastBlobSequence_Call) RunAndReturn(run func(context.Context, pgx.Tx) (*state.BlobSequence, error)) *StateFullInterface_GetLastBlobSequence_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLastBlock provides a mock function with given fields: ctx, dbTx
 func (_m *StateFullInterface) GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error) {
 	ret := _m.Called(ctx, dbTx)
@@ -2399,53 +2506,6 @@ func (_c *StateFullInterface_ResetForkID_Call) Return(_a0 error) *StateFullInter
 }
 
 func (_c *StateFullInterface_ResetForkID_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) error) *StateFullInterface_ResetForkID_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ResetL1InfoTree provides a mock function with given fields: ctx, dbTx
-func (_m *StateFullInterface) ResetL1InfoTree(ctx context.Context, dbTx pgx.Tx) error {
-	ret := _m.Called(ctx, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ResetL1InfoTree")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) error); ok {
-		r0 = rf(ctx, dbTx)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// StateFullInterface_ResetL1InfoTree_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetL1InfoTree'
-type StateFullInterface_ResetL1InfoTree_Call struct {
-	*mock.Call
-}
-
-// ResetL1InfoTree is a helper method to define mock.On call
-//   - ctx context.Context
-//   - dbTx pgx.Tx
-func (_e *StateFullInterface_Expecter) ResetL1InfoTree(ctx interface{}, dbTx interface{}) *StateFullInterface_ResetL1InfoTree_Call {
-	return &StateFullInterface_ResetL1InfoTree_Call{Call: _e.mock.On("ResetL1InfoTree", ctx, dbTx)}
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) Run(run func(ctx context.Context, dbTx pgx.Tx)) *StateFullInterface_ResetL1InfoTree_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(pgx.Tx))
-	})
-	return _c
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) Return(_a0 error) *StateFullInterface_ResetL1InfoTree_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *StateFullInterface_ResetL1InfoTree_Call) RunAndReturn(run func(context.Context, pgx.Tx) error) *StateFullInterface_ResetL1InfoTree_Call {
 	_c.Call.Return(run)
 	return _c
 }

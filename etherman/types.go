@@ -19,6 +19,7 @@ type Block struct {
 	VerifiedBatches       []VerifiedBatch
 	SequencedForceBatches [][]SequencedForceBatch
 	ForkIDs               []ForkID
+	SequenceBlobs         []SequenceBlobs
 	ReceivedAt            time.Time
 	// GER data
 	GlobalExitRoots, L1InfoTree []GlobalExitRoot

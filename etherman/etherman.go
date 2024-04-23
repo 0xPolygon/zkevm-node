@@ -13,7 +13,9 @@ import (
 	"strings"
 	"time"
 
+	beaconclient "github.com/0xPolygonHermez/zkevm-node/beacon_client"
 	"github.com/0xPolygonHermez/zkevm-node/encoding"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/eip4844"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/etherscan"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/ethgasstation"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/metrics"
@@ -194,6 +196,7 @@ type Client struct {
 	EtrogRollupManager            *etrogpolygonrollupmanager.Etrogpolygonrollupmanager
 	EtrogGlobalExitRootManager    *etrogpolygonzkevmglobalexitroot.Etrogpolygonzkevmglobalexitroot
 	PreEtrogGlobalExitRootManager *preetrogpolygonzkevmglobalexitroot.Preetrogpolygonzkevmglobalexitroot
+	FeijoaContracts               *FeijoaContracts
 	Pol                           *pol.Pol
 	SCAddresses                   []common.Address
 
@@ -201,9 +204,11 @@ type Client struct {
 
 	GasProviders externalGasProviders
 
-	l1Cfg L1Config
-	cfg   Config
-	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
+	l1Cfg              L1Config
+	cfg                Config
+	auth               map[common.Address]bind.TransactOpts // empty in case of read-only client
+	EIP4844            *eip4844.EthermanEIP4844
+	eventFeijoaManager *EventManager
 }
 
 // NewClient creates a new etherman.
@@ -214,7 +219,19 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		log.Errorf("error connecting to %s: %+v", cfg.URL, err)
 		return nil, err
 	}
-
+	if cfg.ConsensusL1URL == "" {
+		log.Warn("ConsensusL1URL is not set, so Feijoa is not going to work")
+	}
+	feijoaEnabled := true
+	beaconClient := beaconclient.NewBeaconAPIClient(cfg.ConsensusL1URL)
+	eip4844 := eip4844.NewEthermanEIP4844(beaconClient)
+	if err := eip4844.Initialize(context.Background()); err != nil {
+		// TODO: Must be mandatory to have a consensusL1URL configured, but
+		// for maintain compatibility allow to disable Feijoa
+		// so the log.Warnf must be an Errorf and must return  nil, err
+		log.Warnf("error initializing EIP-4844,Feijoa is going to be disabled.  URL:%s : %+v", cfg.ConsensusL1URL, err)
+		feijoaEnabled = false
+	}
 	// Create smc clients
 	etrogZkevm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(l1Config.ZkEVMAddr, ethClient)
 	if err != nil {
@@ -251,7 +268,12 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		log.Errorf("error creating NewPol client (%s). Error: %w", l1Config.PolAddr.String(), err)
 		return nil, err
 	}
-	var scAddresses []common.Address
+	feijoaContracts, err := NewFeijoaContracts(ethClient, l1Config)
+	if err != nil {
+		log.Errorf("error creating NewFeijoaContracts client (%s). Error: %w", l1Config.RollupManagerAddr.String(), err)
+		return nil, err
+	}
+	scAddresses := feijoaContracts.GetAddresses()
 	scAddresses = append(scAddresses, l1Config.ZkEVMAddr, l1Config.RollupManagerAddr, l1Config.GlobalExitRootManagerAddr)
 
 	gProviders := []ethereum.GasPricer{ethClient}
@@ -288,9 +310,15 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 			MultiGasProvider: cfg.MultiGasProvider,
 			Providers:        gProviders,
 		},
-		l1Cfg: l1Config,
-		cfg:   cfg,
-		auth:  map[common.Address]bind.TransactOpts{},
+		l1Cfg:   l1Config,
+		cfg:     cfg,
+		auth:    map[common.Address]bind.TransactOpts{},
+		EIP4844: eip4844,
+	}
+	if feijoaEnabled {
+		eventFeijoaManager := NewEventManager(client, NewCallDataExtratorGeth(ethClient))
+		eventFeijoaManager.AddProcessor(NewEventFeijoaSequenceBlobsProcessor(feijoaContracts))
+		client.eventFeijoaManager = eventFeijoaManager
 	}
 	return client, nil
 }
@@ -552,8 +580,17 @@ func (etherMan *Client) readEvents(ctx context.Context, query ethereum.FilterQue
 	metrics.ReadAndProcessAllEventsTime(time.Since(start))
 	return blocks, blocksOrder, nil
 }
-
 func (etherMan *Client) processEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
+	if etherMan.eventFeijoaManager != nil {
+		processed, err := etherMan.eventFeijoaManager.ProcessEvent(ctx, vLog, blocks, blocksOrder)
+		if processed || err != nil {
+			return err
+		}
+	}
+	return etherMan.processEventLegacy(ctx, vLog, blocks, blocksOrder)
+}
+
+func (etherMan *Client) processEventLegacy(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
 	switch vLog.Topics[0] {
 	case sequenceBatchesSignatureHash:
 		return etherMan.sequencedBatchesEvent(ctx, vLog, blocks, blocksOrder)
@@ -898,7 +935,7 @@ func (etherMan *Client) updateL1InfoTreeEvent(ctx context.Context, vLog types.Lo
 	var block *Block
 	if !isheadBlockInArray(blocks, vLog.BlockHash, vLog.BlockNumber) {
 		// Need to add the block, doesnt mind if inside the blocks because I have to respect the order so insert at end
-		block, err = etherMan.retrieveFullBlockForEvent(ctx, vLog)
+		block, err = etherMan.RetrieveFullBlockForEvent(ctx, vLog)
 		if err != nil {
 			return err
 		}
@@ -918,7 +955,8 @@ func (etherMan *Client) updateL1InfoTreeEvent(ctx context.Context, vLog types.Lo
 	return nil
 }
 
-func (etherMan *Client) retrieveFullBlockForEvent(ctx context.Context, vLog types.Log) (*Block, error) {
+// RetrieveFullBlockForEvent retrieves the full block for a given event
+func (etherMan *Client) RetrieveFullBlockForEvent(ctx context.Context, vLog types.Log) (*Block, error) {
 	fullBlock, err := etherMan.EthClient.BlockByHash(ctx, vLog.BlockHash)
 	if err != nil {
 		return nil, fmt.Errorf("error getting hashParent. BlockNumber: %d. Error: %w", vLog.BlockNumber, err)
@@ -1251,7 +1289,7 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 	if tx.Hash() != vLog.TxHash {
 		return fmt.Errorf("error: tx hash mismatch. want: %s have: %s", vLog.TxHash, tx.Hash().String())
 	}
-	msg, err := core.TransactionToMessage(tx, types.NewLondonSigner(tx.ChainId()), big.NewInt(0))
+	msg, err := core.TransactionToMessage(tx, types.NewCancunSigner(tx.ChainId()), big.NewInt(0))
 	if err != nil {
 		return err
 	}
