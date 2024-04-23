@@ -171,6 +171,10 @@ func (s *ProcessorTrustedBatchSync) AddPostChecker(checker PostClosedBatchChecke
 
 // ProcessTrustedBatch processes a trusted batch and return the new state
 func (s *ProcessorTrustedBatchSync) ProcessTrustedBatch(ctx context.Context, trustedBatch *types.Batch, status TrustedState, dbTx pgx.Tx, debugPrefix string) (*TrustedState, error) {
+	if trustedBatch == nil {
+		log.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+		return nil, fmt.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+	}
 	log.Debugf("%s Processing trusted batch: %v", debugPrefix, trustedBatch.Number)
 	stateCurrentBatch, statePreviousBatch := s.GetCurrentAndPreviousBatchFromCache(&status)
 	if s.l1SyncChecker != nil {
