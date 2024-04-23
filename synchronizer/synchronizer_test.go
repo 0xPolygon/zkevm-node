@@ -2,6 +2,7 @@ package synchronizer
 
 import (
 	context "context"
+	"math"
 	"math/big"
 	"testing"
 	"time"
@@ -162,6 +163,13 @@ func TestForcedBatchEtrog(t *testing.T) {
 		On("BeginStateTransaction", ctxMatchBy).
 		Run(func(args mock.Arguments) {
 			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
 
 			m.State.
 				On("GetForkIDByBatchNumber", mock.Anything).
@@ -169,8 +177,8 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Maybe()
 
 			m.State.
-				On("GetLastBlock", mock.Anything, mock.Anything).
-				Return(lastBlock, nil).
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock0, nil).
 				Once()
 
 			m.State.
@@ -206,14 +214,14 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Return(nil)
 
 			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
-				Return(ethBlock, nil).
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
 				Once()
 
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
 				On("HeaderByNumber", mock.Anything, n).
-				Return(ethHeader, nil).
+				Return(ethHeader1, nil).
 				Once()
 
 			t := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
@@ -232,7 +240,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 			}
 
 			forceb := []etherman.ForcedBatch{{
-				BlockNumber:       lastBlock.BlockNumber,
+				BlockNumber:       lastBlock1.BlockNumber,
 				ForcedBatchNumber: 1,
 				Sequencer:         sequencedBatch.Coinbase,
 				GlobalExitRoot:    sequencedBatch.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
@@ -240,16 +248,21 @@ func TestForcedBatchEtrog(t *testing.T) {
 				ForcedAt:          time.Unix(int64(sequencedBatch.PolygonRollupBaseEtrogBatchData.ForcedTimestamp), 0),
 			}}
 
-			ethermanBlock := etherman.Block{
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  t,
+				BlockHash:   ethBlock0.Hash(),
+			}
+			ethermanBlock1 := etherman.Block{
 				BlockNumber:      1,
 				ReceivedAt:       t,
-				BlockHash:        ethBlock.Hash(),
+				BlockHash:        ethBlock1.Hash(),
 				SequencedBatches: [][]etherman.SequencedBatch{{sequencedBatch}},
 				ForcedBatches:    forceb,
 			}
-			blocks := []etherman.Block{ethermanBlock}
+			blocks := []etherman.Block{ethermanBlock0, ethermanBlock1}
 			order := map[common.Hash][]etherman.Order{
-				ethBlock.Hash(): {
+				ethBlock1.Hash(): {
 					{
 						Name: etherman.ForcedBatchesOrder,
 						Pos:  0,
@@ -261,19 +274,14 @@ func TestForcedBatchEtrog(t *testing.T) {
 				},
 			}
 
-			fromBlock := ethBlock.NumberU64() + 1
+			fromBlock := ethBlock0.NumberU64()
 			toBlock := fromBlock + cfg.SyncChunkSize
-			if toBlock > ethHeader.Number.Uint64() {
-				toBlock = ethHeader.Number.Uint64()
+			if toBlock > ethBlock1.NumberU64() {
+				toBlock = ethBlock1.NumberU64()
 			}
 			m.Etherman.
 				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
 				Return(blocks, order, nil).
-				Once()
-
-			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
-				Return(ethBlock, nil).
 				Once()
 
 			m.ZKEVMClient.
@@ -286,10 +294,11 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Once()
 
 			stateBlock := &state.Block{
-				BlockNumber: ethermanBlock.BlockNumber,
-				BlockHash:   ethermanBlock.BlockHash,
-				ParentHash:  ethermanBlock.ParentHash,
-				ReceivedAt:  ethermanBlock.ReceivedAt,
+				BlockNumber: ethermanBlock1.BlockNumber,
+				BlockHash:   ethermanBlock1.BlockHash,
+				ParentHash:  ethermanBlock1.ParentHash,
+				ReceivedAt:  ethermanBlock1.ReceivedAt,
+				Checked:     true,
 			}
 
 			executionResponse := executor.ProcessBatchResponseV2{
@@ -301,13 +310,18 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Return(&executionResponse, nil).
 				Times(1)
 
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock1.NumberU64(), nil).
+				Once()
+
 			m.State.
 				On("AddBlock", ctx, stateBlock, m.DbTx).
 				Return(nil).
 				Once()
 
 			fb := []state.ForcedBatch{{
-				BlockNumber:       lastBlock.BlockNumber,
+				BlockNumber:       lastBlock1.BlockNumber,
 				ForcedBatchNumber: 1,
 				Sequencer:         sequencedBatch.Coinbase,
 				GlobalExitRoot:    sequencedBatch.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
@@ -342,7 +356,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 				BatchNumber:         sequencedBatch.BatchNumber,
 				TxHash:              sequencedBatch.TxHash,
 				Coinbase:            sequencedBatch.Coinbase,
-				BlockNumber:         ethermanBlock.BlockNumber,
+				BlockNumber:         ethermanBlock1.BlockNumber,
 				TimestampBatchEtrog: &t,
 				L1InfoRoot:          &forcedGER,
 			}
@@ -422,18 +436,21 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 		On("BeginStateTransaction", ctxMatchBy).
 		Run(func(args mock.Arguments) {
 			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
 			m.State.
 				On("GetForkIDByBatchNumber", mock.Anything).
-				Return(uint64(1), nil).
-				Maybe()
-			m.State.
-				On("GetForkIDByBlockNumber", mock.Anything).
 				Return(uint64(1), nil).
 				Maybe()
 
 			m.State.
 				On("GetLastBlock", ctx, m.DbTx).
-				Return(lastBlock, nil).
+				Return(lastBlock0, nil).
 				Once()
 
 			m.State.
@@ -471,15 +488,15 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				Return(nil).
 				Once()
 
-			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
-				Return(ethBlock, nil).
-				Once()
-
 			n := big.NewInt(rpc.LatestBlockNumber.Int64())
 			m.Etherman.
 				On("HeaderByNumber", ctx, n).
-				Return(ethHeader, nil).
+				Return(ethHeader1, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
 				Once()
 
 			sequencedForceBatch := etherman.SequencedForceBatch{
@@ -495,7 +512,7 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 			}
 
 			forceb := []etherman.ForcedBatch{{
-				BlockNumber:       lastBlock.BlockNumber,
+				BlockNumber:       lastBlock1.BlockNumber,
 				ForcedBatchNumber: 1,
 				Sequencer:         sequencedForceBatch.Coinbase,
 				GlobalExitRoot:    sequencedForceBatch.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
@@ -503,14 +520,21 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				ForcedAt:          time.Unix(int64(sequencedForceBatch.PolygonRollupBaseEtrogBatchData.ForcedTimestamp), 0),
 			}}
 
-			ethermanBlock := etherman.Block{
-				BlockHash:             ethBlock.Hash(),
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			ethermanBlock1 := etherman.Block{
+				BlockNumber:           ethBlock1.NumberU64(),
+				BlockHash:             ethBlock1.Hash(),
+				ParentHash:            ethBlock1.ParentHash(),
 				SequencedForceBatches: [][]etherman.SequencedForceBatch{{sequencedForceBatch}},
 				ForcedBatches:         forceb,
 			}
-			blocks := []etherman.Block{ethermanBlock}
+			blocks := []etherman.Block{ethermanBlock0, ethermanBlock1}
 			order := map[common.Hash][]etherman.Order{
-				ethBlock.Hash(): {
+				ethBlock1.Hash(): {
 					{
 						Name: etherman.ForcedBatchesOrder,
 						Pos:  0,
@@ -522,10 +546,10 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				},
 			}
 
-			fromBlock := ethBlock.NumberU64() + 1
+			fromBlock := ethBlock0.NumberU64()
 			toBlock := fromBlock + cfg.SyncChunkSize
-			if toBlock > ethHeader.Number.Uint64() {
-				toBlock = ethHeader.Number.Uint64()
+			if toBlock > ethBlock1.NumberU64() {
+				toBlock = ethBlock1.NumberU64()
 			}
 			m.Etherman.
 				On("GetRollupInfoByBlockRange", ctx, fromBlock, &toBlock).
@@ -533,8 +557,8 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock.BlockNumber).
-				Return(ethBlock, nil).
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock1.NumberU64(), nil).
 				Once()
 
 			m.State.
@@ -543,10 +567,11 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				Once()
 
 			stateBlock := &state.Block{
-				BlockNumber: ethermanBlock.BlockNumber,
-				BlockHash:   ethermanBlock.BlockHash,
-				ParentHash:  ethermanBlock.ParentHash,
-				ReceivedAt:  ethermanBlock.ReceivedAt,
+				BlockNumber: ethermanBlock1.BlockNumber,
+				BlockHash:   ethermanBlock1.BlockHash,
+				ParentHash:  ethermanBlock1.ParentHash,
+				ReceivedAt:  ethermanBlock1.ReceivedAt,
+				Checked:     true,
 			}
 
 			m.State.
@@ -554,8 +579,13 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				Return(nil).
 				Once()
 
+			m.State.
+				On("GetForkIDByBlockNumber", stateBlock.BlockNumber).
+				Return(uint64(9), nil).
+				Once()
+
 			fb := []state.ForcedBatch{{
-				BlockNumber:       lastBlock.BlockNumber,
+				BlockNumber:       lastBlock1.BlockNumber,
 				ForcedBatchNumber: 1,
 				Sequencer:         sequencedForceBatch.Coinbase,
 				GlobalExitRoot:    sequencedForceBatch.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
@@ -587,7 +617,7 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 			processingContext := state.ProcessingContext{
 				BatchNumber:    sequencedForceBatch.BatchNumber,
 				Coinbase:       sequencedForceBatch.Coinbase,
-				Timestamp:      ethBlock.ReceivedAt,
+				Timestamp:      ethBlock1.ReceivedAt,
 				GlobalExitRoot: sequencedForceBatch.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
 				ForcedBatchNum: &f,
 				BatchL2Data:    &sequencedForceBatch.PolygonRollupBaseEtrogBatchData.Transactions,
@@ -602,7 +632,7 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				TxHash:        sequencedForceBatch.TxHash,
 				Coinbase:      sequencedForceBatch.Coinbase,
 				SequencerAddr: sequencedForceBatch.Coinbase,
-				BlockNumber:   ethermanBlock.BlockNumber,
+				BlockNumber:   ethermanBlock1.BlockNumber,
 			}
 
 			m.State.
@@ -626,7 +656,10 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 
 			m.DbTx.
 				On("Commit", ctx).
-				Run(func(args mock.Arguments) { sync.Stop() }).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
 				Return(nil).
 				Once()
 		}).
@@ -901,4 +934,1030 @@ func expectedCallsForsyncTrustedState(t *testing.T, m *mocks, sync *ClientSynchr
 		On("Commit", mock.Anything).
 		Return(nil).
 		Once()
+}
+
+func TestReorg(t *testing.T) {
+	genesis := state.Genesis{
+		BlockNumber: uint64(0),
+	}
+	cfg := Config{
+		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
+		SyncChunkSize:         3,
+		L1SynchronizationMode: SequentialMode,
+		SyncBlockProtection:   "latest",
+	}
+
+	m := mocks{
+		Etherman:     mock_syncinterfaces.NewEthermanFullInterface(t),
+		State:        mock_syncinterfaces.NewStateFullInterface(t),
+		Pool:         mock_syncinterfaces.NewPoolInterface(t),
+		DbTx:         syncMocks.NewDbTxMock(t),
+		ZKEVMClient:  mock_syncinterfaces.NewZKEVMClientInterface(t),
+		EthTxManager: mock_syncinterfaces.NewEthTxManager(t),
+	}
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	sync, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
+	require.NoError(t, err)
+
+	// state preparation
+	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
+	forkIdInterval := state.ForkIDInterval{
+		ForkId:          9,
+		FromBatchNumber: 0,
+		ToBatchNumber:   math.MaxUint64,
+	}
+	m.State.EXPECT().GetForkIDInMemory(uint64(9)).Return(&forkIdInterval)
+
+	m.State.
+		On("BeginStateTransaction", ctxMatchBy).
+		Run(func(args mock.Arguments) {
+			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1bis := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash(), Time: 10, GasUsed: 20, Root: common.HexToHash("0x234")}
+			ethBlock1bis := ethTypes.NewBlockWithHeader(ethHeader1bis)
+			ethHeader2bis := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1bis.Hash()}
+			ethBlock2bis := ethTypes.NewBlockWithHeader(ethHeader2bis)
+			ethHeader3bis := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2bis.Hash()}
+			ethBlock3bis := ethTypes.NewBlockWithHeader(ethHeader3bis)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			ethHeader2 := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1.Hash()}
+			ethBlock2 := ethTypes.NewBlockWithHeader(ethHeader2)
+			ethHeader3 := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2.Hash()}
+			ethBlock3 := ethTypes.NewBlockWithHeader(ethHeader3)
+
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
+
+			m.State.
+				On("GetForkIDByBatchNumber", mock.Anything).
+				Return(uint64(9), nil).
+				Maybe()
+			m.State.
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock1, nil).
+				Once()
+
+			m.State.
+				On("GetLastBatchNumber", ctx, m.DbTx).
+				Return(uint64(10), nil).
+				Once()
+
+			m.State.
+				On("SetInitSyncBatch", ctx, uint64(10), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("GetLatestBatchNumber").
+				Return(uint64(10), nil)
+
+			var nilDbTx pgx.Tx
+			m.State.
+				On("GetLastBatchNumber", ctx, nilDbTx).
+				Return(uint64(10), nil)
+
+			m.Etherman.
+				On("GetLatestVerifiedBatchNum").
+				Return(uint64(10), nil)
+
+			m.State.
+				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
+				Return(nil)
+
+			n := big.NewInt(rpc.LatestBlockNumber.Int64())
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3bis, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
+
+			ethermanBlock1bis := etherman.Block{
+				BlockNumber: 1,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock1bis.Hash(),
+				ParentHash:  ethBlock1bis.ParentHash(),
+			}
+			ethermanBlock2bis := etherman.Block{
+				BlockNumber: 2,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock2bis.Hash(),
+				ParentHash:  ethBlock2bis.ParentHash(),
+			}
+			blocks := []etherman.Block{ethermanBlock1bis, ethermanBlock2bis}
+			order := map[common.Hash][]etherman.Order{}
+
+			fromBlock := ethBlock1.NumberU64()
+			toBlock := fromBlock + cfg.SyncChunkSize
+			if toBlock > ethBlock3.NumberU64() {
+				toBlock = ethBlock3.NumberU64()
+			}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			var depth uint64 = 1
+			stateBlock0 := &state.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, m.DbTx).
+				Return(stateBlock0, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			m.State.
+				On("Reset", ctx, ethBlock0.NumberU64(), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.EthTxManager.
+				On("Reorg", ctx, ethBlock0.NumberU64()+1, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3bis, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			ethermanBlock3bis := etherman.Block{
+				BlockNumber: 3,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock3bis.Hash(),
+				ParentHash:  ethBlock3bis.ParentHash(),
+			}
+			fromBlock = 0
+			blocks2 := []etherman.Block{ethermanBlock0, ethermanBlock1bis, ethermanBlock2bis, ethermanBlock3bis}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks2, order, nil).
+				Once()
+
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock2bis.NumberU64(), nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock1bis := &state.Block{
+				BlockNumber: ethermanBlock1bis.BlockNumber,
+				BlockHash:   ethermanBlock1bis.BlockHash,
+				ParentHash:  ethermanBlock1bis.ParentHash,
+				ReceivedAt:  ethermanBlock1bis.ReceivedAt,
+				Checked:     true,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock1bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("GetStoredFlushID", ctx).
+				Return(uint64(1), cProverIDExecution, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock2bis := &state.Block{
+				BlockNumber: ethermanBlock2bis.BlockNumber,
+				BlockHash:   ethermanBlock2bis.BlockHash,
+				ParentHash:  ethermanBlock2bis.ParentHash,
+				ReceivedAt:  ethermanBlock2bis.ReceivedAt,
+				Checked:     true,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock2bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock3bis := &state.Block{
+				BlockNumber: ethermanBlock3bis.BlockNumber,
+				BlockHash:   ethermanBlock3bis.BlockHash,
+				ParentHash:  ethermanBlock3bis.ParentHash,
+				ReceivedAt:  ethermanBlock3bis.ReceivedAt,
+				Checked:     false,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock3bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil)
+
+			m.DbTx.
+				On("Commit", ctx).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
+				Return(nil).
+				Once()
+		}).
+		Return(m.DbTx, nil).
+		Once()
+
+	err = sync.Sync()
+	require.NoError(t, err)
+}
+
+func TestLatestSyncedBlockEmpty(t *testing.T) {
+	genesis := state.Genesis{
+		BlockNumber: uint64(0),
+	}
+	cfg := Config{
+		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
+		SyncChunkSize:         3,
+		L1SynchronizationMode: SequentialMode,
+		SyncBlockProtection:   "latest",
+	}
+
+	m := mocks{
+		Etherman:     mock_syncinterfaces.NewEthermanFullInterface(t),
+		State:        mock_syncinterfaces.NewStateFullInterface(t),
+		Pool:         mock_syncinterfaces.NewPoolInterface(t),
+		DbTx:         syncMocks.NewDbTxMock(t),
+		ZKEVMClient:  mock_syncinterfaces.NewZKEVMClientInterface(t),
+		EthTxManager: mock_syncinterfaces.NewEthTxManager(t),
+	}
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	sync, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
+	require.NoError(t, err)
+
+	// state preparation
+	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
+	forkIdInterval := state.ForkIDInterval{
+		ForkId:          9,
+		FromBatchNumber: 0,
+		ToBatchNumber:   math.MaxUint64,
+	}
+	m.State.EXPECT().GetForkIDInMemory(uint64(9)).Return(&forkIdInterval)
+
+	m.State.
+		On("BeginStateTransaction", ctxMatchBy).
+		Run(func(args mock.Arguments) {
+			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			ethHeader2 := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1.Hash()}
+			ethBlock2 := ethTypes.NewBlockWithHeader(ethHeader2)
+			ethHeader3 := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2.Hash()}
+			ethBlock3 := ethTypes.NewBlockWithHeader(ethHeader3)
+
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
+
+			m.State.
+				On("GetForkIDByBatchNumber", mock.Anything).
+				Return(uint64(9), nil).
+				Maybe()
+			m.State.
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock1, nil).
+				Once()
+
+			m.State.
+				On("GetLastBatchNumber", ctx, m.DbTx).
+				Return(uint64(10), nil).
+				Once()
+
+			m.State.
+				On("SetInitSyncBatch", ctx, uint64(10), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("GetLatestBatchNumber").
+				Return(uint64(10), nil)
+
+			var nilDbTx pgx.Tx
+			m.State.
+				On("GetLastBatchNumber", ctx, nilDbTx).
+				Return(uint64(10), nil)
+
+			m.Etherman.
+				On("GetLatestVerifiedBatchNum").
+				Return(uint64(10), nil)
+
+			m.State.
+				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
+				Return(nil)
+
+			n := big.NewInt(rpc.LatestBlockNumber.Int64())
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1, nil).
+				Once()
+
+			blocks := []etherman.Block{}
+			order := map[common.Hash][]etherman.Order{}
+
+			fromBlock := ethBlock1.NumberU64()
+			toBlock := fromBlock + cfg.SyncChunkSize
+			if toBlock > ethBlock3.NumberU64() {
+				toBlock = ethBlock3.NumberU64()
+			}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
+			var depth uint64 = 1
+			stateBlock0 := &state.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, nil).
+				Return(stateBlock0, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			m.State.
+				On("Reset", ctx, ethBlock0.NumberU64(), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.EthTxManager.
+				On("Reorg", ctx, ethBlock0.NumberU64()+1, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
+
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			blocks = []etherman.Block{ethermanBlock0}
+			fromBlock = 0
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock3.NumberU64(), nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
+				Return(uint64(1), nil).
+				Once()
+		}).
+		Return(m.DbTx, nil).
+		Once()
+
+	err = sync.Sync()
+	require.NoError(t, err)
+}
+
+func TestRegularReorg(t *testing.T) {
+	genesis := state.Genesis{
+		BlockNumber: uint64(0),
+	}
+	cfg := Config{
+		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
+		SyncChunkSize:         3,
+		L1SynchronizationMode: SequentialMode,
+		SyncBlockProtection:   "latest",
+	}
+
+	m := mocks{
+		Etherman:     mock_syncinterfaces.NewEthermanFullInterface(t),
+		State:        mock_syncinterfaces.NewStateFullInterface(t),
+		Pool:         mock_syncinterfaces.NewPoolInterface(t),
+		DbTx:         syncMocks.NewDbTxMock(t),
+		ZKEVMClient:  mock_syncinterfaces.NewZKEVMClientInterface(t),
+		EthTxManager: mock_syncinterfaces.NewEthTxManager(t),
+	}
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	sync, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
+	require.NoError(t, err)
+
+	// state preparation
+	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
+	forkIdInterval := state.ForkIDInterval{
+		ForkId:          9,
+		FromBatchNumber: 0,
+		ToBatchNumber:   math.MaxUint64,
+	}
+	m.State.EXPECT().GetForkIDInMemory(uint64(9)).Return(&forkIdInterval)
+
+	m.State.
+		On("BeginStateTransaction", ctxMatchBy).
+		Run(func(args mock.Arguments) {
+			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1bis := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash(), Time: 10, GasUsed: 20, Root: common.HexToHash("0x234")}
+			ethBlock1bis := ethTypes.NewBlockWithHeader(ethHeader1bis)
+			ethHeader2bis := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1bis.Hash()}
+			ethBlock2bis := ethTypes.NewBlockWithHeader(ethHeader2bis)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			ethHeader2 := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1.Hash()}
+			ethBlock2 := ethTypes.NewBlockWithHeader(ethHeader2)
+
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil)
+
+			m.State.
+				On("GetForkIDByBatchNumber", mock.Anything).
+				Return(uint64(9), nil).
+				Maybe()
+			m.State.
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock1, nil).
+				Once()
+
+			m.State.
+				On("GetLastBatchNumber", ctx, m.DbTx).
+				Return(uint64(10), nil).
+				Once()
+
+			m.State.
+				On("SetInitSyncBatch", ctx, uint64(10), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("GetLatestBatchNumber").
+				Return(uint64(10), nil)
+
+			var nilDbTx pgx.Tx
+			m.State.
+				On("GetLastBatchNumber", ctx, nilDbTx).
+				Return(uint64(10), nil)
+
+			m.Etherman.
+				On("GetLatestVerifiedBatchNum").
+				Return(uint64(10), nil)
+
+			m.State.
+				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
+				Return(nil)
+
+			n := big.NewInt(rpc.LatestBlockNumber.Int64())
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader2bis, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1bis, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
+			var depth uint64 = 1
+			stateBlock0 := &state.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, m.DbTx).
+				Return(stateBlock0, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			m.State.
+				On("Reset", ctx, ethBlock0.NumberU64(), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.EthTxManager.
+				On("Reorg", ctx, ethBlock0.NumberU64()+1, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader2bis, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			ethermanBlock1bis := etherman.Block{
+				BlockNumber: 1,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock1bis.Hash(),
+				ParentHash:  ethBlock1bis.ParentHash(),
+			}
+			ethermanBlock2bis := etherman.Block{
+				BlockNumber: 2,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock2bis.Hash(),
+				ParentHash:  ethBlock2bis.ParentHash(),
+			}
+			blocks := []etherman.Block{ethermanBlock0, ethermanBlock1bis, ethermanBlock2bis}
+			order := map[common.Hash][]etherman.Order{}
+
+			fromBlock := ethBlock0.NumberU64()
+			toBlock := fromBlock + cfg.SyncChunkSize
+			if toBlock > ethBlock2.NumberU64() {
+				toBlock = ethBlock2.NumberU64()
+			}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock2bis.NumberU64(), nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock1bis := &state.Block{
+				BlockNumber: ethermanBlock1bis.BlockNumber,
+				BlockHash:   ethermanBlock1bis.BlockHash,
+				ParentHash:  ethermanBlock1bis.ParentHash,
+				ReceivedAt:  ethermanBlock1bis.ReceivedAt,
+				Checked:     true,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock1bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("GetStoredFlushID", ctx).
+				Return(uint64(1), cProverIDExecution, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock2bis := &state.Block{
+				BlockNumber: ethermanBlock2bis.BlockNumber,
+				BlockHash:   ethermanBlock2bis.BlockHash,
+				ParentHash:  ethermanBlock2bis.ParentHash,
+				ReceivedAt:  ethermanBlock2bis.ReceivedAt,
+				Checked:     true,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock2bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
+				Return(nil).
+				Once()
+		}).
+		Return(m.DbTx, nil).
+		Once()
+
+	err = sync.Sync()
+	require.NoError(t, err)
+}
+
+func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
+	genesis := state.Genesis{
+		BlockNumber: uint64(0),
+	}
+	cfg := Config{
+		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
+		SyncChunkSize:         3,
+		L1SynchronizationMode: SequentialMode,
+		SyncBlockProtection:   "latest",
+	}
+
+	m := mocks{
+		Etherman:     mock_syncinterfaces.NewEthermanFullInterface(t),
+		State:        mock_syncinterfaces.NewStateFullInterface(t),
+		Pool:         mock_syncinterfaces.NewPoolInterface(t),
+		DbTx:         syncMocks.NewDbTxMock(t),
+		ZKEVMClient:  mock_syncinterfaces.NewZKEVMClientInterface(t),
+		EthTxManager: mock_syncinterfaces.NewEthTxManager(t),
+	}
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	sync, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
+	require.NoError(t, err)
+
+	// state preparation
+	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
+	forkIdInterval := state.ForkIDInterval{
+		ForkId:          9,
+		FromBatchNumber: 0,
+		ToBatchNumber:   math.MaxUint64,
+	}
+	m.State.EXPECT().GetForkIDInMemory(uint64(9)).Return(&forkIdInterval)
+
+	m.State.
+		On("BeginStateTransaction", ctxMatchBy).
+		Run(func(args mock.Arguments) {
+			ctx := args[0].(context.Context)
+			parentHash := common.HexToHash("0x111")
+			ethHeader0 := &ethTypes.Header{Number: big.NewInt(0), ParentHash: parentHash}
+			ethBlock0 := ethTypes.NewBlockWithHeader(ethHeader0)
+			ethHeader1 := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash()}
+			ethBlock1 := ethTypes.NewBlockWithHeader(ethHeader1)
+			ethHeader1bis := &ethTypes.Header{Number: big.NewInt(1), ParentHash: ethBlock0.Hash(), Time: 0, GasUsed: 10}
+			ethBlock1bis := ethTypes.NewBlockWithHeader(ethHeader1bis)
+			ethHeader2 := &ethTypes.Header{Number: big.NewInt(2), ParentHash: ethBlock1.Hash()}
+			ethBlock2 := ethTypes.NewBlockWithHeader(ethHeader2)
+			ethHeader3 := &ethTypes.Header{Number: big.NewInt(3), ParentHash: ethBlock2.Hash()}
+			ethBlock3 := ethTypes.NewBlockWithHeader(ethHeader3)
+
+			lastBlock0 := &state.Block{BlockHash: ethBlock0.Hash(), BlockNumber: ethBlock0.Number().Uint64(), ParentHash: ethBlock0.ParentHash()}
+			lastBlock1 := &state.Block{BlockHash: ethBlock1.Hash(), BlockNumber: ethBlock1.Number().Uint64(), ParentHash: ethBlock1.ParentHash()}
+			lastBlock2 := &state.Block{BlockHash: ethBlock2.Hash(), BlockNumber: ethBlock2.Number().Uint64(), ParentHash: ethBlock2.ParentHash()}
+
+			m.State.
+				On("GetForkIDByBatchNumber", mock.Anything).
+				Return(uint64(9), nil).
+				Maybe()
+			m.State.
+				On("GetLastBlock", ctx, m.DbTx).
+				Return(lastBlock2, nil).
+				Once()
+
+			m.State.
+				On("GetLastBatchNumber", ctx, m.DbTx).
+				Return(uint64(10), nil).
+				Once()
+
+			m.State.
+				On("SetInitSyncBatch", ctx, uint64(10), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("GetLatestBatchNumber").
+				Return(uint64(10), nil)
+
+			var nilDbTx pgx.Tx
+			m.State.
+				On("GetLastBatchNumber", ctx, nilDbTx).
+				Return(uint64(10), nil)
+
+			m.Etherman.
+				On("GetLatestVerifiedBatchNum").
+				Return(uint64(10), nil)
+
+			m.State.
+				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
+				Return(nil)
+
+			n := big.NewInt(rpc.LatestBlockNumber.Int64())
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock2.BlockNumber).
+				Return(ethBlock2, nil).
+				Once()
+
+			blocks := []etherman.Block{}
+			order := map[common.Hash][]etherman.Order{}
+
+			fromBlock := ethBlock2.NumberU64()
+			toBlock := fromBlock + cfg.SyncChunkSize
+			if toBlock > ethBlock3.NumberU64() {
+				toBlock = ethBlock3.NumberU64()
+			}
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
+			var depth uint64 = 1
+			stateBlock1 := &state.Block{
+				BlockNumber: ethBlock1.NumberU64(),
+				BlockHash:   ethBlock1.Hash(),
+				ParentHash:  ethBlock1.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, nil).
+				Return(stateBlock1, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
+				Return(ethBlock1bis, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock0 := &state.Block{
+				BlockNumber: ethBlock0.NumberU64(),
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+				ReceivedAt:  ti,
+			}
+			m.State.
+				On("GetPreviousBlock", ctx, depth, m.DbTx).
+				Return(stateBlock0, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			m.State.
+				On("Reset", ctx, ethBlock0.NumberU64(), m.DbTx).
+				Return(nil).
+				Once()
+
+			m.EthTxManager.
+				On("Reorg", ctx, ethBlock0.NumberU64()+1, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Return(uint64(1), nil).
+				Once()
+
+			m.Etherman.
+				On("HeaderByNumber", mock.Anything, n).
+				Return(ethHeader3, nil).
+				Once()
+
+			m.Etherman.
+				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
+				Return(ethBlock0, nil).
+				Once()
+
+			ethermanBlock0 := etherman.Block{
+				BlockNumber: 0,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock0.Hash(),
+				ParentHash:  ethBlock0.ParentHash(),
+			}
+			ethermanBlock1bis := etherman.Block{
+				BlockNumber: 1,
+				ReceivedAt:  ti,
+				BlockHash:   ethBlock1.Hash(),
+				ParentHash:  ethBlock1.ParentHash(),
+			}
+			blocks = []etherman.Block{ethermanBlock0, ethermanBlock1bis}
+			fromBlock = 0
+			m.Etherman.
+				On("GetRollupInfoByBlockRange", mock.Anything, fromBlock, &toBlock).
+				Return(blocks, order, nil).
+				Once()
+
+			m.Etherman.
+				On("GetFinalizedBlockNumber", ctx).
+				Return(ethBlock3.NumberU64(), nil).
+				Once()
+
+			m.State.
+				On("BeginStateTransaction", ctx).
+				Return(m.DbTx, nil).
+				Once()
+
+			stateBlock1bis := &state.Block{
+				BlockNumber: ethermanBlock1bis.BlockNumber,
+				BlockHash:   ethermanBlock1bis.BlockHash,
+				ParentHash:  ethermanBlock1bis.ParentHash,
+				ReceivedAt:  ethermanBlock1bis.ReceivedAt,
+				Checked:     true,
+			}
+			m.State.
+				On("AddBlock", ctx, stateBlock1bis, m.DbTx).
+				Return(nil).
+				Once()
+
+			m.State.
+				On("GetStoredFlushID", ctx).
+				Return(uint64(1), cProverIDExecution, nil).
+				Once()
+
+			m.DbTx.
+				On("Commit", ctx).
+				Return(nil).
+				Once()
+
+			m.ZKEVMClient.
+				On("BatchNumber", ctx).
+				Run(func(args mock.Arguments) {
+					sync.Stop()
+					ctx.Done()
+				}).
+				Return(uint64(1), nil).
+				Once()
+		}).
+		Return(m.DbTx, nil).
+		Once()
+
+	err = sync.Sync()
+	require.NoError(t, err)
 }
