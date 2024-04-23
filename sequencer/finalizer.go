@@ -762,6 +762,27 @@ func (f *finalizer) updateWorkerAfterSuccessfulProcessing(ctx context.Context, t
 		log.Debugf("tx %s deleted from address %s", txHash.String(), txFrom.Hex())
 	}
 
+	_, found := result.ReadWriteAddresses[txFrom]
+	exist := result.BlockResponses != nil && len(result.BlockResponses) > 0 && result.BlockResponses[0].TransactionResponses != nil && len(result.BlockResponses[0].TransactionResponses) > 0
+	if found && exist {
+		// Ensure consistency with Ethereum behavior.After OOG, reset the balance in memory.
+		txResponse := result.BlockResponses[0].TransactionResponses[0]
+		if executor.IsROMOutOfGasError(executor.RomErrorCode(txResponse.RomError)) {
+			// get latest balance and nonce.
+			root, err := f.stateIntf.GetLastStateRoot(ctx, nil)
+			if err != nil {
+				log.Error(err)
+			}
+
+			balance, err := f.stateIntf.GetBalanceByStateRoot(ctx, txFrom, root)
+			if err != nil {
+				log.Error(err)
+			}
+			log.Infof("Update worker after processing oog: address:%v, balance:%v, ", txFrom.Hex(), balance.String())
+			result.ReadWriteAddresses[txFrom].Balance = balance
+		}
+	}
+
 	txsToDelete := f.workerIntf.UpdateAfterSingleSuccessfulTxExecution(txFrom, result.ReadWriteAddresses)
 	for _, txToDelete := range txsToDelete {
 		err := f.poolIntf.UpdateTxStatus(ctx, txToDelete.Hash, pool.TxStatusFailed, false, txToDelete.FailedReason)
