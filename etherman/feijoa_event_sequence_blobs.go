@@ -1,9 +1,7 @@
 package etherman
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -151,12 +149,25 @@ func parseBlobCallDataTypeParams(data []byte) (*BlobCommonParams, []byte, error)
 	//		zkGasLimit           uint64
 	//		l1InfoLeafIndex      uint32
 	//	    transactions         []byte
-	buf := bytes.NewBuffer(data)
-	result := &BlobCommonParams{}
-	err := binary.Read(buf, binary.LittleEndian, result)
+
+	// Prepare blob params using ABI encoder
+	uint64Ty, _ := abi.NewType("uint64", "", nil)
+	uint32Ty, _ := abi.NewType("uint32", "", nil)
+	bytesTy, _ := abi.NewType("bytes", "", nil)
+	arguments := abi.Arguments{
+		{Type: uint64Ty},
+		{Type: uint64Ty},
+		{Type: uint32Ty},
+		{Type: bytesTy},
+	}
+	unpacked, err := arguments.Unpack(data)
 	if err != nil {
 		return nil, nil, err
 	}
-	transactionData := buf.Bytes()
+	result := &BlobCommonParams{}
+	result.MaxSequenceTimestamp = unpacked[0].(uint64)
+	result.ZkGasLimit = unpacked[1].(uint64)
+	result.L1InfoLeafIndex = unpacked[2].(uint32)
+	transactionData := unpacked[3].([]byte)
 	return result, transactionData, nil
 }
