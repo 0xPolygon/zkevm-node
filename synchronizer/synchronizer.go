@@ -168,7 +168,7 @@ func NewSynchronizer(
 	}
 
 	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks)
-	res.blockRangeProcessor = NewBlockRangeProcessLegacy(st, res.l1EventProcessors, res)
+	res.blockRangeProcessor = NewBlockRangeProcessLegacy(st, ethMan, res.l1EventProcessors, res)
 	res.syncPreRollup = NewSyncPreRollup(ethMan, st, res.blockRangeProcessor, cfg.SyncChunkSize, genesis.BlockNumber)
 	switch cfg.L1SynchronizationMode {
 	case ParallelMode:
@@ -251,42 +251,42 @@ func rollback(ctx context.Context, dbTx pgx.Tx, err error) error {
 	return err
 }
 
-func (s *ClientSynchronizer) isGenesisProcessed(ctx context.Context, dbTx pgx.Tx) (bool, error) {
+func (s *ClientSynchronizer) isGenesisProcessed(ctx context.Context, dbTx pgx.Tx) (bool, *state.Block, error) {
 	lastEthBlockSynced, err := s.state.GetLastBlock(ctx, dbTx)
 	if err != nil && errors.Is(err, state.ErrStateNotSynchronized) {
-		return false, nil
+		return false, lastEthBlockSynced, nil
 	}
 
 	if lastEthBlockSynced.BlockNumber >= s.genesis.BlockNumber {
 		log.Infof("Genesis block processed. Last block synced: %d >= genesis %d", lastEthBlockSynced.BlockNumber, s.genesis.BlockNumber)
-		return true, nil
+		return true, lastEthBlockSynced, nil
 	}
 	log.Warnf("Genesis block not processed yet. Last block synced: %d < genesis %d", lastEthBlockSynced.BlockNumber, s.genesis.BlockNumber)
-	return false, nil
+	return false, lastEthBlockSynced, nil
 }
 
-func (s *ClientSynchronizer) processGenesis() error {
+func (s *ClientSynchronizer) processGenesis() (*state.Block, error) {
 	log.Info("State is empty, verifying genesis block")
 	valid, err := s.etherMan.VerifyGenBlockNumber(s.ctx, s.genesis.BlockNumber)
 	if err != nil {
 		log.Error("error checking genesis block number. Error: ", err)
-		return err
+		return nil, err
 	} else if !valid {
 		log.Error("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
-		return fmt.Errorf("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
+		return nil, fmt.Errorf("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
 	}
 	// Sync pre genesis rollup events
 	s.syncPreRollup.(*SyncPreRollup).GenesisBlockNumber = s.genesis.BlockNumber
 	err = s.syncPreRollup.SynchronizePreGenesisRollupEvents(s.ctx)
 	if err != nil {
 		log.Error("error synchronizing pre genesis rollup events: ", err)
-		return err
+		return nil, err
 	}
 	log.Info("Setting genesis block")
 	header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(0).SetUint64(s.genesis.BlockNumber))
 	if err != nil {
 		log.Errorf("error getting l1 block header for block %d. Error: %v", s.genesis.BlockNumber, err)
-		return err
+		return nil, err
 	}
 	lastEthBlockSynced := &state.Block{
 		BlockNumber: header.Number.Uint64(),
@@ -297,35 +297,35 @@ func (s *ClientSynchronizer) processGenesis() error {
 	dbTx, err := s.state.BeginStateTransaction(s.ctx)
 	if err != nil {
 		log.Errorf("error creating db transaction to get latest block. Error: %v", err)
-		return err
+		return nil, err
 	}
 	genesisRoot, err := s.state.SetGenesis(s.ctx, *lastEthBlockSynced, s.genesis, stateMetrics.SynchronizerCallerLabel, dbTx)
 	if err != nil {
 		log.Error("error setting genesis: ", err)
-		return rollback(s.ctx, dbTx, err)
+		return nil, rollback(s.ctx, dbTx, err)
 	}
 	err = s.RequestAndProcessRollupGenesisBlock(dbTx, lastEthBlockSynced)
 	if err != nil {
 		log.Error("error processing Rollup genesis block: ", err)
-		return rollback(s.ctx, dbTx, err)
+		return nil, rollback(s.ctx, dbTx, err)
 	}
 
 	if genesisRoot != s.genesis.Root {
 		log.Errorf("Calculated newRoot should be %s instead of %s", s.genesis.Root.String(), genesisRoot.String())
-		return rollback(s.ctx, dbTx, err)
+		return nil, rollback(s.ctx, dbTx, err)
 	}
 	// Waiting for the flushID to be stored
 	err = s.checkFlushID(dbTx)
 	if err != nil {
 		log.Error("error checking genesis flushID: ", err)
-		return rollback(s.ctx, dbTx, err)
+		return nil, rollback(s.ctx, dbTx, err)
 	}
 	if err := dbTx.Commit(s.ctx); err != nil {
 		log.Errorf("error genesis committing dbTx, err: %v", err)
-		return rollback(s.ctx, dbTx, err)
+		return nil, rollback(s.ctx, dbTx, err)
 	}
 	log.Info("Genesis root matches! Stored genesis blocks.")
-	return nil
+	return lastEthBlockSynced, nil
 }
 
 // Sync function will read the last state synced and will continue from that point.
@@ -342,28 +342,24 @@ func (s *ClientSynchronizer) Sync() error {
 	// Get the latest synced block. If there is no block on db, use genesis block
 	log.Info("Sync started")
 
-	genesisDone, err := s.isGenesisProcessed(s.ctx, nil)
-	if err != nil {
-		log.Errorf("error checking if genesis is processed. Error: %v", err)
-		return err
-	}
-	if !genesisDone {
-		err := s.processGenesis()
-		if err != nil {
-			log.Errorf("error processing genesis. Error: %v", err)
-			return err
-		}
-	}
 	dbTx, err := s.state.BeginStateTransaction(s.ctx)
 	if err != nil {
 		log.Errorf("error creating db transaction to get latest block. Error: %v", err)
 		return err
 	}
-	lastEthBlockSynced, err := s.state.GetLastBlock(s.ctx, dbTx)
+	genesisDone, lastEthBlockSynced, err := s.isGenesisProcessed(s.ctx, dbTx)
 	if err != nil {
-		log.Errorf("error getting last L1 block. Error: %v", err)
-		return rollback(s.ctx, dbTx, err)
+		log.Errorf("error checking if genesis is processed. Error: %v", err)
+		return err
 	}
+	if !genesisDone {
+		lastEthBlockSynced, err = s.processGenesis()
+		if err != nil {
+			log.Errorf("error processing genesis. Error: %v", err)
+			return err
+		}
+	}
+
 	initBatchNumber, err := s.state.GetLastBatchNumber(s.ctx, dbTx)
 	if err != nil {
 		log.Error("error getting latest batchNumber synced. Error: ", err)
@@ -596,7 +592,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 
 	for {
 		if toBlock > lastKnownBlock.Uint64() {
-			log.Debug("Setting toBlock to the lastKnownBlock")
+			log.Debug("Setting toBlock to the lastKnownBlock: ", lastKnownBlock)
 			toBlock = lastKnownBlock.Uint64()
 		}
 		if fromBlock > toBlock {
@@ -664,7 +660,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		}
 
 		start = time.Now()
-		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, blocks, order)
+		err = s.ProcessBlockRange(blocks, order)
 		metrics.ProcessL1DataTime(time.Since(start))
 		if err != nil {
 			return lastEthBlockSynced, err

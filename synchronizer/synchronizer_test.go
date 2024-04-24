@@ -123,7 +123,7 @@ func TestGivenPermissionlessNodeWhenSyncronizeFirstTimeABatchThenStoreItInALocal
 // but it used a feature that is not implemented in new one that is asking beyond the last block on L1
 func TestForcedBatchEtrog(t *testing.T) {
 	genesis := state.Genesis{
-		BlockNumber: uint64(123456),
+		BlockNumber: uint64(0),
 	}
 	cfg := Config{
 		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
@@ -150,15 +150,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 		ToBatchNumber:   ^uint64(0),
 	}
 	m.State.EXPECT().GetForkIDInMemory(uint64(7)).Return(&forkIdInterval)
-	parentHash := common.HexToHash("0x111")
-	ethHeader := &ethTypes.Header{Number: big.NewInt(123456), ParentHash: parentHash}
-	ethBlock := ethTypes.NewBlockWithHeader(ethHeader)
-	lastBlock := &state.Block{BlockHash: ethBlock.Hash(), BlockNumber: ethBlock.Number().Uint64()}
 
-	m.State.
-		On("GetLastBlock", mock.Anything, mock.Anything).
-		Return(lastBlock, nil).
-		Once()
 	m.State.
 		On("BeginStateTransaction", ctxMatchBy).
 		Run(func(args mock.Arguments) {
@@ -402,7 +394,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 // but it used a feature that is not implemented in new one that is asking beyond the last block on L1
 func TestSequenceForcedBatchIncaberry(t *testing.T) {
 	genesis := state.Genesis{
-		BlockNumber: uint64(123456),
+		BlockNumber: uint64(0),
 	}
 	cfg := Config{
 		SyncInterval:          cfgTypes.Duration{Duration: 1 * time.Second},
@@ -421,14 +413,6 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
 	sync, err := NewSynchronizer(true, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, genesis, cfg, false)
 	require.NoError(t, err)
-	parentHash := common.HexToHash("0x111")
-	ethHeader := &ethTypes.Header{Number: big.NewInt(123456), ParentHash: parentHash}
-	ethBlock := ethTypes.NewBlockWithHeader(ethHeader)
-	lastBlock := &state.Block{BlockHash: ethBlock.Hash(), BlockNumber: ethBlock.Number().Uint64()}
-	m.State.
-		On("GetLastBlock", mock.Anything, mock.Anything).
-		Return(lastBlock, nil).
-		Once()
 
 	// state preparation
 	ctxMatchBy := mock.MatchedBy(func(ctx context.Context) bool { return ctx != nil })
@@ -2054,11 +2038,6 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 				On("SetLastBatchInfoSeenOnEthereum", ctx, uint64(10), uint64(10), nilDbTx).
 				Return(nil)
 
-			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
-				Return(ethBlock1, nil).
-				Once()
-
 			m.ZKEVMClient.
 				On("BatchNumber", ctx).
 				Return(uint64(1), nil).
@@ -2075,11 +2054,6 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 				On("HeaderByNumber", mock.Anything, n).
 				Return(ethHeader2bis, nil).
 				Once()
-
-			// m.Etherman.
-			// 	On("EthBlockByNumber", ctx, lastBlock1.BlockNumber).
-			// 	Return(ethBlock1, nil).
-			// 	Once()
 
 			ti := time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC)
 
@@ -2153,11 +2127,6 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 			m.DbTx.
 				On("Commit", ctx).
 				Return(nil).
-				Once()
-
-			m.Etherman.
-				On("EthBlockByNumber", ctx, lastBlock0.BlockNumber).
-				Return(ethBlock0, nil).
 				Once()
 
 			m.ZKEVMClient.
