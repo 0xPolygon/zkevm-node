@@ -660,7 +660,7 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		}
 
 		start = time.Now()
-		err = s.ProcessBlockRange(blocks, order)
+		err = s.blockRangeProcessor.ProcessBlockRange(s.ctx, blocks, order)
 		metrics.ProcessL1DataTime(time.Since(start))
 		if err != nil {
 			return lastEthBlockSynced, err

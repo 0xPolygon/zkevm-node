@@ -21,7 +21,7 @@ type stateBlockRangeProcessor interface {
 	GetForkIDByBlockNumber(blockNumber uint64) uint64
 }
 
-type ethermanI interface{
+type ethermanI interface {
 	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
 }
 
