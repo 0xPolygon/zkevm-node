@@ -10,8 +10,8 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
-	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	syncCommon "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	types "github.com/ethereum/go-ethereum/core/types"
 )
 
