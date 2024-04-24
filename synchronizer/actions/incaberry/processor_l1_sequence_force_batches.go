@@ -2,6 +2,7 @@ package incaberry
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
@@ -104,7 +105,7 @@ func (s *ProcessL1SequenceForcedBatches) processSequenceForceBatch(ctx context.C
 			return rollbackErr
 		}
 		log.Error("error number of forced batches doesn't match")
-		return fmt.Errorf("error number of forced batches doesn't match")
+		return errors.New("error number of forced batches doesn't match")
 	}
 	for i, fbatch := range sequenceForceBatch {
 		if uint64(forcedBatches[i].ForcedAt.Unix()) != fbatch.ForcedTimestamp ||

@@ -654,7 +654,7 @@ func forkIDIntervals(ctx context.Context, st *state.State, etherman *etherman.Cl
 			if err != nil {
 				return []state.ForkIDInterval{}, fmt.Errorf("error getting forks. Please check the configuration. Error: %v", err)
 			} else if len(forkIntervals) == 0 {
-				return []state.ForkIDInterval{}, fmt.Errorf("error: no forkID received. It should receive at least one, please check the configuration...")
+				return []state.ForkIDInterval{}, errors.New("error: no forkID received. It should receive at least one, please check the configuration...")
 			}
 
 			dbTx, err := st.BeginStateTransaction(ctx)
@@ -692,7 +692,7 @@ func forkIDIntervals(ctx context.Context, st *state.State, etherman *etherman.Cl
 			if err != nil {
 				return []state.ForkIDInterval{}, fmt.Errorf("error getting forks. Please check the configuration. Error: %v", err)
 			} else if len(forkIntervals) == 0 {
-				return []state.ForkIDInterval{}, fmt.Errorf("error: no forkID received. It should receive at least one, please check the configuration...")
+				return []state.ForkIDInterval{}, errors.New("error: no forkID received. It should receive at least one, please check the configuration...")
 			}
 			forkIDIntervals = forkIntervals
 		}

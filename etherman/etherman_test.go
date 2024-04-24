@@ -3,7 +3,7 @@ package etherman
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"math"
 	"math/big"
 	"testing"
@@ -365,7 +365,7 @@ func TestErrorEthGasStationPrice(t *testing.T) {
 	etherman.GasProviders.Providers = []ethereum.GasPricer{etherman.EthClient, ethGasStationM}
 	ctx := context.Background()
 
-	ethGasStationM.On("SuggestGasPrice", ctx).Return(big.NewInt(0), fmt.Errorf("error getting gasPrice from ethGasStation"))
+	ethGasStationM.On("SuggestGasPrice", ctx).Return(big.NewInt(0), errors.New("error getting gasPrice from ethGasStation"))
 	gp := etherman.GetL1GasPrice(ctx)
 	assert.Equal(t, big.NewInt(1392695906), gp)
 
@@ -385,7 +385,7 @@ func TestErrorEtherScanPrice(t *testing.T) {
 	etherman.GasProviders.Providers = []ethereum.GasPricer{etherman.EthClient, etherscanM, ethGasStationM}
 	ctx := context.Background()
 
-	etherscanM.On("SuggestGasPrice", ctx).Return(big.NewInt(0), fmt.Errorf("error getting gasPrice from etherscan"))
+	etherscanM.On("SuggestGasPrice", ctx).Return(big.NewInt(0), errors.New("error getting gasPrice from etherscan"))
 	ethGasStationM.On("SuggestGasPrice", ctx).Return(big.NewInt(1448795321), nil)
 	gp := etherman.GetL1GasPrice(ctx)
 	assert.Equal(t, big.NewInt(1448795321), gp)

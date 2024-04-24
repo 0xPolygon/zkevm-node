@@ -2,7 +2,7 @@ package l2_sync_etrog
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
@@ -17,7 +17,7 @@ import (
 
 var (
 	globalExitRootNonZero = common.HexToHash("0x723e5c4c7ee7890e1e66c2e391d553ee792d2204ecb4fe921830f12f8dcd1a92")
-	randomError           = fmt.Errorf("random error")
+	randomError           = errors.New("random error")
 )
 
 type testData struct {

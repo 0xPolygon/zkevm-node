@@ -2,6 +2,7 @@ package l2_shared
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -30,7 +31,7 @@ const (
 
 var (
 	// ErrFatalBatchDesynchronized is the error when the batch is desynchronized
-	ErrFatalBatchDesynchronized = fmt.Errorf("batch desynchronized")
+	ErrFatalBatchDesynchronized = errors.New("batch desynchronized")
 )
 
 // ProcessData contains the data required to process a batch
@@ -98,18 +99,18 @@ func (p *ProcessResponse) UpdateCurrentBatchWithExecutionResult(UpdateBatch *sta
 func (p *ProcessResponse) CheckSanity() error {
 	if p.UpdateBatchWithProcessBatchResponse {
 		if p.ProcessBatchResponse == nil {
-			return fmt.Errorf("UpdateBatchWithProcessBatchResponse is true but ProcessBatchResponse is nil")
+			return errors.New("UpdateBatchWithProcessBatchResponse is true but ProcessBatchResponse is nil")
 		}
 		if p.UpdateBatch == nil {
-			return fmt.Errorf("UpdateBatchWithProcessBatchResponse is true but UpdateBatch is nil")
+			return errors.New("UpdateBatchWithProcessBatchResponse is true but UpdateBatch is nil")
 		}
 		if p.ClearCache {
-			return fmt.Errorf("UpdateBatchWithProcessBatchResponse is true but ClearCache is true")
+			return errors.New("UpdateBatchWithProcessBatchResponse is true but ClearCache is true")
 		}
 	}
 	if p.UpdateBatch != nil {
 		if p.ClearCache {
-			return fmt.Errorf("UpdateBatch is not nil but ClearCache is true")
+			return errors.New("UpdateBatch is not nil but ClearCache is true")
 		}
 	}
 	return nil
@@ -306,7 +307,7 @@ func updateStatus(status TrustedState, response *ProcessResponse, closedBatch bo
 func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *types.Batch, stateBatch *state.Batch, statePreviousBatch *state.Batch, debugPrefix string) (ProcessData, error) {
 	// Check parameters
 	if trustedNodeBatch == nil || statePreviousBatch == nil {
-		return ProcessData{}, fmt.Errorf("trustedNodeBatch and statePreviousBatch can't be nil")
+		return ProcessData{}, errors.New("trustedNodeBatch and statePreviousBatch can't be nil")
 	}
 
 	var result ProcessData = ProcessData{}

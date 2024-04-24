@@ -1,6 +1,7 @@
 package etherman
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestTryParseWithContains(t *testing.T) {
 }
 
 func TestTryParseWithNonExistingErr(t *testing.T) {
-	smartContractErr := fmt.Errorf("some non-existing err")
+	smartContractErr := errors.New("some non-existing err")
 
 	actualErr, ok := tryParseError(smartContractErr)
 

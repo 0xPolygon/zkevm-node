@@ -893,7 +893,7 @@ func TestFailedToEstimateTxWithForcedGasGetMined(t *testing.T) {
 	// forces the estimate gas to fail
 	etherman.
 		On("EstimateGas", ctx, from, to, value, data).
-		Return(uint64(0), fmt.Errorf("failed to estimate gas")).
+		Return(uint64(0), errors.New("failed to estimate gas")).
 		Once()
 
 	// set estimated gas as the config ForcedGas

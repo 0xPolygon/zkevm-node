@@ -3,6 +3,7 @@ package sequencer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -352,7 +353,7 @@ func (f *finalizer) batchSanityCheck(ctx context.Context, batchNum uint64, initi
 			}
 		}
 
-		f.Halt(ctx, fmt.Errorf("batch sanity check error. Check previous errors in logs to know which was the cause"), false)
+		f.Halt(ctx, errors.New("batch sanity check error. Check previous errors in logs to know which was the cause"), false)
 	}
 
 	log.Debugf("batch %d sanity check: initialStateRoot: %s, expectedNewStateRoot: %s", batchNum, initialStateRoot, expectedNewStateRoot)

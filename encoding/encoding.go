@@ -1,6 +1,7 @@
 package encoding
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -50,7 +51,7 @@ func DecodeUint256orHex(val *string) (*big.Int, error) {
 	}
 	b, ok := new(big.Int).SetString(str, base)
 	if !ok {
-		return nil, fmt.Errorf("could not parse")
+		return nil, errors.New("could not parse")
 	}
 	return b, nil
 }

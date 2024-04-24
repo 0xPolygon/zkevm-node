@@ -111,7 +111,7 @@ func (g *ProcessorL1SequenceBatchesElderberry) sanityCheckTstampLastL2Block(time
 	}
 	if uint64(lastL2Block.ReceivedAt.Unix()) > timeLimit {
 		log.Errorf("The last L2 block timestamp can't be greater than timeLimit. Expected: %d (L1 event), got: %d (last L2Block)", timeLimit, lastL2Block.ReceivedAt.Unix())
-		return fmt.Errorf("wrong timestamp of  last L2 block timestamp with L1 event timestamp")
+		return errors.New("wrong timestamp of  last L2 block timestamp with L1 event timestamp")
 	}
 	return nil
 }

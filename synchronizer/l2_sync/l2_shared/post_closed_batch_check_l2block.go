@@ -2,6 +2,7 @@ package l2_shared
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -45,7 +46,7 @@ func (p *PostClosedBatchCheckL2Block) CheckPostClosedBatch(ctx context.Context, 
 		return err
 	}
 	if statelastL2Block == nil {
-		return fmt.Errorf("last L2Block in the database is nil")
+		return errors.New("last L2Block in the database is nil")
 	}
 	trustedLastL2Block := processData.TrustedBatch.Blocks[len(processData.TrustedBatch.Blocks)-1].Block
 	log.Info(trustedLastL2Block)

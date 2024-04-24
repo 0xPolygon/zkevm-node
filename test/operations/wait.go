@@ -40,7 +40,7 @@ const (
 var (
 	// ErrTimeoutReached is thrown when the timeout is reached and
 	// because the condition is not matched
-	ErrTimeoutReached = fmt.Errorf("timeout has been reached")
+	ErrTimeoutReached = errors.New("timeout has been reached")
 )
 
 // Wait handles polliing until conditions are met.
@@ -186,7 +186,7 @@ func WaitBatchToBeConsolidated(batchNum uint64, timeout time.Duration, state *st
 
 func WaitTxReceipt(ctx context.Context, txHash common.Hash, timeout time.Duration, client *ethclient.Client) (*types.Receipt, error) {
 	if client == nil {
-		return nil, fmt.Errorf("client is nil")
+		return nil, errors.New("client is nil")
 	}
 	var receipt *types.Receipt
 	pollErr := Poll(DefaultInterval, timeout, func() (bool, error) {

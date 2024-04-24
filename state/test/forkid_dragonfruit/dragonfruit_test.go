@@ -3,6 +3,7 @@ package dragonfruit_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -1520,7 +1521,7 @@ func TestExecutorRevert(t *testing.T) {
 	result, err := testState.ProcessUnsignedTransaction(ctx, unsignedTx, auth.From, &lastL2BlockNumber, false, nil)
 	require.NoError(t, err)
 	require.NotNil(t, result.Err)
-	assert.Equal(t, fmt.Errorf("execution reverted: Today is not juernes").Error(), result.Err.Error())
+	assert.Equal(t, errors.New("execution reverted: Today is not juernes").Error(), result.Err.Error())
 }
 
 func TestExecutorTransfer(t *testing.T) {

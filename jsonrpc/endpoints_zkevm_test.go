@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -2563,7 +2562,7 @@ func TestGetExitRootsByGER(t *testing.T) {
 
 				m.State.
 					On("GetExitRootByGlobalExitRoot", context.Background(), tc.GER, m.DbTx).
-					Return(nil, fmt.Errorf("failed to load exit roots from state"))
+					Return(nil, errors.New("failed to load exit roots from state"))
 			},
 		},
 		{
@@ -2654,7 +2653,7 @@ func TestGetLatestGlobalExitRoot(t *testing.T) {
 
 				m.State.
 					On("GetLatestBatchGlobalExitRoot", context.Background(), m.DbTx).
-					Return(nil, fmt.Errorf("failed to load GER from state")).
+					Return(nil, errors.New("failed to load GER from state")).
 					Once()
 			},
 		},

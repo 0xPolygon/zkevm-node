@@ -2,7 +2,7 @@ package sequencer
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -956,7 +956,7 @@ func TestFinalizer_closeWIPBatch(t *testing.T) {
 		ClosingReason:  f.wipBatch.closingReason,
 	}
 
-	managerErr := fmt.Errorf("some err")
+	managerErr := errors.New("some err")
 
 	testCases := []struct {
 		name        string

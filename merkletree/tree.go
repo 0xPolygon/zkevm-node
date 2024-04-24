@@ -2,7 +2,7 @@ package merkletree
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math/big"
 	"strings"
 
@@ -129,7 +129,7 @@ func (tree *StateTree) GetStorageAt(ctx context.Context, address common.Address,
 // SetBalance sets balance.
 func (tree *StateTree) SetBalance(ctx context.Context, address common.Address, balance *big.Int, root []byte, uuid string) (newRoot []byte, proof *UpdateProof, err error) {
 	if balance.Cmp(big.NewInt(0)) == -1 {
-		return nil, nil, fmt.Errorf("invalid balance")
+		return nil, nil, errors.New("invalid balance")
 	}
 
 	r := new(big.Int).SetBytes(root)
@@ -152,7 +152,7 @@ func (tree *StateTree) SetBalance(ctx context.Context, address common.Address, b
 // SetNonce sets nonce.
 func (tree *StateTree) SetNonce(ctx context.Context, address common.Address, nonce *big.Int, root []byte, uuid string) (newRoot []byte, proof *UpdateProof, err error) {
 	if nonce.Cmp(big.NewInt(0)) == -1 {
-		return nil, nil, fmt.Errorf("invalid nonce")
+		return nil, nil, errors.New("invalid nonce")
 	}
 
 	r := new(big.Int).SetBytes(root)

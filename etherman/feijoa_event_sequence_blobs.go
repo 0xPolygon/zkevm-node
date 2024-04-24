@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/feijoapolygonzkevm"
@@ -68,7 +68,7 @@ func (e *EventFeijoaSequenceBlobsProcessor) AddEventDataToBlock(ctx context.Cont
 
 	if inputData.thereIsAnyBlobType() {
 		// TODO:Retrieve blobs
-		return nil, fmt.Errorf("data-availability in blobs: not supported yet")
+		return nil, errors.New("data-availability in blobs: not supported yet")
 	}
 	// Add the blobs to the block list
 	block.SequenceBlobs = append(block.SequenceBlobs, *inputData)
@@ -120,9 +120,9 @@ func (e *EventFeijoaSequenceBlobsProcessor) parseCallData(callData *CallData) (*
 				return nil, err
 			}
 		case TypeBlobTransaction:
-			return nil, fmt.Errorf("blobType 'BlobTransaction' not supported yet")
+			return nil, errors.New("blobType 'BlobTransaction' not supported yet")
 		default:
-			return nil, fmt.Errorf("blobType not supported")
+			return nil, errors.New("blobType not supported")
 		}
 		blobs = append(blobs, SequenceBlob{
 			Type:               BlobType(blobsRaw[i].BlobType),

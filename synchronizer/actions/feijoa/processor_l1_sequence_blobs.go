@@ -2,7 +2,7 @@ package feijoa
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
@@ -53,7 +53,7 @@ func (p *ProcessorSequenceBlobs) Process(ctx context.Context, order etherman.Ord
 
 func (p *ProcessorSequenceBlobs) storeBlobSequence(ctx context.Context, dbTx pgx.Tx, seqBlobs *etherman.SequenceBlobs, createAt time.Time) error {
 	if seqBlobs == nil || seqBlobs.EventData == nil {
-		return fmt.Errorf("sequence blobs is nil or EventData is nil")
+		return errors.New("sequence blobs is nil or EventData is nil")
 	}
 
 	nextIndex := uint64(1)

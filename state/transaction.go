@@ -171,7 +171,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 
 			receipt := GenerateReceipt(header.Number, processedTx, uint(txIndex), forkID)
 			if !CheckLogOrder(receipt.Logs) {
-				return fmt.Errorf("error: logs received from executor are not in order")
+				return errors.New("error: logs received from executor are not in order")
 			}
 			receipts := []*types.Receipt{receipt}
 			imStateRoots := []common.Hash{processedTx.StateRoot}

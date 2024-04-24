@@ -3,7 +3,7 @@ package etherman_test
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"math/big"
 	"testing"
 
@@ -124,7 +124,7 @@ func TestCallDataExtractorExtarctCallDataTransactionInBlockReturnsErr(t *testing
 	mockChainRetriever := etherman.NewChainReaderMock(t)
 	blockHash := common.HexToHash("0x1")
 	indexTx := uint(12)
-	errReturned := fmt.Errorf("mock error")
+	errReturned := errors.New("mock error")
 	mockChainRetriever.EXPECT().TransactionInBlock(context.TODO(), blockHash, indexTx).Return(nil, errReturned).Once()
 	callDataExtractor := etherman.NewCallDataExtratorGeth(mockChainRetriever)
 	_, err := callDataExtractor.ExtractCallData(context.TODO(), blockHash, common.Hash{}, indexTx)

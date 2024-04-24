@@ -3,6 +3,7 @@ package l2_sync_incaberry
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -178,7 +179,7 @@ func (s *SyncTrustedBatchesAction) processTrustedBatch(ctx context.Context, trus
 		log.Infof("Coinbase. stored:  %s. synced: %s", batches[0].Coinbase.String(), trustedBatch.Coinbase.String())
 		log.Infof("Timestamp. stored:  %d. synced: %d", uint64(batches[0].Timestamp.Unix()), uint64(trustedBatch.Timestamp))
 		log.Infof("BatchL2Data. stored: %s. synced: %s", common.Bytes2Hex(batches[0].BatchL2Data), common.Bytes2Hex(trustedBatchL2Data))
-		return nil, nil, fmt.Errorf("error: inconsistency in data received from trustedNode")
+		return nil, nil, errors.New("error: inconsistency in data received from trustedNode")
 	}
 
 	if s.TrustedState.LastStateRoot == nil && (batches[0] == nil || (batches[0].StateRoot == common.Hash{})) {

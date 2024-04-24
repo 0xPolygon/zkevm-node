@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 const (
 	// DefaultErrorCode rpc default error code
@@ -20,11 +23,11 @@ const (
 var (
 	// ErrBatchRequestsDisabled returned by the server when a batch request
 	// is detected and the batch requests are disabled via configuration
-	ErrBatchRequestsDisabled = fmt.Errorf("batch requests are disabled")
+	ErrBatchRequestsDisabled = errors.New("batch requests are disabled")
 
 	// ErrBatchRequestsLimitExceeded returned by the server when a batch request
 	// is detected and the number of requests are greater than the configured limit.
-	ErrBatchRequestsLimitExceeded = fmt.Errorf("batch requests limit exceeded")
+	ErrBatchRequestsLimitExceeded = errors.New("batch requests limit exceeded")
 )
 
 // Error interface

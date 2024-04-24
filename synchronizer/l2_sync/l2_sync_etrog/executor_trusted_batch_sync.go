@@ -184,7 +184,7 @@ func (b *SyncTrustedBatchExecutorForEtrog) FullProcess(ctx context.Context, data
 func (b *SyncTrustedBatchExecutorForEtrog) IncrementalProcess(ctx context.Context, data *l2_shared.ProcessData, dbTx pgx.Tx) (*l2_shared.ProcessResponse, error) {
 	var err error
 	if data == nil || data.TrustedBatch == nil || data.StateBatch == nil {
-		return nil, fmt.Errorf("data is nil")
+		return nil, errors.New("data is nil")
 	}
 	if err := checkThatL2DataIsIncremental(data); err != nil {
 		log.Errorf("%s error checkThatL2DataIsIncremental. Error: %v", data.DebugPrefix, err)

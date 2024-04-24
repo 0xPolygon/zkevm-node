@@ -340,7 +340,7 @@ func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber
 		return false, err
 	}
 	if len(logs) == 0 {
-		return false, fmt.Errorf("the specified genBlockNumber in config file does not contain any forkID event. Please use the proper blockNumber.")
+		return false, errors.New("the specified genBlockNumber in config file does not contain any forkID event. Please use the proper blockNumber.")
 	}
 	var zkevmVersion preetrogpolygonzkevm.PreetrogpolygonzkevmUpdateZkEVMVersion
 	switch logs[0].Topics[0] {
@@ -820,7 +820,7 @@ func (etherMan *Client) updateEtrogSequence(ctx context.Context, vLog types.Log,
 		(*blocks)[len(*blocks)-1].UpdateEtrogSequence = sequence
 	} else {
 		log.Error("Error processing UpdateEtrogSequence event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing UpdateEtrogSequence event")
+		return errors.New("error processing UpdateEtrogSequence event")
 	}
 	or := Order{
 		Name: UpdateEtrogSequenceOrder,
@@ -878,7 +878,7 @@ func (etherMan *Client) initialSequenceBatches(ctx context.Context, vLog types.L
 		(*blocks)[len(*blocks)-1].SequencedBatches = append((*blocks)[len(*blocks)-1].SequencedBatches, sequences)
 	} else {
 		log.Error("Error processing SequencedBatches event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing SequencedBatches event")
+		return errors.New("error processing SequencedBatches event")
 	}
 	or := Order{
 		Name: InitialSequenceBatchesOrder,
@@ -910,7 +910,7 @@ func (etherMan *Client) updateForkId(ctx context.Context, vLog types.Log, blocks
 		(*blocks)[len(*blocks)-1].ForkIDs = append((*blocks)[len(*blocks)-1].ForkIDs, fork)
 	} else {
 		log.Error("Error processing updateZkevmVersion event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing updateZkevmVersion event")
+		return errors.New("error processing updateZkevmVersion event")
 	}
 	or := Order{
 		Name: ForkIDsOrder,
@@ -1004,7 +1004,7 @@ func (etherMan *Client) processUpdateGlobalExitRootEvent(ctx context.Context, ma
 		(*blocks)[len(*blocks)-1].GlobalExitRoots = append((*blocks)[len(*blocks)-1].GlobalExitRoots, gExitRoot)
 	} else {
 		log.Error("Error processing UpdateGlobalExitRoot event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing UpdateGlobalExitRoot event")
+		return errors.New("error processing UpdateGlobalExitRoot event")
 	}
 	or := Order{
 		Name: GlobalExitRootsOrder,
@@ -1263,7 +1263,7 @@ func (etherMan *Client) forcedBatchEvent(ctx context.Context, vLog types.Log, bl
 		(*blocks)[len(*blocks)-1].ForcedBatches = append((*blocks)[len(*blocks)-1].ForcedBatches, forcedBatch)
 	} else {
 		log.Error("Error processing ForceBatch event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing ForceBatch event")
+		return errors.New("error processing ForceBatch event")
 	}
 	or := Order{
 		Name: ForcedBatchesOrder,
@@ -1333,7 +1333,7 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 		(*blocks)[len(*blocks)-1].SequencedBatches = append((*blocks)[len(*blocks)-1].SequencedBatches, sequences)
 	} else {
 		log.Error("Error processing SequencedBatches event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing SequencedBatches event")
+		return errors.New("error processing SequencedBatches event")
 	}
 	or := Order{
 		Name: SequenceBatchesOrder,
@@ -1380,7 +1380,7 @@ func (etherMan *Client) sequencedBatchesPreEtrogEvent(ctx context.Context, vLog 
 		(*blocks)[len(*blocks)-1].SequencedBatches = append((*blocks)[len(*blocks)-1].SequencedBatches, sequences)
 	} else {
 		log.Error("Error processing SequencedBatches event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing SequencedBatches event")
+		return errors.New("error processing SequencedBatches event")
 	}
 	or := Order{
 		Name: SequenceBatchesOrder,
@@ -1586,7 +1586,7 @@ func (etherMan *Client) verifyBatches(
 		(*blocks)[len(*blocks)-1].VerifiedBatches = append((*blocks)[len(*blocks)-1].VerifiedBatches, verifyBatch)
 	} else {
 		log.Error("Error processing verifyBatch event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing verifyBatch event")
+		return errors.New("error processing verifyBatch event")
 	}
 	or := Order{
 		Name: orderName,
@@ -1633,7 +1633,7 @@ func (etherMan *Client) forceSequencedBatchesEvent(ctx context.Context, vLog typ
 		(*blocks)[len(*blocks)-1].SequencedForceBatches = append((*blocks)[len(*blocks)-1].SequencedForceBatches, sequencedForceBatch)
 	} else {
 		log.Error("Error processing ForceSequencedBatches event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
-		return fmt.Errorf("error processing ForceSequencedBatches event")
+		return errors.New("error processing ForceSequencedBatches event")
 	}
 	or := Order{
 		Name: SequenceForceBatchesOrder,
@@ -1833,7 +1833,7 @@ func (etherMan *Client) GetL2ChainID() (uint64, error) {
 			log.Debug("error from EtrogRollupManager: ", err)
 			return 0, err
 		} else if rollupData.ChainID == 0 {
-			return rollupData.ChainID, fmt.Errorf("error: chainID received is 0!!")
+			return rollupData.ChainID, errors.New("error: chainID received is 0!!")
 		}
 		return rollupData.ChainID, nil
 	}

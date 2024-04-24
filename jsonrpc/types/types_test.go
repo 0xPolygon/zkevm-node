@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/hex"
@@ -42,13 +42,13 @@ func TestArgHashUnmarshalFromShortString(t *testing.T) {
 			name:           "invalid hex value starting with 0x",
 			input:          "0xG",
 			expectedResult: "0x0000000000000000000000000000000000000000000000000000000000000000",
-			expectedError:  fmt.Errorf("invalid hash, it needs to be a hexadecimal value"),
+			expectedError:  errors.New("invalid hash, it needs to be a hexadecimal value"),
 		},
 		{
 			name:           "invalid hex value starting without 0x",
 			input:          "G",
 			expectedResult: "0x0000000000000000000000000000000000000000000000000000000000000000",
-			expectedError:  fmt.Errorf("invalid hash, it needs to be a hexadecimal value"),
+			expectedError:  errors.New("invalid hash, it needs to be a hexadecimal value"),
 		},
 	}
 
@@ -92,13 +92,13 @@ func TestArgAddressUnmarshalFromShortString(t *testing.T) {
 			name:           "invalid hex value starting with 0x",
 			input:          "0xG",
 			expectedResult: "0x0000000000000000000000000000000000000000",
-			expectedError:  fmt.Errorf("invalid address, it needs to be a hexadecimal value"),
+			expectedError:  errors.New("invalid address, it needs to be a hexadecimal value"),
 		},
 		{
 			name:           "invalid hex value starting without 0x",
 			input:          "G",
 			expectedResult: "0x0000000000000000000000000000000000000000",
-			expectedError:  fmt.Errorf("invalid address, it needs to be a hexadecimal value"),
+			expectedError:  errors.New("invalid address, it needs to be a hexadecimal value"),
 		},
 	}
 

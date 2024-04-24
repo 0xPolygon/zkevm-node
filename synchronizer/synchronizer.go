@@ -188,7 +188,7 @@ func decodeSyncBlockProtection(sBP string) (rpc.BlockNumber, error) {
 	case "safe":
 		return rpc.SafeBlockNumber, nil
 	default:
-		return 0, fmt.Errorf("error decoding SyncBlockProtection. Unknown value")
+		return 0, errors.New("error decoding SyncBlockProtection. Unknown value")
 	}
 }
 
@@ -269,7 +269,7 @@ func (s *ClientSynchronizer) processGenesis() error {
 		return err
 	} else if !valid {
 		log.Error("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
-		return fmt.Errorf("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
+		return errors.New("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
 	}
 	// Sync pre genesis rollup events
 	s.syncPreRollup.(*SyncPreRollup).GenesisBlockNumber = s.genesis.BlockNumber
@@ -526,11 +526,11 @@ func (s *ClientSynchronizer) RequestAndProcessRollupGenesisBlock(dbTx pgx.Tx, la
 func sanityCheckForGenesisBlockRollupInfo(blocks []etherman.Block, order map[common.Hash][]etherman.Order) error {
 	if len(blocks) != 1 || len(order) < 1 || len(order[blocks[0].BlockHash]) < 1 {
 		log.Errorf("error getting rollupInfoByBlockRange after set the genesis. Expected 1 block with 2 orders")
-		return fmt.Errorf("error getting rollupInfoByBlockRange after set the genesis. Expected 1 block with 2 orders")
+		return errors.New("error getting rollupInfoByBlockRange after set the genesis. Expected 1 block with 2 orders")
 	}
 	if order[blocks[0].BlockHash][0].Name != etherman.ForkIDsOrder {
 		log.Errorf("error getting rollupInfoByBlockRange after set the genesis. Expected ForkIDsOrder, got %s", order[blocks[0].BlockHash][0].Name)
-		return fmt.Errorf("error getting rollupInfoByBlockRange after set the genesis. Expected ForkIDsOrder")
+		return errors.New("error getting rollupInfoByBlockRange after set the genesis. Expected ForkIDsOrder")
 	}
 
 	return nil
@@ -543,7 +543,7 @@ func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block)
 	block, err := s.checkReorg(lastEthBlockSynced)
 	if err != nil {
 		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-		return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
+		return lastEthBlockSynced, errors.New("error checking reorgs")
 	}
 	if block != nil {
 		log.Infof("reorg detected. Resetting the state from block %v to block %v", lastEthBlockSynced.BlockNumber, block.BlockNumber)
@@ -551,7 +551,7 @@ func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block)
 		if err != nil {
 			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
 			s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
-			return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+			return lastEthBlockSynced, errors.New("error resetting the state to a previous block")
 		}
 		return block, nil
 	}
@@ -573,13 +573,13 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 	block, err := s.checkReorg(lastEthBlockSynced)
 	if err != nil {
 		log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-		return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
+		return lastEthBlockSynced, errors.New("error checking reorgs")
 	}
 	if block != nil {
 		err = s.resetState(block.BlockNumber)
 		if err != nil {
 			log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-			return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+			return lastEthBlockSynced, errors.New("error resetting the state to a previous block")
 		}
 		return block, nil
 	}
@@ -612,13 +612,13 @@ func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Bloc
 		block, err := s.checkReorg(lastEthBlockSynced)
 		if err != nil {
 			log.Errorf("error checking reorgs. Retrying... Err: %v", err)
-			return lastEthBlockSynced, fmt.Errorf("error checking reorgs")
+			return lastEthBlockSynced, errors.New("error checking reorgs")
 		}
 		if block != nil {
 			err = s.resetState(block.BlockNumber)
 			if err != nil {
 				log.Errorf("error resetting the state to a previous block. Retrying... Err: %v", err)
-				return lastEthBlockSynced, fmt.Errorf("error resetting the state to a previous block")
+				return lastEthBlockSynced, errors.New("error resetting the state to a previous block")
 			}
 			return block, nil
 		}

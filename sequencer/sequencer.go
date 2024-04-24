@@ -2,6 +2,7 @@ package sequencer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -129,7 +130,7 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 		}
 
 		if stateInconsistenciesDetected != s.numberOfStateInconsistencies {
-			s.finalizer.Halt(ctx, fmt.Errorf("state inconsistency detected, halting finalizer"), false)
+			s.finalizer.Halt(ctx, errors.New("state inconsistency detected, halting finalizer"), false)
 		}
 
 		time.Sleep(s.cfg.StateConsistencyCheckInterval.Duration)

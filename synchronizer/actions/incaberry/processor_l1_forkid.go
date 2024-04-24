@@ -195,7 +195,7 @@ func (s *ProcessorForkId) processForkID(ctx context.Context, forkID etherman.For
 	}
 	log.Infof("%s new ForkID detected, committed reverting state", debugPrefix)
 
-	return fmt.Errorf("new ForkID detected, reseting synchronizarion")
+	return errors.New("new ForkID detected, reseting synchronizarion")
 }
 
 func (s *ProcessorForkId) commit(ctx context.Context, debugPrefix string, dbTx pgx.Tx) error {

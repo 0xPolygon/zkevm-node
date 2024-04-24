@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"math/big"
 	"strconv"
 	"strings"
@@ -135,7 +135,7 @@ type ArgHash common.Hash
 // UnmarshalText unmarshals from text
 func (arg *ArgHash) UnmarshalText(input []byte) error {
 	if !hex.IsValid(string(input)) {
-		return fmt.Errorf("invalid hash, it needs to be a hexadecimal value")
+		return errors.New("invalid hash, it needs to be a hexadecimal value")
 	}
 
 	str := strings.TrimPrefix(string(input), "0x")
@@ -159,7 +159,7 @@ type ArgAddress common.Address
 // UnmarshalText unmarshals from text
 func (b *ArgAddress) UnmarshalText(input []byte) error {
 	if !hex.IsValid(string(input)) {
-		return fmt.Errorf("invalid address, it needs to be a hexadecimal value")
+		return errors.New("invalid address, it needs to be a hexadecimal value")
 	}
 
 	str := strings.TrimPrefix(string(input), "0x")
@@ -217,7 +217,7 @@ func (args *TxArgs) ToTransaction(ctx context.Context, st StateInterface, maxCum
 	} else if args.Input != nil {
 		data = *args.Input
 	} else if args.To == nil {
-		return common.Address{}, nil, fmt.Errorf("contract creation without data provided")
+		return common.Address{}, nil, errors.New("contract creation without data provided")
 	}
 
 	gas := maxCumulativeGasUsed

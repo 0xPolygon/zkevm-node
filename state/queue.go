@@ -1,13 +1,13 @@
 package state
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 )
 
 // ErrQueueEmpty is returned when a queue operation
 // depends on the queue to not be empty, but it is empty
-var ErrQueueEmpty = fmt.Errorf("queue is empty")
+var ErrQueueEmpty = errors.New("queue is empty")
 
 // Queue is a generic queue implementation that implements FIFO
 type Queue[T any] struct {

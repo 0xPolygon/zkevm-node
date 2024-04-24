@@ -1,6 +1,7 @@
 package l1infotree
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -172,7 +173,7 @@ func (mt *L1InfoTree) AddLeaf(index uint32, leaf [32]byte) (common.Hash, error) 
 // it is used to initialize the siblings array in the beginning.
 func (mt *L1InfoTree) initSiblings(initialLeaves [][32]byte) ([][32]byte, common.Hash, error) {
 	if mt.count != uint32(len(initialLeaves)) {
-		return nil, [32]byte{}, fmt.Errorf("error: mt.count and initialLeaves length mismatch")
+		return nil, [32]byte{}, errors.New("error: mt.count and initialLeaves length mismatch")
 	}
 	if mt.count == 0 {
 		var siblings [][32]byte

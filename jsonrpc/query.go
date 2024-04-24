@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -243,12 +244,12 @@ func (f *LogFilter) UnmarshalJSON(data []byte) error {
 						return err
 					}
 				} else {
-					return fmt.Errorf("address expected")
+					return errors.New("address expected")
 				}
 			}
 
 		default:
-			return fmt.Errorf("failed to decode address. Expected either '' or ['', '']")
+			return errors.New("failed to decode address. Expected either '' or ['', '']")
 		}
 	}
 
@@ -270,7 +271,7 @@ func (f *LogFilter) UnmarshalJSON(data []byte) error {
 					if item, ok := i.(string); ok {
 						res = append(res, item)
 					} else {
-						return fmt.Errorf("hash expected")
+						return errors.New("hash expected")
 					}
 				}
 
@@ -285,7 +286,7 @@ func (f *LogFilter) UnmarshalJSON(data []byte) error {
 				}
 
 			default:
-				return fmt.Errorf("failed to decode topics. Expected '' or [''] or null")
+				return errors.New("failed to decode topics. Expected '' or [''] or null")
 			}
 		}
 	}

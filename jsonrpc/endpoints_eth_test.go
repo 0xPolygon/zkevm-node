@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
@@ -5142,7 +5141,7 @@ func TestSubscribeNewHeads(t *testing.T) {
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
 				m.Storage.
 					On("NewBlockFilter", mock.IsType(&concurrentWsConn{})).
-					Return("", fmt.Errorf("failed to add filter to storage")).
+					Return("", errors.New("failed to add filter to storage")).
 					Once()
 			},
 		},
@@ -5235,7 +5234,7 @@ func TestSubscribeNewLogs(t *testing.T) {
 
 				m.Storage.
 					On("NewLogFilter", mock.IsType(&concurrentWsConn{}), mock.IsType(LogFilter{})).
-					Return("", fmt.Errorf("failed to add filter to storage")).
+					Return("", errors.New("failed to add filter to storage")).
 					Once()
 			},
 		},

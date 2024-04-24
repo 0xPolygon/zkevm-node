@@ -333,7 +333,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	// Sanity check
 	log.Debugf(response.TxHash.String())
 	if response.TxHash != transactionHash {
-		return nil, fmt.Errorf("tx hash not found in executor response")
+		return nil, errors.New("tx hash not found in executor response")
 	}
 
 	result := &runtime.ExecutionResult{
@@ -377,7 +377,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	gasPrice, ok := new(big.Int).SetString(context.GasPrice, encoding.Base10)
 	if !ok {
 		log.Errorf("debug transaction: failed to parse gasPrice")
-		return nil, fmt.Errorf("failed to parse gasPrice")
+		return nil, errors.New("failed to parse gasPrice")
 	}
 
 	// select and prepare tracer

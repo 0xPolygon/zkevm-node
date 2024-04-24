@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -57,10 +58,10 @@ func CheckError(err error, expected bool, msg string) error {
 	}
 	if expected {
 		if err == nil {
-			return fmt.Errorf("Expected error didn't happen")
+			return errors.New("Expected error didn't happen")
 		}
 		if msg == "" {
-			return fmt.Errorf("Expected error message not defined")
+			return errors.New("Expected error message not defined")
 		}
 		if !strings.HasPrefix(err.Error(), msg) {
 			return fmt.Errorf("Wrong error, expected %q, got %q", msg, err.Error())
@@ -75,7 +76,7 @@ func ReadBytecode(contractPath string) (string, error) {
 
 	_, currentFilename, _, ok := runtime.Caller(0)
 	if !ok {
-		return "", fmt.Errorf("Could not get name of current file")
+		return "", errors.New("Could not get name of current file")
 	}
 	fullBasePath := path.Join(path.Dir(currentFilename), basePath)
 

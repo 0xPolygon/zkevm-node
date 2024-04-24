@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strconv"
 	"testing"
 
@@ -412,17 +412,17 @@ func TestBlockNumberOrHashMarshaling(t *testing.T) {
 		{`{"blockHash":"0x1"}`, &BlockNumberOrHash{hash: argHashPtr(common.HexToHash("0x1"))}, nil},
 		{`{"blockHash":"0x1", "requireCanonical":true}`, &BlockNumberOrHash{hash: argHashPtr(common.HexToHash("0x1")), requireCanonical: true}, nil},
 		// float wrong value
-		{`{"blockNumber":1.0}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockNumber")},
-		{`{"blockHash":1.0}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockHash")},
-		{`{"blockHash":"0x1", "requireCanonical":1.0}`, &BlockNumberOrHash{}, fmt.Errorf("invalid requireCanonical")},
+		{`{"blockNumber":1.0}`, &BlockNumberOrHash{}, errors.New("invalid blockNumber")},
+		{`{"blockHash":1.0}`, &BlockNumberOrHash{}, errors.New("invalid blockHash")},
+		{`{"blockHash":"0x1", "requireCanonical":1.0}`, &BlockNumberOrHash{}, errors.New("invalid requireCanonical")},
 		// int wrong value
-		{`{"blockNumber":1}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockNumber")},
-		{`{"blockHash":1}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockHash")},
-		{`{"blockHash":"0x1", "requireCanonical":1}`, &BlockNumberOrHash{}, fmt.Errorf("invalid requireCanonical")},
+		{`{"blockNumber":1}`, &BlockNumberOrHash{}, errors.New("invalid blockNumber")},
+		{`{"blockHash":1}`, &BlockNumberOrHash{}, errors.New("invalid blockHash")},
+		{`{"blockHash":"0x1", "requireCanonical":1}`, &BlockNumberOrHash{}, errors.New("invalid requireCanonical")},
 		// string wrong value
-		{`{"blockNumber":"aaa"}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockNumber")},
-		{`{"blockHash":"ggg"}`, &BlockNumberOrHash{}, fmt.Errorf("invalid blockHash")},
-		{`{"blockHash":"0x1", "requireCanonical":"aaa"}`, &BlockNumberOrHash{}, fmt.Errorf("invalid requireCanonical")},
+		{`{"blockNumber":"aaa"}`, &BlockNumberOrHash{}, errors.New("invalid blockNumber")},
+		{`{"blockHash":"ggg"}`, &BlockNumberOrHash{}, errors.New("invalid blockHash")},
+		{`{"blockHash":"0x1", "requireCanonical":"aaa"}`, &BlockNumberOrHash{}, errors.New("invalid requireCanonical")},
 	}
 
 	for _, testCase := range testCases {

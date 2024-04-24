@@ -2,6 +2,7 @@ package eip4844
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	beaconclient "github.com/0xPolygonHermez/zkevm-node/beacon_client"
@@ -72,7 +73,7 @@ func (e *EthermanEIP4844) GetBlobSidecar(ctx context.Context, blockTime uint64, 
 			return sidecar.Blob, nil
 		}
 	}
-	err = fmt.Errorf("sidecar not found")
+	err = errors.New("sidecar not found")
 	log.Error(err.Error())
 	return nil, err
 }
@@ -80,7 +81,7 @@ func (e *EthermanEIP4844) GetBlobSidecar(ctx context.Context, blockTime uint64, 
 // CalculateSlot calculates the slot for a given blockTime
 func (e *EthermanEIP4844) CalculateSlot(blockTime uint64) (uint64, error) {
 	if !e.IsInitialized() {
-		return 0, fmt.Errorf("EIP-4844 not initialized,please call Initialize(..) function first")
+		return 0, errors.New("EIP-4844 not initialized,please call Initialize(..) function first")
 	}
 	return (blockTime - e.genesisTime) / e.secondsPerSlot, nil
 }

@@ -3,7 +3,6 @@ package l1_parallel_sync
 import (
 	context "context"
 	"errors"
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
@@ -162,7 +161,7 @@ func TestIfRollupInfoFailGettingLastBlockContainBlockRange(t *testing.T) {
 
 	mockEtherman.
 		On("EthBlockByNumber", mock.Anything, blockRange.toBlock).
-		Return(ethTypes.NewBlockWithHeader(&ethTypes.Header{Number: big.NewInt(int64(blockRange.toBlock))}), fmt.Errorf("error")).
+		Return(ethTypes.NewBlockWithHeader(&ethTypes.Header{Number: big.NewInt(int64(blockRange.toBlock))}), errors.New("error")).
 		Once()
 	mockEtherman.
 		On("GetRollupInfoByBlockRange", mock.Anything, blockRange.fromBlock, mock.Anything).
@@ -193,7 +192,7 @@ func TestIfRollupInfoFailGettingRollupContainBlockRange(t *testing.T) {
 		Maybe()
 	mockEtherman.
 		On("GetRollupInfoByBlockRange", mock.Anything, blockRange.fromBlock, mock.Anything).
-		Return([]etherman.Block{}, map[common.Hash][]etherman.Order{}, fmt.Errorf("error")).
+		Return([]etherman.Block{}, map[common.Hash][]etherman.Order{}, errors.New("error")).
 		Once()
 
 	err := sut.asyncRequestRollupInfoByBlockRange(ctx, ch, &wg, request)
@@ -224,7 +223,7 @@ func TestIfRollupInfoFailPreviousBlockContainBlockRange(t *testing.T) {
 		Maybe()
 	mockEtherman.
 		On("EthBlockByNumber", mock.Anything, blockRange.fromBlock-1).
-		Return(ethTypes.NewBlockWithHeader(&ethTypes.Header{Number: big.NewInt(int64(blockRange.fromBlock - 1))}), fmt.Errorf("error")).
+		Return(ethTypes.NewBlockWithHeader(&ethTypes.Header{Number: big.NewInt(int64(blockRange.fromBlock - 1))}), errors.New("error")).
 		Once()
 
 	err := sut.asyncRequestRollupInfoByBlockRange(ctx, ch, &wg, request)

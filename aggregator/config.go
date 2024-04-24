@@ -1,7 +1,7 @@
 package aggregator
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
 
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
@@ -17,7 +17,7 @@ type TokenAmountWithDecimals struct {
 func (t *TokenAmountWithDecimals) UnmarshalText(data []byte) error {
 	amount, ok := new(big.Float).SetString(string(data))
 	if !ok {
-		return fmt.Errorf("failed to unmarshal string to float")
+		return errors.New("failed to unmarshal string to float")
 	}
 	coin := new(big.Float).SetInt(big.NewInt(encoding.TenToThePowerOf18))
 	bigval := new(big.Float).Mul(amount, coin)

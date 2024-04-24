@@ -332,7 +332,7 @@ func convertToReadWriteAddressesV2(addresses map[string]*executor.InfoReadWriteV
 			bigNonce, ok := new(big.Int).SetString(addrInfo.Nonce, encoding.Base10)
 			if !ok {
 				log.Debugf("received nonce as string: %v", addrInfo.Nonce)
-				return nil, fmt.Errorf("error while parsing address nonce")
+				return nil, errors.New("error while parsing address nonce")
 			}
 			nonceNp := bigNonce.Uint64()
 			nonce = &nonceNp
@@ -342,7 +342,7 @@ func convertToReadWriteAddressesV2(addresses map[string]*executor.InfoReadWriteV
 			balance, ok = new(big.Int).SetString(addrInfo.Balance, encoding.Base10)
 			if !ok {
 				log.Debugf("received balance as string: %v", addrInfo.Balance)
-				return nil, fmt.Errorf("error while parsing address balance")
+				return nil, errors.New("error while parsing address balance")
 			}
 		}
 

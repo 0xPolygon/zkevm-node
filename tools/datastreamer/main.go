@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -1008,7 +1009,7 @@ func setGenesis(ctx context.Context, tree *merkletree.StateTree, genesis state.G
 	)
 
 	if tree == nil {
-		return newRoot, fmt.Errorf("state tree is nil")
+		return newRoot, errors.New("state tree is nil")
 	}
 
 	uuid := uuid.New().String()

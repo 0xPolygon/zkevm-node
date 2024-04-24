@@ -2,7 +2,7 @@ package pgstatestorage_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/state"
@@ -32,17 +32,17 @@ func TestAddForkIDInterval(t *testing.T) {
 		{
 			name:          "fails to add because forkID already exists",
 			forkIDToAdd:   state.ForkIDInterval{ForkId: 3},
-			expectedError: fmt.Errorf("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 3"),
+			expectedError: errors.New("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 3"),
 		},
 		{
 			name:          "fails to add because forkID is smaller than the latest forkID",
 			forkIDToAdd:   state.ForkIDInterval{ForkId: 5},
-			expectedError: fmt.Errorf("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 5"),
+			expectedError: errors.New("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 5"),
 		},
 		{
 			name:          "fails to add because forkID is equal to the latest forkID",
 			forkIDToAdd:   state.ForkIDInterval{ForkId: 6},
-			expectedError: fmt.Errorf("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 6"),
+			expectedError: errors.New("error checking forkID sequence. Last ForkID stored: 6. New ForkID received: 6"),
 		},
 		{
 			name:          "adds successfully",

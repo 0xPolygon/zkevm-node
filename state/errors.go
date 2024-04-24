@@ -21,9 +21,9 @@ var (
 	// ErrAlreadyInitializedDBTransaction indicates the db transaction was already initialized
 	ErrAlreadyInitializedDBTransaction = errors.New("database transaction already initialized")
 	// ErrNotEnoughIntrinsicGas indicates the gas is not enough to cover the intrinsic gas cost
-	ErrNotEnoughIntrinsicGas = fmt.Errorf("not enough gas supplied for intrinsic gas costs")
+	ErrNotEnoughIntrinsicGas = errors.New("not enough gas supplied for intrinsic gas costs")
 	// ErrParsingExecutorTrace indicates an error occurred while parsing the executor trace
-	ErrParsingExecutorTrace = fmt.Errorf("error while parsing executor trace")
+	ErrParsingExecutorTrace = errors.New("error while parsing executor trace")
 	// ErrInvalidBatchNumber indicates the provided batch number is not the latest in db
 	ErrInvalidBatchNumber = errors.New("provided batch number is not latest")
 	// ErrLastBatchShouldBeClosed indicates that last batch needs to be closed before adding a new one

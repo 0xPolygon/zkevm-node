@@ -106,7 +106,7 @@ func (s *Server) Start() error {
 // startHTTP starts a server to respond http requests
 func (s *Server) startHTTP() error {
 	if s.srv != nil {
-		return fmt.Errorf("server already started")
+		return errors.New("server already started")
 	}
 
 	address := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
@@ -287,7 +287,7 @@ func (s *Server) isSingleRequest(data []byte) (bool, error) {
 	x := bytes.TrimLeft(data, " \t\r\n")
 
 	if len(x) == 0 {
-		return false, fmt.Errorf("empty request body")
+		return false, errors.New("empty request body")
 	}
 
 	return x[0] != '[', nil
@@ -360,7 +360,7 @@ func (s *Server) parseRequest(data []byte) (types.Request, error) {
 	var req types.Request
 
 	if err := json.Unmarshal(data, &req); err != nil {
-		return types.Request{}, fmt.Errorf("invalid json object request body")
+		return types.Request{}, errors.New("invalid json object request body")
 	}
 
 	return req, nil
@@ -370,7 +370,7 @@ func (s *Server) parseRequests(data []byte) ([]types.Request, error) {
 	var requests []types.Request
 
 	if err := json.Unmarshal(data, &requests); err != nil {
-		return nil, fmt.Errorf("invalid json array request body")
+		return nil, errors.New("invalid json array request body")
 	}
 
 	return requests, nil
