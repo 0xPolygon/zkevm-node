@@ -780,7 +780,10 @@ func TestEstimateGas(t *testing.T) {
 					msg.GasPrice = gasPrice
 				}
 
-				_, err = ethereumClient.EstimateGas(ctx, msg)
+				gas, err := ethereumClient.EstimateGas(ctx, msg)
+				t.Log("testCase: ", testCase.name)
+				t.Log("err: ", err)
+				t.Log("gas: ", gas)
 				if testCase.expectedError != nil {
 					rpcErr := err.(rpc.Error)
 					errMsg := fmt.Sprintf("[%v] expected: %v %v found: %v %v", network.Name, testCase.expectedError.ErrorCode(), testCase.expectedError.Error(), rpcErr.ErrorCode(), rpcErr.Error())
