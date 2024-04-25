@@ -287,8 +287,8 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 
 			// Reset trusted state
 			previousBatchNumber := batch.BatchNumber - 1
-			if tBatch.StateRoot == (common.Hash{}) {
-				log.Warnf("cleaning state before inserting batch from L1. Clean until batch: %d", previousBatchNumber)
+			if tBatch.WIP {
+				log.Infof("cleaning state before inserting batch from L1. Clean until batch: %d", previousBatchNumber)
 			} else {
 				log.Warnf("missmatch in trusted state detected, discarding batches until batchNum %d", previousBatchNumber)
 			}
