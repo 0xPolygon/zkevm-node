@@ -19,7 +19,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKK(t *testing.T) {
+// This test is a exploratory test used to develop. It use a sequencedBlob on Sepolia
+// It need Database, a prover >7.x and L1 client
+// TODO: Remove this test or convert to a test than can be executed
+func TestProcessASequenceBlobUsingCallDataFromSepolia(t *testing.T) {
 	l1url := os.Getenv("ZKEVM_NODE_ETHERMAN_URL")
 	consensusl1url := os.Getenv("ZKEVM_NODE_ETHERMAN_CONSENSUSL1URL")
 	if l1url == "" || consensusl1url == "" {
