@@ -218,19 +218,18 @@ func (b *SyncTrustedBatchExecutorForEtrog) IncrementalProcess(ctx context.Contex
 		log.Errorf("%s error batchResultSanityCheck. Error: %s", data.DebugPrefix, err.Error())
 		return nil, err
 	}
+	log.Debugf("%s updateWIPBatch ", data.DebugPrefix)
+	err = b.updateWIPBatch(ctx, data, processBatchResp.NewStateRoot, dbTx)
+	if err != nil {
+		log.Errorf("%s error updateWIPBatch. Error: ", data.DebugPrefix, err)
+		return nil, err
+	}
 
 	if data.BatchMustBeClosed {
 		log.Debugf("%s Closing batch", data.DebugPrefix)
 		err = b.CloseBatch(ctx, data.TrustedBatch, dbTx, data.DebugPrefix)
 		if err != nil {
 			log.Errorf("%s error closing batch. Error: ", data.DebugPrefix, err)
-			return nil, err
-		}
-	} else {
-		log.Debugf("%s updateWIPBatch", data.DebugPrefix)
-		err = b.updateWIPBatch(ctx, data, processBatchResp.NewStateRoot, dbTx)
-		if err != nil {
-			log.Errorf("%s error updateWIPBatch. Error: ", data.DebugPrefix, err)
 			return nil, err
 		}
 	}
