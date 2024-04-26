@@ -4,142 +4,116 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/0xPolygonHermez/zkevm-node/hex"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-type migrationTest0019TestCase struct {
-	Name  string
-	Block migrationTest0019TestCaseBlock
-}
-
-type migrationTest0019TestCaseBlock struct {
-	Transactions []migrationTest0019TestCaseTransaction
-}
-
-type migrationTest0019TestCaseTransaction struct {
-	CurrentIndex uint
-}
-
 type migrationTest0019 struct {
-	TestCases []migrationTest0019TestCase
+	migrationBase
 }
 
 func (m migrationTest0019) InsertData(db *sql.DB) error {
-	const addBlock0 = "INSERT INTO state.block (block_num, received_at, block_hash) VALUES (0, now(), '0x0')"
-	if _, err := db.Exec(addBlock0); err != nil {
-		return err
-	}
-
-	const addBatch0 = `
+	const insertBatch1 = `
 		INSERT INTO state.batch (batch_num, global_exit_root, local_exit_root, acc_input_hash, state_root, timestamp, coinbase, raw_txs_data, forced_batch_num, wip) 
-		VALUES (0,'0x0000', '0x0000', '0x0000', '0x0000', now(), '0x0000', null, null, true)`
-	if _, err := db.Exec(addBatch0); err != nil {
+		VALUES (1,'0x0001', '0x0001', '0x0001', '0x0001', now(), '0x0001', null, null, true)`
+
+	_, err := db.Exec(insertBatch1)
+	if err != nil {
 		return err
 	}
 
-	const addL2Block = "INSERT INTO state.l2block (block_num, block_hash, header, uncles, parent_hash, state_root, received_at, batch_num, created_at) VALUES ($1, $2, '{}', '{}', '0x0', '0x0', now(), 0, now())"
-	const addTransaction = "INSERT INTO state.transaction (hash, encoded, decoded, l2_block_num, effective_percentage, l2_hash) VALUES ($1, 'ABCDEF', '{}', $2, 255, $1)"
-	const addReceipt = "INSERT INTO state.receipt (tx_hash, type, post_state, status, cumulative_gas_used, gas_used, effective_gas_price, block_num, tx_index, contract_address) VALUES ($1, 1, null, 1, 1234, 1234, 1, $2, $3, '')"
+	const insertBatch2 = `
+		INSERT INTO state.batch (batch_num, global_exit_root, local_exit_root, acc_input_hash, state_root, timestamp, coinbase, raw_txs_data, forced_batch_num, wip) 
+		VALUES (2,'0x0002', '0x0002', '0x0002', '0x0002', now(), '0x0002', null, null, true)`
 
-	txUnique := 0
-	for tci, testCase := range m.TestCases {
-		blockNum := uint64(tci + 1)
-		blockHash := common.HexToHash(hex.EncodeUint64(blockNum)).String()
-		if _, err := db.Exec(addL2Block, blockNum, blockHash); err != nil {
-			return err
-		}
-		for _, tx := range testCase.Block.Transactions {
-			txUnique++
-			txHash := common.HexToHash(hex.EncodeUint64(uint64(txUnique))).String()
-			if _, err := db.Exec(addTransaction, txHash, blockNum); err != nil {
-				return err
-			}
-			if _, err := db.Exec(addReceipt, txHash, blockNum, tx.CurrentIndex); err != nil {
-				return err
-			}
-		}
+	_, err = db.Exec(insertBatch2)
+	if err != nil {
+		return err
+	}
+
+	const insertBlock1 = "INSERT INTO state.block (block_num, block_hash, parent_hash, received_at) VALUES (1,'0x0001', '0x0001', now())"
+
+	_, err = db.Exec(insertBlock1)
+	if err != nil {
+		return err
+	}
+
+	const insertBlock2 = "INSERT INTO state.block (block_num, block_hash, parent_hash, received_at) VALUES (2,'0x0002', '0x0002', now())"
+
+	_, err = db.Exec(insertBlock2)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (m migrationTest0019) RunAssertsAfterMigrationUp(t *testing.T, db *sql.DB) {
-	const getReceiptsByBlock = "SELECT r.tx_index FROM state.receipt r WHERE r.block_num = $1 ORDER BY r.tx_index"
+	m.AssertNewAndRemovedItemsAfterMigrationUp(t, db)
 
-	for tci := range m.TestCases {
-		blockNum := uint64(tci + 1)
+	// Insert blobInner 1
+	const insertBlobInner = `INSERT INTO state.blob_inner (blob_inner_num, data, block_num) VALUES (1, E'\\x1234', 1);`
+	_, err := db.Exec(insertBlobInner)
+	assert.NoError(t, err)
 
-		rows, err := db.Query(getReceiptsByBlock, blockNum)
-		require.NoError(t, err)
+	const insertBatch1 = `
+		INSERT INTO state.virtual_batch (batch_num, tx_hash, coinbase, block_num, sequencer_addr, timestamp_batch_etrog, l1_info_root, blob_inner_num, prev_l1_it_root, prev_l1_it_index) 
+		VALUES (1,'0x0001', '0x0001', 1, '0x0001', now(), '0x0001', 1, '0x0001', 1)`
 
-		var expectedIndex = uint(0)
-		var txIndex uint
-		for rows.Next() {
-			err := rows.Scan(&txIndex)
-			require.NoError(t, err)
-			require.Equal(t, expectedIndex, txIndex)
-			expectedIndex++
-		}
-	}
+	_, err = db.Exec(insertBatch1)
+	assert.NoError(t, err)
+
+	const insertBatch2 = `
+		INSERT INTO state.virtual_batch (batch_num, tx_hash, coinbase, block_num, sequencer_addr, timestamp_batch_etrog, l1_info_root, blob_inner_num, prev_l1_it_root, prev_l1_it_index) 
+		VALUES (2,'0x0002', '0x0002', 2, '0x0002', now(), '0x0002', 1, '0x0002', 2)`
+
+	_, err = db.Exec(insertBatch2)
+	assert.NoError(t, err)
 }
 
 func (m migrationTest0019) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB) {
-	m.RunAssertsAfterMigrationUp(t, db)
+	var result int
+
+	m.AssertNewAndRemovedItemsAfterMigrationDown(t, db)
+
+	// Check column blob_inner_num doesn't exists in state.virtual_batch table
+	const getBlobInnerNumColumn = `SELECT count(*) FROM information_schema.columns WHERE table_name='virtual_batch' and column_name='blob_inner_num'`
+	row := db.QueryRow(getBlobInnerNumColumn)
+	assert.NoError(t, row.Scan(&result))
+	assert.Equal(t, 0, result)
+
+	// Check column prev_l1_it_root doesn't exists in state.virtual_batch table
+	const getPrevL1ITRootColumn = `SELECT count(*) FROM information_schema.columns WHERE table_name='virtual_batch' and column_name='prev_l1_it_root'`
+	row = db.QueryRow(getPrevL1ITRootColumn)
+	assert.NoError(t, row.Scan(&result))
+	assert.Equal(t, 0, result)
+
+	// Check column prev_l1_it_index doesn't exists in state.virtual_batch table
+	const getPrevL1ITIndexColumn = `SELECT count(*) FROM information_schema.columns WHERE table_name='virtual_batch' and column_name='prev_l1_it_index'`
+	row = db.QueryRow(getPrevL1ITIndexColumn)
+	assert.NoError(t, row.Scan(&result))
+	assert.Equal(t, 0, result)
 }
 
 func TestMigration0019(t *testing.T) {
-	runMigrationTest(t, 19, migrationTest0019{
-		TestCases: []migrationTest0019TestCase{
-			{
-				Name: "single tx with correct index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
-						{CurrentIndex: 0},
-					},
-				},
+	m := migrationTest0019{
+		migrationBase: migrationBase{
+			removedTables: []tableMetadata{
+				{"state", "proof"},
 			},
-			{
-				Name: "multiple txs indexes are correct",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
-						{CurrentIndex: 0},
-						{CurrentIndex: 1},
-						{CurrentIndex: 2},
-					},
-				},
+
+			newTables: []tableMetadata{
+				{"state", "blob_inner"},
+				{"state", "batch_proof"},
+				{"state", "blob_inner_proof"},
+				{"state", "blob_outer_proof"},
 			},
-			{
-				Name: "single tx with wrong tx index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
-						{CurrentIndex: 3},
-					},
-				},
-			},
-			{
-				Name: "multiple txs missing 0 index",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
-						{CurrentIndex: 1},
-						{CurrentIndex: 2},
-						{CurrentIndex: 3},
-						{CurrentIndex: 4},
-					},
-				},
-			},
-			{
-				Name: "multiple has index 0 but also txs index gap",
-				Block: migrationTest0019TestCaseBlock{
-					Transactions: []migrationTest0019TestCaseTransaction{
-						{CurrentIndex: 0},
-						{CurrentIndex: 2},
-						{CurrentIndex: 4},
-						{CurrentIndex: 6},
-					},
-				},
+
+			newColumns: []columnMetadata{
+				{"state", "virtual_batch", "blob_inner_num"},
+				{"state", "virtual_batch", "prev_l1_it_root"},
+				{"state", "virtual_batch", "prev_l1_it_index"},
 			},
 		},
-	})
+	}
+	runMigrationTest(t, 19, m)
 }

@@ -453,7 +453,7 @@ services:
 
   zkevm-mock-l1-network:
     container_name: zkevm-mock-l1-network
-    image: hermeznetwork/geth-zkevm-contracts:v2.1.3-fork.8-geth1.12.0
+    image: hermeznetwork/geth-zkevm-contracts:elderberry-fork.9-geth1.13.11
     ports:
       - 8545:8545
       - 8546:8546

@@ -1702,5 +1702,62 @@ func TestStoreBlobInner(t *testing.T) {
 	}
 	err = testState.AddBlobInner(ctx, &blobInner, dbTx)
 	require.NoError(t, err)
+}
 
+func TestGetFirstUncheckedBlock(t *testing.T) {
+	var err error
+	blockNumber := uint64(51001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+
+	block, err := testState.GetFirstUncheckedBlock(context.Background(), blockNumber, nil)
+	require.NoError(t, err)
+	require.Equal(t, uint64(blockNumber+1), block.BlockNumber)
+}
+
+func TestUpdateCheckedBlockByNumber(t *testing.T) {
+	var err error
+	blockNumber := uint64(54001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+
+	b1, err := testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
+	require.NoError(t, err)
+	require.True(t, b1.Checked)
+
+	err = testState.UpdateCheckedBlockByNumber(context.Background(), uint64(blockNumber), false, nil)
+	require.NoError(t, err)
+
+	b1, err = testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
+	require.NoError(t, err)
+	require.False(t, b1.Checked)
+}
+
+func TestGetUncheckedBlocks(t *testing.T) {
+	var err error
+	blockNumber := uint64(61001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 3, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 4, Checked: false}, nil)
+	require.NoError(t, err)
+
+	blocks, err := testState.GetUncheckedBlocks(context.Background(), blockNumber, blockNumber+3, nil)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(blocks))
+	require.Equal(t, uint64(blockNumber+1), blocks[0].BlockNumber)
+	require.Equal(t, uint64(blockNumber+3), blocks[1].BlockNumber)
 }
