@@ -1692,8 +1692,13 @@ func TestStoreBlobInner(t *testing.T) {
 	dbTx, err := testState.BeginStateTransaction(ctx)
 	require.NoError(t, err)
 	defer func() { require.NoError(t, dbTx.Commit(ctx)) }()
+	block := state.NewBlock(100)
+	err = testState.AddBlock(ctx, block, dbTx)
+	require.NoError(t, err)
+
 	blobSeq := state.BlobSequence{
 		BlobSequenceIndex: 1,
+		BlockNumber:       100,
 	}
 	err = testState.AddBlobSequence(ctx, &blobSeq, dbTx)
 	require.NoError(t, err)

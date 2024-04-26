@@ -52,6 +52,6 @@ CREATE TABLE IF NOT EXISTS state.incomming_batch
 ); 
 
 -- +migrate Down
+DROP TABLE IF EXISTS state.incomming_batch;
 DROP TABLE IF EXISTS state.blob_inner_in;
 DROP TABLE IF EXISTS state.blob_sequence;
-DROP TABLE IF EXISTS state.incomming_batch;
