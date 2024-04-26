@@ -84,6 +84,54 @@ func (_c *StateFullInterface_AddAccumulatedInputHash_Call) RunAndReturn(run func
 	return _c
 }
 
+// AddBlobInner provides a mock function with given fields: ctx, blobInner, dbTx
+func (_m *StateFullInterface) AddBlobInner(ctx context.Context, blobInner *state.BlobInner, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, blobInner, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddBlobInner")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *state.BlobInner, pgx.Tx) error); ok {
+		r0 = rf(ctx, blobInner, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StateFullInterface_AddBlobInner_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddBlobInner'
+type StateFullInterface_AddBlobInner_Call struct {
+	*mock.Call
+}
+
+// AddBlobInner is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blobInner *state.BlobInner
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) AddBlobInner(ctx interface{}, blobInner interface{}, dbTx interface{}) *StateFullInterface_AddBlobInner_Call {
+	return &StateFullInterface_AddBlobInner_Call{Call: _e.mock.On("AddBlobInner", ctx, blobInner, dbTx)}
+}
+
+func (_c *StateFullInterface_AddBlobInner_Call) Run(run func(ctx context.Context, blobInner *state.BlobInner, dbTx pgx.Tx)) *StateFullInterface_AddBlobInner_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*state.BlobInner), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_AddBlobInner_Call) Return(_a0 error) *StateFullInterface_AddBlobInner_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StateFullInterface_AddBlobInner_Call) RunAndReturn(run func(context.Context, *state.BlobInner, pgx.Tx) error) *StateFullInterface_AddBlobInner_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddBlobSequence provides a mock function with given fields: ctx, blobSequence, dbTx
 func (_m *StateFullInterface) AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, blobSequence, dbTx)

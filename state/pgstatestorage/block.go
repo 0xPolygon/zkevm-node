@@ -82,3 +82,9 @@ func (p *PostgresStorage) GetBlockByNumber(ctx context.Context, blockNumber uint
 	block.ParentHash = common.HexToHash(parentHash)
 	return &block, err
 }
+
+// AddOrCheckIfExistsBlock adds a new block to DB, but if exists check that the block is the same
+func (p *PostgresStorage) AddOrCheckIfExistsBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error {
+	err := p.AddBlock(ctx, block, dbTx)
+	return err
+}

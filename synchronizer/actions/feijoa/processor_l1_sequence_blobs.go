@@ -18,6 +18,7 @@ import (
 type stateProcessorSequenceBlobsInterface interface {
 	AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error
 	GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error)
+	AddBlobInner(ctx context.Context, blobInner *state.BlobInner, dbTx pgx.Tx) error
 	GetL1InfoRecursiveRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error)
 }
 
@@ -66,7 +67,6 @@ func (p *ProcessorSequenceBlobs) Process(ctx context.Context, order etherman.Ord
 		if err != nil {
 			return err
 		}
-
 	}
 	return nil
 }
@@ -82,18 +82,38 @@ func (p *ProcessorSequenceBlobs) doBlobInner(ctx context.Context, blobNum uint64
 		log.Errorf("Error converting blob to state: %v", err)
 		return err
 	}
-	//p.sate.AddBlobInner(ctx, stateBlob, dbTx)
 
-	processBuilder := state.NewProcessBlobInnerProcessRequestBuilder(uint64(10), stateBlob, previousBlobSequence, *newBlobSequence)
-	processRequest, err := processBuilder.Build()
+	processRequest, err := state.NewProcessBlobInnerProcessRequest(uint64(actions.ForkIDFeijoa), stateBlob, previousBlobSequence, *newBlobSequence)
 	if err != nil {
 		return err
 	}
-	response, err := p.stateBlobInnerProcessor.ProcessBlobInner(ctx, processRequest, blob.Data)
+	log.Infof("storing Blob %d: BlobInner: %v", blobNum, stateBlob)
+	err = p.state.AddBlobInner(ctx, stateBlob, dbTx)
+	if err != nil {
+		log.Errorf("Error storing blobInner to state: %v", err)
+		return err
+	}
+	response, err := p.stateBlobInnerProcessor.ProcessBlobInner(ctx, *processRequest, blob.Data)
 	if err != nil {
 		return err
+	}
+	if response == nil {
+		return errors.New("response is nil")
 	}
 	log.Infof("Blob %d: response: %v", blobNum, response)
+	if response.IsSuccessfulExecution() {
+		// We need to store the batches
+		outcomeData := response.GetSuccesfulData()
+		for idx := 0; idx < outcomeData.HowManyBatches(); idx++ {
+			log.Infof("storing Blob %d: Batch %d: Hash:%s", blobNum, idx, outcomeData.GetBatchHash(idx).String())
+			// TODO: Store batch
+		}
+	} else {
+		err := response.GetUnifiedError()
+		log.Errorf("Blob %d: response is not successful: Err: %s", blobNum, err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -106,7 +126,8 @@ func (p *ProcessorSequenceBlobs) doBlobSequence(ctx context.Context,
 	}
 	blobSequenceIndex := p.calculateBlobSequenceIndex(previousBlobSequence)
 	newBlobSequence := p.convertToStateBlobSequence(incommingSequenceBlobs, blobSequenceIndex, l1Block.ReceivedAt, p.timeProvider.Now(), l1Block.BlockNumber)
-	p.state.AddBlobSequence(ctx, newBlobSequence, dbTx)
+	log.Infof("storing BlobSequence: %v", newBlobSequence)
+	err = p.state.AddBlobSequence(ctx, newBlobSequence, dbTx)
 	if err != nil {
 		return nil, nil, err
 	}

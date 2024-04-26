@@ -28,8 +28,7 @@ CREATE TABLE IF NOT EXISTS state.blob_inner_in
     zk_gas_limit        BIGINT,
     l1_info_tree_leaf_index BIGINT,
     l1_info_tree_root VARCHAR,
-    data           BYTEA,
-    
+    blob_data_hash VARCHAR,
     updated_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     -- if blob_type== blob
     blob_type_index    BIGINT,
@@ -41,6 +40,7 @@ CREATE TABLE IF NOT EXISTS state.blob_inner_in
 
 comment on column state.blob_inner_in.updated_at is 'the creation time is blob_sequence.created_at, this is the last time when was updated (tipically Now() )';
 comment on column state.blob_inner_in.blob_type is 'call_data, blob or forced';
+comment on column state.blob_inner_in.blob_data_hash is 'is the hash of the blobData';
 
 CREATE TABLE IF NOT EXISTS state.incomming_batch
 (

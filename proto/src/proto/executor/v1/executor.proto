@@ -372,6 +372,7 @@ message ProcessBatchResponseV2 {
 
 message ResponseDebug {
     string error_log = 1;
+    string version = 2;
 }
 
 // Trace configuration request params
