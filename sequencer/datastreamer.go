@@ -3,9 +3,11 @@ package sequencer
 import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
+	"github.com/ethereum/go-ethereum/common"
 )
 
-func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32) error {
+func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32, minTimestamp uint64) error {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
 
 	// Send data to streamer
@@ -13,12 +15,13 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 		l2Block := state.DSL2Block{
 			BatchNumber:     batchNumber,
 			L2BlockNumber:   blockResponse.BlockNumber,
-			Timestamp:       int64(blockResponse.Timestamp),
+			Timestamp:       blockResponse.Timestamp,
+			Min_timestamp:   minTimestamp,
 			L1InfoTreeIndex: l1InfoTreeIndex,
 			L1BlockHash:     blockResponse.BlockHashL1,
 			GlobalExitRoot:  blockResponse.GlobalExitRoot,
 			Coinbase:        f.sequencerAddress,
-			ForkID:          uint16(forkID),
+			ForkID:          forkID,
 			BlockHash:       blockResponse.BlockHash,
 			StateRoot:       blockResponse.BlockHash, //From etrog, the blockhash is the block root
 		}
@@ -57,9 +60,23 @@ func (f *finalizer) DSSendBatchBookmark(batchNumber uint64) {
 	// Check if stream server enabled
 	if f.streamServer != nil {
 		// Send batch bookmark to the streamer
-		f.dataToStream <- state.DSBookMark{
-			Type:  state.BookMarkTypeBatch,
+		f.dataToStream <- datastream.BookMark{
+			Type:  datastream.BookmarkType_BOOKMARK_TYPE_BATCH,
 			Value: batchNumber,
+		}
+	}
+}
+
+func (f *finalizer) DSSendBatch(batchNumber uint64, stateRoot common.Hash, localExitRoot common.Hash) {
+	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
+
+	if f.streamServer != nil {
+		// Send batch to the streamer
+		f.dataToStream <- datastream.Batch{
+			Number:        batchNumber,
+			ForkId:        forkID,
+			StateRoot:     stateRoot.Bytes(),
+			LocalExitRoot: localExitRoot.Bytes(),
 		}
 	}
 }

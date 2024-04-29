@@ -516,6 +516,7 @@ services:
     container_name: zkevm-prover
     #image: hermeznetwork/zkevm-prover:v7.0.0-RC4
     image: hermeznetwork/zkevm-prover:v6.0.0
+    platform: linux/amd64
     ports:
       - 50061:50061 # MT
       - 50071:50071 # Executor
@@ -607,7 +608,10 @@ services:
   zkevm-permissionless-prover:
     container_name: zkevm-permissionless-prover
     #image: hermeznetwork/zkevm-prover:v7.0.0-RC4
+    platform: linux/amd64
     image: hermeznetwork/zkevm-prover:v6.0.0
+    environment:
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover

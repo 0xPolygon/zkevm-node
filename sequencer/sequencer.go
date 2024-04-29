@@ -11,7 +11,9 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
 	"github.com/ethereum/go-ethereum/common"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -137,7 +139,7 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 }
 
 func (s *Sequencer) updateDataStreamerFile(ctx context.Context, chainID uint64) {
-	err := state.GenerateDataStreamerFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber)
+	err := state.GenerateDataStreamFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber)
 	if err != nil {
 		log.Fatalf("failed to generate data streamer file, error: %v", err)
 	}
@@ -276,73 +278,106 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					continue
 				}
 
-				bookMark := state.DSBookMark{
-					Type:  state.BookMarkTypeL2Block,
+				bookMark := &datastream.BookMark{
+					Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 					Value: l2Block.L2BlockNumber,
 				}
 
-				_, err = s.streamServer.AddStreamBookmark(bookMark.Encode())
+				//TODO: remove this log
+				log.Infof("add stream bookmark for l2block %d", l2Block.L2BlockNumber)
+				marshalledBookMark, err := proto.Marshal(bookMark)
+				if err != nil {
+					log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamBookmark(marshalledBookMark)
 				if err != nil {
 					log.Errorf("failed to add stream bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
 				// Get previous block timestamp to calculate delta timestamp
-				previousL2Block := state.DSL2BlockStart{}
+				previousL2Block := datastream.L2Block{}
 				if l2Block.L2BlockNumber > 0 {
-					bookMark = state.DSBookMark{
-						Type:  state.BookMarkTypeL2Block,
+					bookMark = &datastream.BookMark{
+						Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 						Value: l2Block.L2BlockNumber - 1,
 					}
 
-					previousL2BlockEntry, err := s.streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
+					//TODO: remove this log
+					log.Infof("get previous l2block %d", l2Block.L2BlockNumber-1)
+					marshalledBookMark, err := proto.Marshal(bookMark)
+					if err != nil {
+						log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+
+					previousL2BlockEntry, err := s.streamServer.GetFirstEventAfterBookmark(marshalledBookMark)
 					if err != nil {
 						log.Errorf("failed to get previous l2block %d, error: %v", l2Block.L2BlockNumber-1, err)
 						continue
 					}
 
-					previousL2Block = state.DSL2BlockStart{}.Decode(previousL2BlockEntry.Data)
+					err = proto.Unmarshal(previousL2BlockEntry.Data, &previousL2Block)
+					if err != nil {
+						log.Errorf("failed to unmarshal previous l2block %d, error: %v", l2Block.L2BlockNumber-1, err)
+						continue
+					}
 				}
 
-				blockStart := state.DSL2BlockStart{
+				streamL2Block := &datastream.L2Block{
+					Number:          l2Block.L2BlockNumber,
 					BatchNumber:     l2Block.BatchNumber,
-					L2BlockNumber:   l2Block.L2BlockNumber,
 					Timestamp:       l2Block.Timestamp,
 					DeltaTimestamp:  uint32(l2Block.Timestamp - previousL2Block.Timestamp),
-					L1InfoTreeIndex: l2Block.L1InfoTreeIndex,
-					L1BlockHash:     l2Block.L1BlockHash,
-					GlobalExitRoot:  l2Block.GlobalExitRoot,
-					Coinbase:        l2Block.Coinbase,
-					ForkID:          l2Block.ForkID,
-					ChainID:         uint32(chainID),
+					MinTimestamp:    l2Block.Min_timestamp,
+					L1Blockhash:     l2Block.L1BlockHash.Bytes(),
+					L1InfotreeIndex: l2Block.L1InfoTreeIndex,
+					Hash:            l2Block.BlockHash.Bytes(),
+					StateRoot:       l2Block.StateRoot.Bytes(),
+					GlobalExitRoot:  l2Block.GlobalExitRoot.Bytes(),
+					Coinbase:        l2Block.Coinbase.Bytes(),
 				}
 
-				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockStart, blockStart.Encode())
+				marshalledL2Block, err := proto.Marshal(streamL2Block)
+				if err != nil {
+					log.Errorf("failed to marshal l2block %d, error: %v", l2Block.L2BlockNumber, err)
+					continue
+				}
+
+				//TODO: remove this log
+				log.Infof("add l2blockStart stream entry for l2block %d", l2Block.L2BlockNumber)
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK), marshalledL2Block)
 				if err != nil {
 					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
 				for _, l2Transaction := range l2Block.Txs {
-					_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2Tx, l2Transaction.Encode())
+					streamL2Transaction := &datastream.Transaction{
+						L2BlockNumber:               l2Transaction.L2BlockNumber,
+						IsValid:                     l2Transaction.IsValid != 0,
+						Encoded:                     l2Transaction.Encoded,
+						EffectiveGasPricePercentage: uint32(l2Transaction.EffectiveGasPricePercentage),
+						ImStateRoot:                 l2Transaction.ImStateRoot.Bytes(),
+					}
+
+					marshalledL2Transaction, err := proto.Marshal(streamL2Transaction)
+					if err != nil {
+						log.Errorf("failed to marshal l2tx for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+
+					_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION), marshalledL2Transaction)
 					if err != nil {
 						log.Errorf("failed to add l2tx stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 						continue
 					}
 				}
 
-				blockEnd := state.DSL2BlockEnd{
-					L2BlockNumber: l2Block.L2BlockNumber,
-					BlockHash:     l2Block.BlockHash,
-					StateRoot:     l2Block.StateRoot,
-				}
-
-				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockEnd, blockEnd.Encode())
-				if err != nil {
-					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
-					continue
-				}
-
+				//TODO: remove this log
+				log.Infof("commit atomic op for l2block %d", l2Block.L2BlockNumber)
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
 					log.Errorf("failed to commit atomic op for l2block %d, error: %v ", l2Block.L2BlockNumber, err)
@@ -350,24 +385,55 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 				}
 
 			// Stream a bookmark
-			case state.DSBookMark:
-				bookmark := data
-
+			case datastream.BookMark:
 				err = s.streamServer.StartAtomicOp()
 				if err != nil {
-					log.Errorf("failed to start atomic op for bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to start atomic op for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
 					continue
 				}
 
-				_, err = s.streamServer.AddStreamBookmark(bookmark.Encode())
+				marshalledBookMark, err := proto.Marshal(&data)
 				if err != nil {
-					log.Errorf("failed to add stream bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to marshal bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamBookmark(marshalledBookMark)
+				if err != nil {
+					log.Errorf("failed to add stream bookmark for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
 					continue
 				}
 
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
-					log.Errorf("failed to commit atomic op for bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to commit atomic op for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
+					continue
+				}
+			case datastream.Batch:
+				err = s.streamServer.StartAtomicOp()
+				if err != nil {
+					log.Errorf("failed to start atomic op for batch, error: %v", err)
+					continue
+				}
+
+				data.ChainId = chainID
+
+				marshalledBatch, err := proto.Marshal(&data)
+				if err != nil {
+					log.Errorf("failed to marshal batch, error: %v", err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH), marshalledBatch)
+				if err != nil {
+					log.Errorf("failed to add stream entry for batch, error: %v", err)
+					continue
+				}
+
+				err = s.streamServer.CommitAtomicOp()
+				if err != nil {
+					log.Errorf("failed to commit atomic op for batch, error: %v", err)
+					continue
 				}
 
 			// Invalid stream message type
