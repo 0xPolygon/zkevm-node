@@ -152,7 +152,7 @@ StateConsistencyCheckInterval = "5s"
 		StateRootSyncInterval = "3600s"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
-		SequentialProcessL2Block = true
+		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
 		EnableLog = true
