@@ -140,7 +140,7 @@ func TestIncrementalProcessUpdateBatchL2DataAndGER(t *testing.T) {
 	processBatchResp := &state.ProcessBatchResponse{
 		NewStateRoot: expectedStateRoot,
 	}
-	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, nil).Once()
+	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
 
 	syncMock.EXPECT().PendingFlushID(mock.Anything, mock.Anything).Once()
 	syncMock.EXPECT().CheckFlushID(mock.Anything).Return(nil).Maybe()
