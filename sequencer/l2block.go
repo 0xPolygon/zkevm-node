@@ -475,7 +475,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 		return err
 	}
 
-	//TODO: remove this log
+	//TODO: remove this Log
 	log.Infof("l2 block %d [%d] stored in statedb", blockResponse.BlockNumber, l2Block.trackingNum)
 
 	// Update txs status in the pool
