@@ -981,7 +981,6 @@ func TestFinalizer_closeWIPBatch(t *testing.T) {
 			// arrange
 			stateMock.Mock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
 			stateMock.On("BeginStateTransaction", ctx).Return(dbTxMock, nilErr).Once()
-			stateMock.On("GetForkIDByBatchNumber", mock.Anything).Return(uint64(state.FORKID_BLUEBERRY))
 			if tc.managerErr == nil {
 				dbTxMock.On("Commit", ctx).Return(nilErr).Once()
 			} else {

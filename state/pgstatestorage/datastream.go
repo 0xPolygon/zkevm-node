@@ -78,7 +78,7 @@ func scanL2Block(row pgx.Row) (*state.DSL2Block, error) {
 	}
 	l2Block.GlobalExitRoot = common.HexToHash(gerStr)
 	l2Block.Coinbase = common.HexToAddress(coinbaseStr)
-	l2Block.Timestamp = uint64(timestamp.Unix())
+	l2Block.Timestamp = timestamp.Unix()
 	l2Block.BlockHash = common.HexToHash(blockHashStr)
 	l2Block.StateRoot = common.HexToHash(stateRootStr)
 
@@ -151,13 +151,9 @@ func scanDSL2Transaction(row pgx.Row) (*state.DSL2Transaction, error) {
 // GetDSBatches returns the DS batches
 func (p *PostgresStorage) GetDSBatches(ctx context.Context, firstBatchNumber, lastBatchNumber uint64, readWIPBatch bool, dbTx pgx.Tx) ([]*state.DSBatch, error) {
 	var getBatchByNumberSQL = `
-		SELECT b.batch_num, b.global_exit_root, b.local_exit_root, b.acc_input_hash, b.state_root, b.timestamp, b.coinbase, b.raw_txs_data, b.forced_batch_num, b.wip, f.fork_id, vb.timestamp_batch_etrog
-		 FROM state.batch b
-		 LEFT JOIN 
-    		state.fork_id f ON b.batch_num BETWEEN f.from_batch_num AND f.to_batch_num
-		 LEFT JOIN 
-    		state.virtual_batch vb ON b.batch_num = vb.batch_num
-		 WHERE b.batch_num >= $1 AND b.batch_num <= $2`
+		SELECT b.batch_num, b.global_exit_root, b.local_exit_root, b.acc_input_hash, b.state_root, b.timestamp, b.coinbase, b.raw_txs_data, b.forced_batch_num, b.wip, f.fork_id
+		  FROM state.batch b, state.fork_id f
+		 WHERE b.batch_num >= $1 AND b.batch_num <= $2 AND batch_num between f.from_batch_num AND f.to_batch_num`
 
 	if !readWIPBatch {
 		getBatchByNumberSQL += " AND b.wip is false"
@@ -209,7 +205,6 @@ func scanDSBatch(row pgx.Row) (state.DSBatch, error) {
 		&batch.ForcedBatchNum,
 		&batch.WIP,
 		&batch.ForkID,
-		&batch.EtrogTimestamp,
 	)
 	if err != nil {
 		return batch, err
