@@ -1749,7 +1749,7 @@ func TestFinalizer_updateWorkerAfterSuccessfulProcessing(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// arrange
 			finalizerInstance := setupFinalizer(false)
-			workerMock.On("DeleteTx", tc.txTracker.Hash, tc.txTracker.From).Times(tc.expectedDeleteTxCount)
+			workerMock.On("MoveTxPendingToStore", tc.txTracker.Hash, tc.txTracker.From).Times(tc.expectedDeleteTxCount)
 			txsToDelete := make([]*TxTracker, 0, len(tc.processBatchResponse.ReadWriteAddresses))
 			for _, infoReadWrite := range tc.processBatchResponse.ReadWriteAddresses {
 				txsToDelete = append(txsToDelete, &TxTracker{
