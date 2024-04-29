@@ -14,9 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// TODO: remove this
-//var simOOC bool = false
-
 // L2Block represents a wip or processed L2 block
 type L2Block struct {
 	createdAt                 time.Time
@@ -208,11 +205,6 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 		l2Block.l1InfoTreeExitRootChanged, initialStateRoot, len(l2Block.transactions))
 
 	batchResponse, batchL2DataSize, contextId, err := f.executeL2Block(ctx, initialStateRoot, l2Block)
-
-	/*if !l2Block.isEmpty() && rand.Intn(6) == 1 {
-		err = ErrProcessBatchOOC
-		simOOC = true
-	}*/
 
 	if err != nil {
 		return fmt.Errorf("failed to execute L2 block [%d], error: %v", l2Block.trackingNum, err)
