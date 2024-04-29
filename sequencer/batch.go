@@ -31,8 +31,8 @@ type Batch struct {
 	closingReason               state.ClosingReason
 }
 
-func (w *Batch) isEmpty() bool {
-	return w.countOfL2Blocks == 0
+func (b *Batch) isEmpty() bool {
+	return b.countOfL2Blocks == 0
 }
 
 // processBatchesPendingtoCheck performs a sanity check for batches closed but pending to be checked

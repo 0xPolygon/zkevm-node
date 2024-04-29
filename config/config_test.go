@@ -131,7 +131,7 @@ func Test_Defaults(t *testing.T) {
 		},
 		{
 			path:          "Sequencer.Finalizer.BatchMaxDeltaTimestamp",
-			expectedValue: types.NewDuration(10 * time.Second),
+			expectedValue: types.NewDuration(1800 * time.Second),
 		},
 		{
 			path:          "Sequencer.Finalizer.Metrics.Interval",
