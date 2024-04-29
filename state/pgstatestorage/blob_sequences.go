@@ -11,6 +11,7 @@ import (
 )
 
 // AddBlobSequence adds a new blob sequence to the state.
+// TODO: Add support to ReceivedAt
 func (p *PostgresStorage) AddBlobSequence(ctx context.Context, blobSequence *state.BlobSequence, dbTx pgx.Tx) error {
 	const addBlobSequenceSQL = "INSERT INTO state.blob_sequence (index, block_num, coinbase, final_acc_input_hash, first_blob_sequenced, last_blob_sequenced, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
 
@@ -20,6 +21,7 @@ func (p *PostgresStorage) AddBlobSequence(ctx context.Context, blobSequence *sta
 }
 
 // GetLastBlobSequence returns the last blob sequence stored in the state.
+// TODO: Add support to ReceivedAt
 func (p *PostgresStorage) GetLastBlobSequence(ctx context.Context, dbTx pgx.Tx) (*state.BlobSequence, error) {
 	var (
 		coinbase          string
