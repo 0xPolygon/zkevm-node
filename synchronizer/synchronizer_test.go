@@ -890,7 +890,7 @@ func expectedCallsForsyncTrustedState(t *testing.T, m *mocks, sync *ClientSynchr
 	if etrogMode {
 		m.State.EXPECT().GetL1InfoTreeDataFromBatchL2Data(mock.Anything, mock.Anything, mock.Anything).Return(map[uint32]state.L1DataV2{}, common.Hash{}, common.Hash{}, nil).Times(1)
 		m.State.EXPECT().ProcessBatchV2(mock.Anything, mock.Anything, mock.Anything).
-			Return(&processedBatch, nil).Times(1)
+			Return(&processedBatch, "", nil).Times(1)
 		m.State.EXPECT().StoreL2Block(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(nil).Times(1)
 		m.State.EXPECT().UpdateWIPBatch(mock.Anything, mock.Anything, mock.Anything).

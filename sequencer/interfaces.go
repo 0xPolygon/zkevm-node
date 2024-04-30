@@ -50,7 +50,7 @@ type stateInterface interface {
 	GetBalanceByStateRoot(ctx context.Context, address common.Address, root common.Hash) (*big.Int, error)
 	GetNonceByStateRoot(ctx context.Context, address common.Address, root common.Hash) (*big.Int, error)
 	GetLastStateRoot(ctx context.Context, dbTx pgx.Tx) (common.Hash, error)
-	ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error)
+	ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, string, error)
 	CloseBatch(ctx context.Context, receipt state.ProcessingReceipt, dbTx pgx.Tx) error
 	CloseWIPBatch(ctx context.Context, receipt state.ProcessingReceipt, dbTx pgx.Tx) error
 	GetForcedBatch(ctx context.Context, forcedBatchNumber uint64, dbTx pgx.Tx) (*state.ForcedBatch, error)
@@ -84,15 +84,16 @@ type stateInterface interface {
 }
 
 type workerInterface interface {
-	GetBestFittingTx(resources state.BatchResources) (*TxTracker, error)
+	GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters) (*TxTracker, error)
 	UpdateAfterSingleSuccessfulTxExecution(from common.Address, touchedAddresses map[common.Address]*state.InfoReadWrite) []*TxTracker
 	UpdateTxZKCounters(txHash common.Hash, from common.Address, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters)
 	AddTxTracker(ctx context.Context, txTracker *TxTracker) (replacedTx *TxTracker, dropReason error)
 	MoveTxToNotReady(txHash common.Hash, from common.Address, actualNonce *uint64, actualBalance *big.Int) []*TxTracker
 	DeleteTx(txHash common.Hash, from common.Address)
-	AddPendingTxToStore(txHash common.Hash, addr common.Address)
-	DeletePendingTxToStore(txHash common.Hash, addr common.Address)
+	MoveTxPendingToStore(txHash common.Hash, addr common.Address)
+	DeleteTxPendingToStore(txHash common.Hash, addr common.Address)
 	NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string) (*TxTracker, error)
 	AddForcedTx(txHash common.Hash, addr common.Address)
 	DeleteForcedTx(txHash common.Hash, addr common.Address)
+	RestoreTxsPendingToStore(ctx context.Context) ([]*TxTracker, []*TxTracker)
 }

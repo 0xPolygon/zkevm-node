@@ -1,4 +1,3 @@
-version: "3.5"
 networks:
   default:
     name: zkevm
@@ -26,7 +25,7 @@ services:
     volumes:
       - ./config/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    user: telegraf:${DOCKERGID}
+    user: telegraf:${DOCKERGID:-}
     environment:
       - POSTGRES_HOST=grafana-db
       - POSTGRES_USER=user
@@ -56,8 +55,8 @@ services:
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
@@ -77,8 +76,8 @@ services:
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
       - ZKEVM_NODE_ETHERMAN_URL=http://zkevm-v1tov2-l1-network:8545
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
@@ -96,8 +95,8 @@ services:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
       - ZKEVM_NODE_SEQUENCER_SENDER_ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
     volumes:
       - ./sequencer.keystore:/pk/sequencer.keystore
       - ./config/test.node.config.toml:/app/config.toml
@@ -114,8 +113,8 @@ services:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
       - ZKEVM_NODE_SEQUENCER_SENDER_ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
       - ZKEVM_NODE_ETHERMAN_URL=http://zkevm-v1tov2-l1-network:8545
     volumes:
       - ./sequencer.keystore:/pk/sequencer.keystore
@@ -136,8 +135,8 @@ services:
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
@@ -156,8 +155,8 @@ services:
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
       - ZKEVM_NODE_ETHERMAN_URL=http://zkevm-v1tov2-l1-network:8545
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
@@ -210,8 +209,8 @@ services:
       - 9095:9091 # needed if metrics enabled
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
@@ -227,8 +226,8 @@ services:
       - 9095:9091 # needed if metrics enabled
     environment:
       - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
       - ZKEVM_NODE_ETHERMAN_URL=http://zkevm-v1tov2-l1-network:8545
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
@@ -430,8 +429,8 @@ services:
       - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
       - ZKEVM_NODE_RPC_PORT=8124
       - ZKEVM_NODE_RPC_WEBSOCKETS_PORT=8134
-      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
-      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
+      - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
+      - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
