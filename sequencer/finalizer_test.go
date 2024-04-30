@@ -980,6 +980,7 @@ func TestFinalizer_finalizeSIPBatch(t *testing.T) {
 
 			// arrange
 			stateMock.On("BeginStateTransaction", ctx).Return(dbTxMock, nilErr).Once()
+			stateMock.On("GetForkIDByBatchNumber", mock.Anything).Return(uint64(state.FORKID_BLUEBERRY))
 			stateMock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
 			stateMock.On("GetForkIDByBatchNumber", mock.Anything).Return(uint64(state.FORKID_BLUEBERRY))
 			if tc.managerErr == nil {

@@ -607,7 +607,6 @@ services:
 
   zkevm-permissionless-prover:
     container_name: zkevm-permissionless-prover
-    #image: hermeznetwork/zkevm-prover:v7.0.0-RC4
     platform: linux/amd64
     image: hermeznetwork/zkevm-prover:v6.0.0
     environment:

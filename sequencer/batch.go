@@ -314,6 +314,7 @@ func (f *finalizer) openNewWIPBatch(batchNumber uint64, stateRoot common.Hash) *
 		imRemainingResources:    maxRemainingResources,
 		finalRemainingResources: maxRemainingResources,
 		closingReason:           state.EmptyClosingReason,
+		finalLocalExitRoot:      state.ZeroHash,
 	}
 }
 
@@ -412,6 +413,9 @@ func (f *finalizer) closeSIPBatch(ctx context.Context, dbTx pgx.Tx) error {
 		f.DSSendBatch(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
 		*/
 	}
+
+	// Sent batch to DS
+	f.DSSendBatch(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
 
 	log.Infof("sip batch %d closed in statedb, closing reason: %s", f.sipBatch.batchNumber, f.sipBatch.closingReason)
 
