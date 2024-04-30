@@ -476,7 +476,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	//TODO: remove this Log
-	log.Infof("l2 block %d [%d] stored in statedb", blockResponse.BlockNumber, l2Block.trackingNum)
+	log.Infof("[ds-debug] l2 block %d [%d] stored in statedb", blockResponse.BlockNumber, l2Block.trackingNum)
 
 	// Update txs status in the pool
 	for _, txResponse := range blockResponse.TransactionResponses {
@@ -488,7 +488,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	//TODO: remove this log
-	log.Infof("l2 block %d [%d] transactions updated as selected in the pooldb", blockResponse.BlockNumber, l2Block.trackingNum)
+	log.Infof("[ds-debug] l2 block %d [%d] transactions updated as selected in the pooldb", blockResponse.BlockNumber, l2Block.trackingNum)
 
 	// Send L2 block to data streamer
 	err = f.DSSendL2Block(f.wipBatch.batchNumber, blockResponse, l2Block.getL1InfoTreeIndex())
@@ -498,7 +498,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	//TODO: remove this log
-	log.Infof("l2 block %d [%d] sent to datastream", blockResponse.BlockNumber, l2Block.trackingNum)
+	log.Infof("[ds-debug] l2 block %d [%d] sent to datastream", blockResponse.BlockNumber, l2Block.trackingNum)
 
 	for _, tx := range l2Block.transactions {
 		// Delete the tx from the pending list in the worker (addrQueue)
