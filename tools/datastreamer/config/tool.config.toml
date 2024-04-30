@@ -1,5 +1,5 @@
 [Online]
-URI = "zkevm-sequencer:6900"
+URI = "localhost:6900"
 StreamType = 1
 
 [Offline]
@@ -19,7 +19,7 @@ EnableLog = false
 MaxConns = 200
 
 [MerkleTree]
-URI = "zkevm-prover:50061"
+URI = "localhost:50061"
 MaxThreads = 20
 CacheFile = "merkle_tree_cache.json"
 

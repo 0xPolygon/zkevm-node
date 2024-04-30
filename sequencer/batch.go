@@ -29,6 +29,7 @@ type Batch struct {
 	finalRemainingResources     state.BatchResources // remaining batch resources when a L2 block is processed
 	finalHighReservedZKCounters state.ZKCounters
 	closingReason               state.ClosingReason
+	finalLocalExitRoot          common.Hash
 }
 
 func (b *Batch) isEmpty() bool {
@@ -99,6 +100,7 @@ func (f *finalizer) setWIPBatch(ctx context.Context, wipStateBatch *state.Batch)
 		finalRemainingResources:     remainingResources,
 		imHighReservedZKCounters:    wipStateBatch.HighReservedZKCounters,
 		finalHighReservedZKCounters: wipStateBatch.HighReservedZKCounters,
+		finalLocalExitRoot:          wipStateBatch.LocalExitRoot,
 	}
 
 	return wipBatch, nil
@@ -312,6 +314,7 @@ func (f *finalizer) openNewWIPBatch(batchNumber uint64, stateRoot common.Hash) *
 		imRemainingResources:    maxRemainingResources,
 		finalRemainingResources: maxRemainingResources,
 		closingReason:           state.EmptyClosingReason,
+		finalLocalExitRoot:      state.ZeroHash,
 	}
 }
 
@@ -399,6 +402,9 @@ func (f *finalizer) closeSIPBatch(ctx context.Context, dbTx pgx.Tx) error {
 			_, _ = f.batchSanityCheck(ctx, batchNumber, initialStateRoot, finalStateRoot)
 		}()
 	}
+
+	// Sent batch to DS
+	f.DSSendBatch(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
 
 	log.Infof("sip batch %d closed in statedb, closing reason: %s", f.sipBatch.batchNumber, f.sipBatch.closingReason)
 
