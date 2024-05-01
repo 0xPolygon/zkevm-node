@@ -330,7 +330,7 @@
 				},
 				"TxFeeCap": {
 					"type": "number",
-					"description": "TxFeeCap is the global transaction fee(price * gaslimit) cap for\nsend-transaction variants. The unit is ether.",
+					"description": "TxFeeCap is the global transaction fee(price * gaslimit) cap for\nsend-transaction variants. The unit is ether. 0 means no cap.",
 					"default": 1
 				}
 			},
