@@ -299,6 +299,10 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: uint64(1024),
 		},
 		{
+			path:          "Pool.TxFeeCap",
+			expectedValue: float64(1),
+		},
+		{
 			path:          "Pool.EffectiveGasPrice.Enabled",
 			expectedValue: false,
 		},
