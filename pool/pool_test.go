@@ -2075,7 +2075,6 @@ func Test_AddTx_TxFeeCap(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func setupPool(t *testing.T, cfg pool.Config, constraintsCfg state.BatchConstraintsCfg, s *pgpoolstorage.PostgresPoolStorage, st *state.State, chainID uint64, ctx context.Context, eventLog *event.EventLog) *pool.Pool {
