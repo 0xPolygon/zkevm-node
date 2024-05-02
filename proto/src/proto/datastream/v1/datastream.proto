@@ -4,12 +4,16 @@ package datastream.v1;
 
 option go_package = "github.com/0xPolygonHermez/zkevm-node/state/datastream";
 
-message Batch {
+message BatchStart {
+    uint64 number = 1;
+    uint64 fork_id = 4;
+    uint64 chain_id = 5;
+}
+
+message BatchEnd {
     uint64 number = 1;
     bytes local_exit_root = 2;
     bytes state_root = 3;
-    uint64 fork_id = 4;
-    uint64 chain_id = 5;
 }
 
 message L2Block {
@@ -57,8 +61,9 @@ enum BookmarkType {
 
 enum EntryType {
     ENTRY_TYPE_UNSPECIFIED = 0;
-    ENTRY_TYPE_BATCH = 1;
+    ENTRY_TYPE_BATCH_START = 1;
     ENTRY_TYPE_L2_BLOCK = 2;
     ENTRY_TYPE_TRANSACTION = 3;
-    ENTRY_TYPE_UPDATE_GER = 4;
+    ENTRY_TYPE_BATCH_END = 4;
+    ENTRY_TYPE_UPDATE_GER = 5;
 }
