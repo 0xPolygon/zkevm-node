@@ -416,30 +416,55 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					log.Errorf("failed to commit atomic op for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
 					continue
 				}
-			case datastream.Batch:
+			case datastream.BatchStart:
 				err = s.streamServer.StartAtomicOp()
 				if err != nil {
-					log.Errorf("failed to start atomic op for batch, error: %v", err)
+					log.Errorf("failed to start atomic op for batch start, error: %v", err)
 					continue
 				}
 
 				data.ChainId = chainID
 
-				marshalledBatch, err := proto.Marshal(&data)
+				marshalledBatchStart, err := proto.Marshal(&data)
 				if err != nil {
-					log.Errorf("failed to marshal batch, error: %v", err)
+					log.Errorf("failed to marshal batch start error: %v", err)
 					continue
 				}
 
-				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH), marshalledBatch)
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledBatchStart)
 				if err != nil {
-					log.Errorf("failed to add stream entry for batch, error: %v", err)
+					log.Errorf("failed to add stream entry for batch start, error: %v", err)
 					continue
 				}
 
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
-					log.Errorf("failed to commit atomic op for batch, error: %v", err)
+					log.Errorf("failed to commit atomic op for batch start, error: %v", err)
+					continue
+				}
+
+			case datastream.BatchEnd:
+				err = s.streamServer.StartAtomicOp()
+				if err != nil {
+					log.Errorf("failed to start atomic op for batch end, error: %v", err)
+					continue
+				}
+
+				marshalledBatchEnd, err := proto.Marshal(&data)
+				if err != nil {
+					log.Errorf("failed to marshal batch end, error: %v", err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatchEnd)
+				if err != nil {
+					log.Errorf("failed to add stream entry for batch end, error: %v", err)
+					continue
+				}
+
+				err = s.streamServer.CommitAtomicOp()
+				if err != nil {
+					log.Errorf("failed to commit atomic op for batch end, error: %v", err)
 					continue
 				}
 

@@ -67,14 +67,23 @@ func (f *finalizer) DSSendBatchBookmark(batchNumber uint64) {
 	}
 }
 
-func (f *finalizer) DSSendBatch(batchNumber uint64, stateRoot common.Hash, localExitRoot common.Hash) {
+func (f *finalizer) DSSendBatchStart(batchNumber uint64) {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
 
 	if f.streamServer != nil {
-		// Send batch to the streamer
-		f.dataToStream <- datastream.Batch{
+		// Send batch start to the streamer
+		f.dataToStream <- datastream.BatchStart{
+			Number: batchNumber,
+			ForkId: forkID,
+		}
+	}
+}
+
+func (f *finalizer) DSSendBatchEnd(batchNumber uint64, stateRoot common.Hash, localExitRoot common.Hash) {
+	if f.streamServer != nil {
+		// Send batch end to the streamer
+		f.dataToStream <- datastream.BatchEnd{
 			Number:        batchNumber,
-			ForkId:        forkID,
 			StateRoot:     stateRoot.Bytes(),
 			LocalExitRoot: localExitRoot.Bytes(),
 		}

@@ -757,15 +757,32 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.BytesToHash(l2Block.GlobalExitRoot)))
 		printColored(color.FgGreen, "Coinbase........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.BytesToAddress(l2Block.Coinbase)))
-	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH):
-		batch := &datastream.Batch{}
+	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
+		batch := &datastream.BatchStart{}
 		err := proto.Unmarshal(entry.Data, batch)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
 		}
 		printColored(color.FgGreen, "Entry Type......: ")
-		printColored(color.FgHiYellow, "Batch\n")
+		printColored(color.FgHiYellow, "Batch Start\n")
+		printColored(color.FgGreen, "Entry Number....: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", entry.Number))
+		printColored(color.FgGreen, "Batch Number....: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.Number))
+		printColored(color.FgGreen, "Fork ID.........: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ForkId))
+		printColored(color.FgGreen, "Chain ID........: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ChainId))
+	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
+		batch := &datastream.BatchEnd{}
+		err := proto.Unmarshal(entry.Data, batch)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+		printColored(color.FgGreen, "Entry Type......: ")
+		printColored(color.FgHiYellow, "Batch End\n")
 		printColored(color.FgGreen, "Entry Number....: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", entry.Number))
 		printColored(color.FgGreen, "Batch Number....: ")
@@ -774,10 +791,6 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batch.StateRoot)))
 		printColored(color.FgGreen, "Local Exit Root.: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batch.LocalExitRoot)))
-		printColored(color.FgGreen, "Fork ID.........: ")
-		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ForkId))
-		printColored(color.FgGreen, "Chain ID........: ")
-		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ChainId))
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
 		dsTx := &datastream.Transaction{}
 		err := proto.Unmarshal(entry.Data, dsTx)

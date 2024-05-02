@@ -339,6 +339,8 @@ func (f *finalizer) insertSIPBatch(ctx context.Context, batchNumber uint64, stat
 
 	// Send batch bookmark to the datastream
 	f.DSSendBatchBookmark(batchNumber)
+	// Send batch start to the datastream
+	f.DSSendBatchStart(batchNumber)
 
 	// Check if synchronizer is up-to-date
 	//TODO: review if this is needed
@@ -404,7 +406,7 @@ func (f *finalizer) closeSIPBatch(ctx context.Context, dbTx pgx.Tx) error {
 	}
 
 	// Sent batch to DS
-	f.DSSendBatch(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
+	f.DSSendBatchEnd(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
 
 	log.Infof("sip batch %d closed in statedb, closing reason: %s", f.sipBatch.batchNumber, f.sipBatch.closingReason)
 

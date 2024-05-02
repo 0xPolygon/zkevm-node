@@ -157,20 +157,34 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			return err
 		}
 
-		genesisBatch := &datastream.Batch{
-			Number:        genesisL2Block.BatchNumber,
-			LocalExitRoot: common.Hash{}.Bytes(),
-			StateRoot:     genesisL2Block.StateRoot.Bytes(),
-			ForkId:        genesisL2Block.ForkID,
-			ChainId:       chainID,
+		genesisBatchStart := &datastream.BatchStart{
+			Number:  genesisL2Block.BatchNumber,
+			ForkId:  genesisL2Block.ForkID,
+			ChainId: chainID,
 		}
 
-		marshalledGenesisBatch, err := proto.Marshal(genesisBatch)
+		marshalledGenesisBatchStart, err := proto.Marshal(genesisBatchStart)
 		if err != nil {
 			return err
 		}
 
-		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH), marshalledGenesisBatch)
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledGenesisBatchStart)
+		if err != nil {
+			return err
+		}
+
+		genesisBatchEnd := &datastream.BatchEnd{
+			Number:        genesisL2Block.BatchNumber,
+			LocalExitRoot: common.Hash{}.Bytes(),
+			StateRoot:     genesisL2Block.StateRoot.Bytes(),
+		}
+
+		marshalledGenesisBatchEnd, err := proto.Marshal(genesisBatchEnd)
+		if err != nil {
+			return err
+		}
+
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledGenesisBatchEnd)
 		if err != nil {
 			return err
 		}
@@ -189,15 +203,24 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 		log.Infof("Latest entry: %+v", latestEntry)
 
 		switch latestEntry.Type {
-		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH):
-			log.Info("Latest entry type is Batch")
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
+			log.Info("Latest entry type is Batch Start")
 
-			batch := &datastream.Batch{}
-			if err := proto.Unmarshal(latestEntry.Data, batch); err != nil {
+			batchStart := &datastream.BatchStart{}
+			if err := proto.Unmarshal(latestEntry.Data, batchStart); err != nil {
 				return err
 			}
 
-			currentBatchNumber = batch.Number
+			currentBatchNumber = batchStart.Number
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
+			log.Info("Latest entry type is Batch End")
+
+			batchEnd := &datastream.BatchStart{}
+			if err := proto.Unmarshal(latestEntry.Data, batchEnd); err != nil {
+				return err
+			}
+
+			currentBatchNumber = batchEnd.Number
 			currentBatchNumber++
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER):
 			log.Info("Latest entry type is UpdateGER")
@@ -361,6 +384,22 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 
 			if missingBatchBookMark {
 				_, err = streamServer.AddStreamBookmark(marshalledBookMark)
+				if err != nil {
+					return err
+				}
+
+				batchStart := &datastream.BatchStart{
+					Number:  batch.BatchNumber,
+					ForkId:  batch.ForkID,
+					ChainId: chainID,
+				}
+
+				marshalledBatchStart, err := proto.Marshal(batchStart)
+				if err != nil {
+					return err
+				}
+
+				_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledBatchStart)
 				if err != nil {
 					return err
 				}
@@ -542,20 +581,18 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 				}
 			}
 
-			batch := &datastream.Batch{
+			batchEnd := &datastream.BatchEnd{
 				Number:        batch.BatchNumber,
 				LocalExitRoot: batch.LocalExitRoot.Bytes(),
 				StateRoot:     batch.StateRoot.Bytes(),
-				ForkId:        batch.ForkID,
-				ChainId:       chainID,
 			}
 
-			marshalledBatch, err := proto.Marshal(batch)
+			marshalledBatch, err := proto.Marshal(batchEnd)
 			if err != nil {
 				return err
 			}
 
-			_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH), marshalledBatch)
+			_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatch)
 			if err != nil {
 				return err
 			}
