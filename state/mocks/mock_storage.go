@@ -8333,6 +8333,55 @@ func (_c *StorageMock_UpdateBatchL2Data_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// UpdateBatchTimestamp provides a mock function with given fields: ctx, batchNumber, timestamp, dbTx
+func (_m *StorageMock) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, timestamp time.Time, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, batchNumber, timestamp, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateBatchTimestamp")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, time.Time, pgx.Tx) error); ok {
+		r0 = rf(ctx, batchNumber, timestamp, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StorageMock_UpdateBatchTimestamp_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateBatchTimestamp'
+type StorageMock_UpdateBatchTimestamp_Call struct {
+	*mock.Call
+}
+
+// UpdateBatchTimestamp is a helper method to define mock.On call
+//   - ctx context.Context
+//   - batchNumber uint64
+//   - timestamp time.Time
+//   - dbTx pgx.Tx
+func (_e *StorageMock_Expecter) UpdateBatchTimestamp(ctx interface{}, batchNumber interface{}, timestamp interface{}, dbTx interface{}) *StorageMock_UpdateBatchTimestamp_Call {
+	return &StorageMock_UpdateBatchTimestamp_Call{Call: _e.mock.On("UpdateBatchTimestamp", ctx, batchNumber, timestamp, dbTx)}
+}
+
+func (_c *StorageMock_UpdateBatchTimestamp_Call) Run(run func(ctx context.Context, batchNumber uint64, timestamp time.Time, dbTx pgx.Tx)) *StorageMock_UpdateBatchTimestamp_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(time.Time), args[3].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageMock_UpdateBatchTimestamp_Call) Return(_a0 error) *StorageMock_UpdateBatchTimestamp_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StorageMock_UpdateBatchTimestamp_Call) RunAndReturn(run func(context.Context, uint64, time.Time, pgx.Tx) error) *StorageMock_UpdateBatchTimestamp_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateCheckedBlockByNumber provides a mock function with given fields: ctx, blockNumber, newCheckedStatus, dbTx
 func (_m *StorageMock) UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, blockNumber, newCheckedStatus, dbTx)

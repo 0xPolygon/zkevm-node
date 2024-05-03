@@ -1092,3 +1092,11 @@ func (p *PostgresStorage) GetNotCheckedBatches(ctx context.Context, dbTx pgx.Tx)
 
 	return batches, nil
 }
+
+// UpdateBatchTimestamp updates the timestamp of the state.batch with the given number.
+func (p *PostgresStorage) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, timestamp time.Time, dbTx pgx.Tx) error {
+	const sql = "UPDATE state.batch SET timestamp = $1 WHERE batch_num = $2"
+	e := p.getExecQuerier(dbTx)
+	_, err := e.Exec(ctx, sql, timestamp.UTC(), batchNumber)
+	return err
+}

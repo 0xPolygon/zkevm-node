@@ -163,4 +163,5 @@ type storage interface {
 	GetNotCheckedBatches(ctx context.Context, dbTx pgx.Tx) ([]*Batch, error)
 	GetLastL2BlockByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*L2Block, error)
 	GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*Block, error)
+	UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, timestamp time.Time, dbTx pgx.Tx) error
 }
