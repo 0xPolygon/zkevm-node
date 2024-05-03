@@ -119,6 +119,22 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			return err
 		}
 
+		genesisBatchStart := &datastream.BatchStart{
+			Number:  genesisL2Block.BatchNumber,
+			ForkId:  genesisL2Block.ForkID,
+			ChainId: chainID,
+		}
+
+		marshalledGenesisBatchStart, err := proto.Marshal(genesisBatchStart)
+		if err != nil {
+			return err
+		}
+
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledGenesisBatchStart)
+		if err != nil {
+			return err
+		}
+
 		bookMark = &datastream.BookMark{
 			Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 			Value: genesisL2Block.L2BlockNumber,
@@ -153,22 +169,6 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 		}
 
 		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK), marshalledGenesisBlock)
-		if err != nil {
-			return err
-		}
-
-		genesisBatchStart := &datastream.BatchStart{
-			Number:  genesisL2Block.BatchNumber,
-			ForkId:  genesisL2Block.ForkID,
-			ChainId: chainID,
-		}
-
-		marshalledGenesisBatchStart, err := proto.Marshal(genesisBatchStart)
-		if err != nil {
-			return err
-		}
-
-		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledGenesisBatchStart)
 		if err != nil {
 			return err
 		}
