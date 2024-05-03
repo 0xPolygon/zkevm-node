@@ -368,6 +368,8 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Return(nil).
 				Once()
 
+			m.State.EXPECT().UpdateBatchTimestamp(ctx, sequencedBatch.BatchNumber, fb[0].ForcedAt, m.DbTx).Return(nil)
+
 			m.State.
 				On("AddAccumulatedInputHash", ctx, sequencedBatch.BatchNumber, common.Hash{}, m.DbTx).
 				Return(nil).
