@@ -49,7 +49,7 @@ if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.f
   * If it has a checkout action, replace it with:
   ```
   - name: Fork based /ok-to-test checkout
-    uses: actions/checkout@v3
+    uses: actions/checkout@v4
     with:
       ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
   ```
