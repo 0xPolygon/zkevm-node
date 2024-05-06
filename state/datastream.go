@@ -58,16 +58,19 @@ type DSL2Block struct {
 	ChainID         uint64
 	BlockHash       common.Hash
 	StateRoot       common.Hash
+	BlockGasLimit   uint64
+	BlockInfoRoot   common.Hash
 }
 
 // DSL2Transaction represents a data stream L2 transaction
 type DSL2Transaction struct {
-	L2BlockNumber               uint64      // Not included in the encoded data
-	ImStateRoot                 common.Hash // Not included in the encoded data
-	EffectiveGasPricePercentage uint8       // 1 byte
-	IsValid                     uint8       // 1 byte
-	StateRoot                   common.Hash // 32 bytes
-	EncodedLength               uint32      // 4 bytes
+	L2BlockNumber               uint64
+	ImStateRoot                 common.Hash
+	EffectiveGasPricePercentage uint8
+	IsValid                     uint8
+	Index                       uint64
+	StateRoot                   common.Hash
+	EncodedLength               uint32
 	Encoded                     []byte
 }
 
@@ -121,6 +124,7 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 
 		genesisBatchStart := &datastream.BatchStart{
 			Number:  genesisL2Block.BatchNumber,
+			Type:    datastream.BatchType_BATCH_TYPE_UNSPECIFIED,
 			ForkId:  genesisL2Block.ForkID,
 			ChainId: chainID,
 		}
@@ -390,8 +394,17 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 
 				batchStart := &datastream.BatchStart{
 					Number:  batch.BatchNumber,
+					Type:    datastream.BatchType_BATCH_TYPE_REGULAR,
 					ForkId:  batch.ForkID,
 					ChainId: chainID,
+				}
+
+				if batch.ForkID >= FORKID_ETROG && (batch.BatchNumber == 1 || (upgradeEtrogBatchNumber != 0 && batch.BatchNumber == upgradeEtrogBatchNumber)) {
+					batchStart.Type = datastream.BatchType_BATCH_TYPE_INJECTED
+				}
+
+				if batch.ForcedBatchNum != nil {
+					batchStart.Type = datastream.BatchType_BATCH_TYPE_FORCED
 				}
 
 				marshalledBatchStart, err := proto.Marshal(batchStart)
@@ -495,6 +508,8 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 						StateRoot:       l2Block.StateRoot.Bytes(),
 						GlobalExitRoot:  l2Block.GlobalExitRoot.Bytes(),
 						Coinbase:        l2Block.Coinbase.Bytes(),
+						BlockInfoRoot:   l2Block.BlockInfoRoot.Bytes(),
+						BlockGasLimit:   l2Block.BlockGasLimit,
 					}
 
 					if l2Block.ForkID >= FORKID_ETROG {
@@ -560,6 +575,7 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 
 						transaction := &datastream.Transaction{
 							L2BlockNumber:               tx.L2BlockNumber,
+							Index:                       tx.Index,
 							IsValid:                     tx.IsValid != 0,
 							Encoded:                     tx.Encoded,
 							EffectiveGasPricePercentage: uint32(tx.EffectiveGasPricePercentage),

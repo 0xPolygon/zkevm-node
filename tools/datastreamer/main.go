@@ -700,12 +700,6 @@ func decodeBatchOffline(cliCtx *cli.Context) error {
 }
 
 func printEntry(entry datastreamer.FileEntry) {
-	var bookmarkTypeDesc = map[datastream.BookmarkType]string{
-		datastream.BookmarkType_BOOKMARK_TYPE_UNSPECIFIED: "Unspecified",
-		datastream.BookmarkType_BOOKMARK_TYPE_BATCH:       "Batch Number",
-		datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK:    "L2 Block Number",
-	}
-
 	switch entry.Type {
 	case state.EntryTypeBookMark:
 		bookmark := &datastream.BookMark{}
@@ -720,7 +714,7 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgGreen, "Entry Number....: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", entry.Number))
 		printColored(color.FgGreen, "Type............: ")
-		printColored(color.FgHiWhite, fmt.Sprintf("%d (%s)\n", bookmark.Type, bookmarkTypeDesc[bookmark.Type]))
+		printColored(color.FgHiWhite, fmt.Sprintf("%d (%s)\n", bookmark.Type, datastream.BookmarkType_name[int32(bookmark.Type)]))
 		printColored(color.FgGreen, "Value...........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", bookmark.Value))
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):
@@ -757,6 +751,16 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.BytesToHash(l2Block.GlobalExitRoot)))
 		printColored(color.FgGreen, "Coinbase........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.BytesToAddress(l2Block.Coinbase)))
+		printColored(color.FgGreen, "Block Gas Limit.: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", l2Block.BlockGasLimit))
+		printColored(color.FgGreen, "Block Info Root.: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.BytesToHash(l2Block.BlockInfoRoot)))
+
+		if l2Block.Debug != nil && l2Block.Debug.Message != "" {
+			printColored(color.FgGreen, "Debug...........: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", l2Block.Debug))
+		}
+
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
 		batch := &datastream.BatchStart{}
 		err := proto.Unmarshal(entry.Data, batch)
@@ -770,10 +774,18 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", entry.Number))
 		printColored(color.FgGreen, "Batch Number....: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.Number))
+		printColored(color.FgGreen, "Batch Type......: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", datastream.BatchType_name[int32(batch.Type)]))
 		printColored(color.FgGreen, "Fork ID.........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ForkId))
 		printColored(color.FgGreen, "Chain ID........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", batch.ChainId))
+
+		if batch.Debug != nil && batch.Debug.Message != "" {
+			printColored(color.FgGreen, "Debug...........: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", batch.Debug))
+		}
+
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
 		batch := &datastream.BatchEnd{}
 		err := proto.Unmarshal(entry.Data, batch)
@@ -791,6 +803,12 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batch.StateRoot)))
 		printColored(color.FgGreen, "Local Exit Root.: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batch.LocalExitRoot)))
+
+		if batch.Debug != nil && batch.Debug.Message != "" {
+			printColored(color.FgGreen, "Debug...........: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", batch.Debug))
+		}
+
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
 		dsTx := &datastream.Transaction{}
 		err := proto.Unmarshal(entry.Data, dsTx)
@@ -805,6 +823,8 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", entry.Number))
 		printColored(color.FgGreen, "L2 Block Number.: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", dsTx.L2BlockNumber))
+		printColored(color.FgGreen, "Index...........: ")
+		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", dsTx.Index))
 		printColored(color.FgGreen, "Is Valid........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%t\n", dsTx.IsValid))
 		printColored(color.FgGreen, "Data............: ")
@@ -831,6 +851,12 @@ func printEntry(entry datastreamer.FileEntry) {
 		nonce := tx.Nonce()
 		printColored(color.FgGreen, "Nonce...........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", nonce))
+
+		if dsTx.Debug != nil && dsTx.Debug.Message != "" {
+			printColored(color.FgGreen, "Debug...........: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", dsTx.Debug))
+		}
+
 	case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER):
 		updateGer := &datastream.UpdateGER{}
 		err := proto.Unmarshal(entry.Data, updateGer)
@@ -857,6 +883,11 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", updateGer.ChainId))
 		printColored(color.FgGreen, "State Root......: ")
 		printColored(color.FgHiWhite, fmt.Sprint(common.Bytes2Hex(updateGer.StateRoot)+"\n"))
+
+		if updateGer.Debug != nil && updateGer.Debug.Message != "" {
+			printColored(color.FgGreen, "Debug...........: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", updateGer.Debug))
+		}
 	}
 }
 
