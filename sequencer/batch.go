@@ -340,7 +340,7 @@ func (f *finalizer) insertSIPBatch(ctx context.Context, batchNumber uint64, stat
 	// Send batch bookmark to the datastream
 	f.DSSendBatchBookmark(batchNumber)
 	// Send batch start to the datastream
-	f.DSSendBatchStart(batchNumber)
+	f.DSSendBatchStart(batchNumber, false)
 
 	// Check if synchronizer is up-to-date
 	//TODO: review if this is needed

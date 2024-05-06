@@ -24,11 +24,12 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 			ForkID:          forkID,
 			BlockHash:       blockResponse.BlockHash,
 			StateRoot:       blockResponse.BlockHash, //From etrog, the blockhash is the block root
+			BlockInfoRoot:   blockResponse.BlockInfoRoot,
 		}
 
 		l2Transactions := []state.DSL2Transaction{}
 
-		for _, txResponse := range blockResponse.TransactionResponses {
+		for i, txResponse := range blockResponse.TransactionResponses {
 			binaryTxData, err := txResponse.Tx.MarshalBinary()
 			if err != nil {
 				return err
@@ -37,10 +38,15 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 			l2Transaction := state.DSL2Transaction{
 				L2BlockNumber:               blockResponse.BlockNumber,
 				EffectiveGasPricePercentage: uint8(txResponse.EffectivePercentage),
+				Index:                       uint64(i),
 				IsValid:                     1,
 				EncodedLength:               uint32(len(binaryTxData)),
 				Encoded:                     binaryTxData,
 				StateRoot:                   txResponse.StateRoot,
+			}
+
+			if txResponse.Logs != nil && len(txResponse.Logs) > 0 {
+				l2Transaction.Index = uint64(txResponse.Logs[0].TxIndex)
 			}
 
 			l2Transactions = append(l2Transactions, l2Transaction)
@@ -67,15 +73,23 @@ func (f *finalizer) DSSendBatchBookmark(batchNumber uint64) {
 	}
 }
 
-func (f *finalizer) DSSendBatchStart(batchNumber uint64) {
+func (f *finalizer) DSSendBatchStart(batchNumber uint64, isForced bool) {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
+
+	batchStart := datastream.BatchStart{
+		Number: batchNumber,
+		ForkId: forkID,
+	}
+
+	if isForced {
+		batchStart.Type = datastream.BatchType_BATCH_TYPE_FORCED
+	} else {
+		batchStart.Type = datastream.BatchType_BATCH_TYPE_REGULAR
+	}
 
 	if f.streamServer != nil {
 		// Send batch start to the streamer
-		f.dataToStream <- datastream.BatchStart{
-			Number: batchNumber,
-			ForkId: forkID,
-		}
+		f.dataToStream <- batchStart
 	}
 }
 
