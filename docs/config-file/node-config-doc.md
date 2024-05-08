@@ -2084,6 +2084,7 @@ StateConsistencyCheckInterval="5s"
 | - [BatchMaxDeltaTimestamp](#Sequencer_Finalizer_BatchMaxDeltaTimestamp )                       | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [L2BlockMaxDeltaTimestamp](#Sequencer_Finalizer_L2BlockMaxDeltaTimestamp )                   | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [StateRootSyncInterval](#Sequencer_Finalizer_StateRootSyncInterval )                         | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
+| - [FlushIdCheckInterval](#Sequencer_Finalizer_FlushIdCheckInterval )                           | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [HaltOnBatchNumber](#Sequencer_Finalizer_HaltOnBatchNumber )                                 | No      | integer | No         | -          | HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.<br />The Sequencer will halt after it closes the batch equal to this number |
 | - [SequentialBatchSanityCheck](#Sequencer_Finalizer_SequentialBatchSanityCheck )               | No      | boolean | No         | -          | SequentialBatchSanityCheck indicates if the reprocess of a closed batch (sanity check) must be done in a<br />sequential way (instead than in parallel)                                                       |
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
@@ -2314,7 +2315,33 @@ the stateroot used in the tx-by-tx execution
 StateRootSyncInterval="1h0m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.7.11. `Sequencer.Finalizer.HaltOnBatchNumber`
+#### <a name="Sequencer_Finalizer_FlushIdCheckInterval"></a>10.7.11. `Sequencer.Finalizer.FlushIdCheckInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"50ms"`
+
+**Description:** FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("50ms"):
+```
+[Sequencer.Finalizer]
+FlushIdCheckInterval="50ms"
+```
+
+#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.7.12. `Sequencer.Finalizer.HaltOnBatchNumber`
 
 **Type:** : `integer`
 
@@ -2329,7 +2356,7 @@ The Sequencer will halt after it closes the batch equal to this number
 HaltOnBatchNumber=0
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.7.12. `Sequencer.Finalizer.SequentialBatchSanityCheck`
+#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.7.13. `Sequencer.Finalizer.SequentialBatchSanityCheck`
 
 **Type:** : `boolean`
 
@@ -2344,7 +2371,7 @@ sequential way (instead than in parallel)
 SequentialBatchSanityCheck=false
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.7.13. `Sequencer.Finalizer.SequentialProcessL2Block`
+#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.7.14. `Sequencer.Finalizer.SequentialProcessL2Block`
 
 **Type:** : `boolean`
 
@@ -2359,7 +2386,7 @@ in the processPendingL2Blocks go func
 SequentialProcessL2Block=false
 ```
 
-#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.14. `[Sequencer.Finalizer.Metrics]`
+#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.15. `[Sequencer.Finalizer.Metrics]`
 
 **Type:** : `object`
 **Description:** Metrics is the config for the sequencer metrics
@@ -2369,7 +2396,7 @@ SequentialProcessL2Block=false
 | - [Interval](#Sequencer_Finalizer_Metrics_Interval )   | No      | string  | No         | -          | Duration                                           |
 | - [EnableLog](#Sequencer_Finalizer_Metrics_EnableLog ) | No      | boolean | No         | -          | EnableLog is a flag to enable/disable metrics logs |
 
-##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.14.1. `Sequencer.Finalizer.Metrics.Interval`
+##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.15.1. `Sequencer.Finalizer.Metrics.Interval`
 
 **Title:** Duration
 
@@ -2395,7 +2422,7 @@ SequentialProcessL2Block=false
 Interval="1h0m0s"
 ```
 
-##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.14.2. `Sequencer.Finalizer.Metrics.EnableLog`
+##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.15.2. `Sequencer.Finalizer.Metrics.EnableLog`
 
 **Type:** : `boolean`
 
