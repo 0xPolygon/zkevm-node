@@ -265,10 +265,12 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 
 	f.updateFlushIDs(batchResponse.FlushID, batchResponse.StoredFlushID)
 
+	var waitStoreL2Block time.Duration
 	if f.pendingL2BlocksToStoreWG.Count() > 0 {
 		startWait := time.Now()
 		f.pendingL2BlocksToStoreWG.Wait()
-		log.Debugf("waiting for previous L2 block to be stored took: %v", time.Since(startWait))
+		waitStoreL2Block = time.Since(startWait)
+		log.Debugf("waiting for previous L2 block to be stored took: %v", waitStoreL2Block)
 	}
 	f.addPendingL2BlockToStore(ctx, l2Block)
 
@@ -279,9 +281,9 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 	}
 	f.metrics.addL2BlockMetrics(l2Block.metrics)
 
-	log.Infof("processed L2 block %d [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v, initialStateRoot: %s, newStateRoot: %s, txs: %d/%d, blockHash: %s, infoRoot: %s, counters: {used: %s, reserved: %s, needed: %s, high: %s}, contextId: %s",
+	log.Infof("processed L2 block %d [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v, initialStateRoot: %s, newStateRoot: %s, txs: %d/%d, blockHash: %s, infoRoot: %s, waitStoreL2Block: %v, counters: {used: %s, reserved: %s, needed: %s, high: %s}, contextId: %s",
 		blockResponse.BlockNumber, l2Block.trackingNum, l2Block.batch.batchNumber, l2Block.deltaTimestamp, l2Block.timestamp, l2Block.l1InfoTreeExitRoot.L1InfoTreeIndex, l2Block.l1InfoTreeExitRootChanged, initialStateRoot, l2Block.batchResponse.NewStateRoot,
-		len(l2Block.transactions), len(blockResponse.TransactionResponses), blockResponse.BlockHash, blockResponse.BlockInfoRoot,
+		len(l2Block.transactions), len(blockResponse.TransactionResponses), blockResponse.BlockHash, blockResponse.BlockInfoRoot, waitStoreL2Block,
 		f.logZKCounters(batchResponse.UsedZkCounters), f.logZKCounters(batchResponse.ReservedZkCounters), f.logZKCounters(neededZKCounters), f.logZKCounters(l2Block.batch.finalHighReservedZKCounters), contextId)
 
 	if f.cfg.Metrics.EnableLog {
@@ -367,19 +369,21 @@ func (f *finalizer) executeL2Block(ctx context.Context, initialStateRoot common.
 func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	startStoring := time.Now()
 
-	// Wait until L2 block has been flushed/stored by the executor
-	f.storedFlushIDCond.L.Lock()
-	for f.storedFlushID < l2Block.batchResponse.FlushID {
-		f.storedFlushIDCond.Wait()
-	}
-	f.storedFlushIDCond.L.Unlock()
-
-	// If the L2 block has txs now f.storedFlushID >= l2BlockToStore.flushId, we can store tx
 	blockResponse := l2Block.batchResponse.BlockResponses[0]
 	log.Infof("storing L2 block %d [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v, txs: %d/%d, blockHash: %s, infoRoot: %s",
 		blockResponse.BlockNumber, l2Block.trackingNum, l2Block.batch.batchNumber, l2Block.deltaTimestamp, l2Block.timestamp, l2Block.l1InfoTreeExitRoot.L1InfoTreeIndex,
 		l2Block.l1InfoTreeExitRootChanged, len(l2Block.transactions), len(blockResponse.TransactionResponses), blockResponse.BlockHash, blockResponse.BlockInfoRoot.String())
 
+	// Wait until L2 block has been flushed/stored by the executor
+	startWaitFlushId := time.Now()
+	f.storedFlushIDCond.L.Lock()
+	for f.storedFlushID < l2Block.batchResponse.FlushID {
+		f.storedFlushIDCond.Wait()
+	}
+	f.storedFlushIDCond.L.Unlock()
+	waitFlushId := time.Since(startWaitFlushId)
+
+	// If the L2 block has txs now f.storedFlushID >= l2BlockToStore.flushId, we can store tx
 	dbTx, err := f.stateIntf.BeginStateTransaction(ctx)
 	if err != nil {
 		return fmt.Errorf("error creating db transaction to store L2 block %d [%d], error: %v", blockResponse.BlockNumber, l2Block.trackingNum, err)
@@ -506,11 +510,9 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 		f.workerIntf.DeleteTxPendingToStore(tx.Hash, tx.From)
 	}
 
-	endStoring := time.Now()
-
-	log.Infof("stored L2 block %d [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v, txs: %d/%d, blockHash: %s, infoRoot: %s, time: %v",
+	log.Infof("stored L2 block %d [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v, txs: %d/%d, blockHash: %s, infoRoot: %s, time: %v, waitFlushId: %v",
 		blockResponse.BlockNumber, l2Block.trackingNum, l2Block.batch.batchNumber, l2Block.deltaTimestamp, l2Block.timestamp, l2Block.l1InfoTreeExitRoot.L1InfoTreeIndex,
-		l2Block.l1InfoTreeExitRootChanged, len(l2Block.transactions), len(blockResponse.TransactionResponses), blockResponse.BlockHash, blockResponse.BlockInfoRoot.String(), endStoring.Sub(startStoring))
+		l2Block.l1InfoTreeExitRootChanged, len(l2Block.transactions), len(blockResponse.TransactionResponses), blockResponse.BlockHash, blockResponse.BlockInfoRoot.String(), time.Since(startStoring), waitFlushId)
 
 	return nil
 }

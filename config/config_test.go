@@ -134,6 +134,10 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: types.NewDuration(1800 * time.Second),
 		},
 		{
+			path:          "Sequencer.Finalizer.FlushIdCheckInterval",
+			expectedValue: types.NewDuration(50 * time.Millisecond),
+		},
+		{
 			path:          "Sequencer.Finalizer.Metrics.Interval",
 			expectedValue: types.NewDuration(60 * time.Minute),
 		},
