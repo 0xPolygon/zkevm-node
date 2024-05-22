@@ -413,7 +413,7 @@ func (s *ClientSynchronizer) Sync() error {
 			// latestSequencedBatchNumber -> last batch on SMC
 			if latestSyncedBatch >= latestSequencedBatchNumber {
 				startTrusted := time.Now()
-				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
+				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer && s.cfg.L2Synchronization.Enable {
 					log.Info("Syncing trusted state (permissionless)")
 					//Sync Trusted State
 					log.Debug("Doing reorg check before L2 sync")
