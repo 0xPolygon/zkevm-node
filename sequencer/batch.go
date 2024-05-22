@@ -306,7 +306,7 @@ func (f *finalizer) openNewWIPBatch(batchNumber uint64, stateRoot common.Hash) *
 
 	return &Batch{
 		batchNumber:             batchNumber,
-		coinbase:                f.sequencerAddress,
+		coinbase:                f.l2Coinbase,
 		initialStateRoot:        stateRoot,
 		imStateRoot:             stateRoot,
 		finalStateRoot:          stateRoot,
@@ -323,7 +323,7 @@ func (f *finalizer) insertSIPBatch(ctx context.Context, batchNumber uint64, stat
 	// open next batch
 	newStateBatch := state.Batch{
 		BatchNumber:    batchNumber,
-		Coinbase:       f.sequencerAddress,
+		Coinbase:       f.l2Coinbase,
 		Timestamp:      now(),
 		StateRoot:      stateRoot,
 		GlobalExitRoot: state.ZeroHash,

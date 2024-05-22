@@ -85,7 +85,7 @@ func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.Fo
 	// Open new batch on state for the forced batch
 	processingCtx := state.ProcessingContext{
 		BatchNumber:    newBatchNumber,
-		Coinbase:       f.sequencerAddress,
+		Coinbase:       f.l2Coinbase,
 		Timestamp:      time.Now(),
 		GlobalExitRoot: forcedBatch.GlobalExitRoot,
 		ForcedBatchNum: &forcedBatch.ForcedBatchNumber,
@@ -101,7 +101,7 @@ func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.Fo
 		ForcedBlockHashL1:       fbL1Block.ParentHash,
 		OldStateRoot:            stateRoot,
 		Transactions:            forcedBatch.RawTxsData,
-		Coinbase:                f.sequencerAddress,
+		Coinbase:                f.l2Coinbase,
 		TimestampLimit_V2:       uint64(forcedBatch.ForcedAt.Unix()),
 		ForkID:                  f.stateIntf.GetForkIDByBatchNumber(lastBatchNumber),
 		SkipVerifyL1InfoRoot_V2: true,
