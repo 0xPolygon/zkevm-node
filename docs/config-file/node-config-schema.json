@@ -700,7 +700,7 @@
 					"properties": {
 						"Enable": {
 							"type": "boolean",
-							"description": "Enable if is true then the L2 sync process is active",
+							"description": "Enable if is true then the L2 sync process is permitted (only for permissionless)",
 							"default": true
 						},
 						"AcceptEmptyClosedBatches": {
