@@ -46,7 +46,6 @@ func TestConsolidatedBlockNumber(t *testing.T) {
 			Name:           "Get consolidated block number successfully",
 			ExpectedResult: state.Ptr(uint64(10)),
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastConsolidatedL2BlockNumber", context.Background(), nil).
 					Return(uint64(10), nil).
@@ -58,7 +57,6 @@ func TestConsolidatedBlockNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get last consolidated block number from state"),
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastConsolidatedL2BlockNumber", context.Background(), nil).
 					Return(uint64(0), errors.New("failed to get last consolidated block number")).
@@ -106,7 +104,6 @@ func TestIsBlockConsolidated(t *testing.T) {
 			Name:           "Query status of block number successfully",
 			ExpectedResult: true,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("IsL2BlockConsolidated", context.Background(), uint64(1), nil).
 					Return(true, nil).
@@ -118,7 +115,6 @@ func TestIsBlockConsolidated(t *testing.T) {
 			ExpectedResult: false,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to check if the block is consolidated"),
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("IsL2BlockConsolidated", context.Background(), uint64(1), nil).
 					Return(false, errors.New("failed to check if the block is consolidated")).
@@ -166,7 +162,6 @@ func TestIsBlockVirtualized(t *testing.T) {
 			Name:           "Query status of block number successfully",
 			ExpectedResult: true,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("IsL2BlockVirtualized", context.Background(), uint64(1), nil).
 					Return(true, nil).
@@ -178,7 +173,6 @@ func TestIsBlockVirtualized(t *testing.T) {
 			ExpectedResult: false,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to check if the block is virtualized"),
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("IsL2BlockVirtualized", context.Background(), uint64(1), nil).
 					Return(false, errors.New("failed to check if the block is virtualized")).
@@ -228,7 +222,6 @@ func TestBatchNumberByBlockNumber(t *testing.T) {
 			Name:           "get batch number by block number successfully",
 			ExpectedResult: &batchNumber,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("BatchNumberByL2BlockNumber", context.Background(), blockNumber, nil).
 					Return(batchNumber, nil).
@@ -240,7 +233,6 @@ func TestBatchNumberByBlockNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get batch number from block number"),
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("BatchNumberByL2BlockNumber", context.Background(), blockNumber, nil).
 					Return(uint64(0), errors.New("failed to get batch number of l2 batchNum")).
@@ -252,7 +244,6 @@ func TestBatchNumberByBlockNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("BatchNumberByL2BlockNumber", context.Background(), blockNumber, nil).
 					Return(uint64(0), state.ErrNotFound).
@@ -312,7 +303,6 @@ func TestBatchNumber(t *testing.T) {
 			ExpectedError:  nil,
 			ExpectedResult: 10,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastBatchNumber", context.Background(), nil).
 					Return(uint64(10), nil).
@@ -324,7 +314,6 @@ func TestBatchNumber(t *testing.T) {
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get the last batch number from state"),
 			ExpectedResult: 0,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastBatchNumber", context.Background(), nil).
 					Return(uint64(0), errors.New("failed to get last batch number")).
@@ -373,7 +362,6 @@ func TestVirtualBatchNumber(t *testing.T) {
 			ExpectedError:  nil,
 			ExpectedResult: 10,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastVirtualBatchNum", context.Background(), nil).
 					Return(uint64(10), nil).
@@ -385,7 +373,6 @@ func TestVirtualBatchNumber(t *testing.T) {
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get the last virtual batch number from state"),
 			ExpectedResult: 0,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastVirtualBatchNum", context.Background(), nil).
 					Return(uint64(0), errors.New("failed to get last batch number")).
@@ -434,7 +421,6 @@ func TestVerifiedBatchNumber(t *testing.T) {
 			ExpectedError:  nil,
 			ExpectedResult: 10,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastVerifiedBatch", context.Background(), nil).
 					Return(&state.VerifiedBatch{BatchNumber: uint64(10)}, nil).
@@ -446,7 +432,6 @@ func TestVerifiedBatchNumber(t *testing.T) {
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get the last verified batch number from state"),
 			ExpectedResult: 0,
 			SetupMocks: func(m *mocksWrapper) {
-
 				m.State.
 					On("GetLastVerifiedBatch", context.Background(), nil).
 					Return(nil, errors.New("failed to get last batch number")).
@@ -495,7 +480,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetBatchByNumber", context.Background(), hex.DecodeBig(tc.Number).Uint64(), nil).
 					Return(nil, state.ErrNotFound)
@@ -517,7 +501,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			},
 			ExpectedError: nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				txs := []*ethTypes.Transaction{
 					signTx(ethTypes.NewTransaction(1001, common.HexToAddress("0x1000"), big.NewInt(1000), 1001, big.NewInt(1002), []byte("1003")), s.ChainID()),
 					signTx(ethTypes.NewTransaction(1002, common.HexToAddress("0x1000"), big.NewInt(1000), 1001, big.NewInt(1002), []byte("1003")), s.ChainID()),
@@ -654,7 +637,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			},
 			ExpectedError: nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				txs := []*ethTypes.Transaction{
 					signTx(ethTypes.NewTransaction(1001, common.HexToAddress("0x1000"), big.NewInt(1000), 1001, big.NewInt(1002), []byte("1003")), s.ChainID()),
 					signTx(ethTypes.NewTransaction(1002, common.HexToAddress("0x1000"), big.NewInt(1000), 1001, big.NewInt(1002), []byte("1003")), s.ChainID()),
@@ -771,7 +753,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			},
 			ExpectedError: nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastClosedBatchNumber", context.Background(), nil).
 					Return(uint64(tc.ExpectedResult.Number), nil).
@@ -913,7 +894,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get the last batch number from state"),
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastClosedBatchNumber", context.Background(), nil).
 					Return(uint64(0), errors.New("failed to get last batch number")).
@@ -926,7 +906,6 @@ func TestGetBatchByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "couldn't load batch from state by number 1"),
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastClosedBatchNumber", context.Background(), nil).
 					Return(uint64(1), nil).
@@ -1029,7 +1008,6 @@ func TestGetL2FullBlockByHash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetL2BlockByHash", context.Background(), tc.Hash, nil).
 					Return(nil, state.ErrNotFound)
@@ -1041,7 +1019,6 @@ func TestGetL2FullBlockByHash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get block by hash from state"),
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetL2BlockByHash", context.Background(), tc.Hash, nil).
 					Return(nil, errors.New("failed to get block from state")).
@@ -1269,7 +1246,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetL2BlockByNumber", context.Background(), hex.DecodeUint64(tc.Number), nil).
 					Return(nil, state.ErrNotFound).
@@ -1282,7 +1258,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: rpcBlock,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetL2BlockByNumber", context.Background(), hex.DecodeUint64(tc.Number), nil).
 					Return(l2Block, nil).
@@ -1302,7 +1277,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: rpcBlock,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				blockNumber := uint64(1)
 
 				m.State.
@@ -1329,7 +1303,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get the last block number from state"),
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastL2BlockNumber", context.Background(), nil).
 					Return(uint64(0), errors.New("failed to get last block number")).
@@ -1342,7 +1315,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "couldn't load block from state by number 1"),
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastL2BlockNumber", context.Background(), nil).
 					Return(uint64(1), nil).
@@ -1390,7 +1362,6 @@ func TestGetL2FullBlockByNumber(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "couldn't load last block from state to compute the pending block"),
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLastL2Block", context.Background(), nil).
 					Return(nil, errors.New("failed to load last block")).
@@ -1488,7 +1459,6 @@ func TestGetNativeBlockHashesInRange(t *testing.T) {
 			ExpectedResult: state.Ptr([]string{}),
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				fromBlock, _ := tc.Filter.FromBlock.GetNumericBlockNumber(context.Background(), nil, nil, nil)
 				toBlock, _ := tc.Filter.ToBlock.GetNumericBlockNumber(context.Background(), nil, nil, nil)
 
@@ -1507,7 +1477,6 @@ func TestGetNativeBlockHashesInRange(t *testing.T) {
 			ExpectedResult: state.Ptr([]string{}),
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				fromBlock, _ := tc.Filter.FromBlock.GetNumericBlockNumber(context.Background(), nil, nil, nil)
 				toBlock, _ := tc.Filter.ToBlock.GetNumericBlockNumber(context.Background(), nil, nil, nil)
 				hashes := []common.Hash{}
@@ -1654,7 +1623,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  &rpcTransaction,
 			ExpectedError:   nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1701,7 +1669,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(nil, state.ErrNotFound).
@@ -1720,7 +1687,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   types.NewRPCError(types.DefaultErrorCode, "failed to load transaction by l2 hash from state"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(nil, errors.New("failed to load transaction by l2 hash from state")).
@@ -1734,7 +1700,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   types.NewRPCError(types.DefaultErrorCode, "failed to load transaction by l2 hash from pool"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(nil, state.ErrNotFound).
@@ -1753,7 +1718,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   types.NewRPCError(types.DefaultErrorCode, "transaction receipt not found"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1772,7 +1736,6 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   types.NewRPCError(types.DefaultErrorCode, "failed to load transaction receipt from state"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1906,7 +1869,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: &rpcReceipt,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1929,7 +1891,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(nil, state.ErrNotFound).
@@ -1942,7 +1903,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get tx from state"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(nil, errors.New("failed to get tx")).
@@ -1955,7 +1915,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1973,7 +1932,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to get tx receipt from state"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(signedTx, nil).
@@ -1991,7 +1949,6 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to build the receipt response"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByL2Hash", context.Background(), tc.Hash, nil).
 					Return(tx, nil).
@@ -2097,7 +2054,6 @@ func TestGetExitRootsByGER(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetExitRootByGlobalExitRoot", context.Background(), tc.GER, nil).
 					Return(nil, state.ErrNotFound)
@@ -2109,7 +2065,6 @@ func TestGetExitRootsByGER(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetExitRootByGlobalExitRoot", context.Background(), tc.GER, nil).
 					Return(nil, fmt.Errorf("failed to load exit roots from state"))
@@ -2126,7 +2081,6 @@ func TestGetExitRootsByGER(t *testing.T) {
 			},
 			ExpectedError: nil,
 			SetupMocks: func(s *mockedServer, m *mocksWrapper, tc *testCase) {
-
 				er := &state.GlobalExitRoot{
 					BlockNumber:     uint64(tc.ExpectedResult.BlockNumber),
 					Timestamp:       time.Unix(int64(tc.ExpectedResult.Timestamp), 0),
@@ -2183,7 +2137,6 @@ func TestGetLatestGlobalExitRoot(t *testing.T) {
 			ExpectedResult: nil,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "couldn't load the last global exit root"),
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLatestBatchGlobalExitRoot", context.Background(), nil).
 					Return(nil, fmt.Errorf("failed to load GER from state")).
@@ -2195,7 +2148,6 @@ func TestGetLatestGlobalExitRoot(t *testing.T) {
 			ExpectedResult: state.Ptr(common.HexToHash("0x1")),
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc *testCase) {
-
 				m.State.
 					On("GetLatestBatchGlobalExitRoot", context.Background(), nil).
 					Return(common.HexToHash("0x1"), nil).

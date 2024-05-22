@@ -2221,7 +2221,6 @@ func TestGetTransactionByHash(t *testing.T) {
 			ExpectedResult:  nil,
 			ExpectedError:   types.NewRPCError(types.DefaultErrorCode, "failed to load transaction by hash from state"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetTransactionByHash", context.Background(), tc.Hash, nil).
 					Return(nil, errors.New("failed to load transaction by hash from state")).
@@ -2344,7 +2343,6 @@ func TestGetBlockTransactionCountByHash(t *testing.T) {
 			ExpectedResult: 0,
 			ExpectedError:  types.NewRPCError(types.DefaultErrorCode, "failed to count transactions"),
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.State.
 					On("GetL2BlockTransactionCountByHash", context.Background(), tc.BlockHash, nil).
 					Return(uint64(0), errors.New("failed to count txs")).
@@ -2412,7 +2410,6 @@ func TestGetBlockTransactionCountByNumber(t *testing.T) {
 			ExpectedResult: uint(10),
 			ExpectedError:  nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-
 				m.Pool.
 					On("CountPendingTransactions", context.Background()).
 					Return(uint64(10), nil).

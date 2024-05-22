@@ -118,7 +118,6 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 	}
 
 	return types.ArgBytesPtr(result.ReturnValue), nil
-
 }
 
 // ChainId returns the chain id of the client
