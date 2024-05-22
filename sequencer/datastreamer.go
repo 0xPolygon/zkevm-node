@@ -22,7 +22,7 @@ func (f *finalizer) DSSendL2Block(ctx context.Context, batchNumber uint64, block
 			L1InfoTreeIndex: l1InfoTreeIndex,
 			L1BlockHash:     blockResponse.BlockHashL1,
 			GlobalExitRoot:  blockResponse.GlobalExitRoot,
-			Coinbase:        f.sequencerAddress,
+			Coinbase:        f.l2Coinbase,
 			ForkID:          forkID,
 			BlockHash:       blockHash,
 			StateRoot:       blockResponse.BlockHash, //From etrog, the blockhash is the block root

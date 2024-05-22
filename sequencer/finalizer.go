@@ -35,7 +35,7 @@ var (
 type finalizer struct {
 	cfg              FinalizerCfg
 	isSynced         func(ctx context.Context) bool
-	sequencerAddress common.Address
+	l2Coinbase       common.Address
 	workerIntf       workerInterface
 	poolIntf         txPool
 	stateIntf        stateInterface
@@ -95,7 +95,7 @@ func newFinalizer(
 	poolIntf txPool,
 	stateIntf stateInterface,
 	etherman ethermanInterface,
-	sequencerAddr common.Address,
+	l2Coinbase common.Address,
 	isSynced func(ctx context.Context) bool,
 	batchConstraints state.BatchConstraintsCfg,
 	eventLog *event.EventLog,
@@ -106,7 +106,7 @@ func newFinalizer(
 	f := finalizer{
 		cfg:              cfg,
 		isSynced:         isSynced,
-		sequencerAddress: sequencerAddr,
+		l2Coinbase:       l2Coinbase,
 		workerIntf:       workerIntf,
 		poolIntf:         poolIntf,
 		stateIntf:        stateIntf,

@@ -12,7 +12,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
-	"github.com/ethereum/go-ethereum/common"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -38,18 +37,11 @@ type Sequencer struct {
 	streamServer *datastreamer.StreamServer
 	dataToStream chan interface{}
 
-	address common.Address
-
 	numberOfStateInconsistencies uint64
 }
 
 // New init sequencer
 func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman ethermanInterface, eventLog *event.EventLog) (*Sequencer, error) {
-	addr, err := etherman.TrustedSequencer()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
-	}
-
 	sequencer := &Sequencer{
 		cfg:       cfg,
 		batchCfg:  batchCfg,
@@ -57,7 +49,6 @@ func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txP
 		pool:      txPool,
 		stateIntf: stateIntf,
 		etherman:  etherman,
-		address:   addr,
 		eventLog:  eventLog,
 	}
 
@@ -101,7 +92,7 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
 	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints, s.workerReadyTxsCond)
-	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
+	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.cfg.L2Coinbase, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
 	go s.finalizer.Start(ctx)
 
 	go s.loadFromPool(ctx)
