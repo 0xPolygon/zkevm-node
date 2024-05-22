@@ -774,7 +774,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 }
 
 func (s *ClientSynchronizer) syncTrustedState(latestSyncedBatch uint64) error {
-	if s.syncTrustedStateExecutor == nil || s.isTrustedSequencer {
+	if s.syncTrustedStateExecutor == nil {
 		return nil
 	}
 
