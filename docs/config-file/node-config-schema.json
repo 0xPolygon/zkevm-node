@@ -862,6 +862,16 @@
 								"300ms"
 							]
 						},
+						"FlushIdCheckInterval": {
+							"type": "string",
+							"title": "Duration",
+							"description": "FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb",
+							"default": "50ms",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
 						"HaltOnBatchNumber": {
 							"type": "integer",
 							"description": "HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.\nThe Sequencer will halt after it closes the batch equal to this number",

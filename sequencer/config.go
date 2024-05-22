@@ -83,6 +83,9 @@ type FinalizerCfg struct {
 	// the stateroot used in the tx-by-tx execution
 	StateRootSyncInterval types.Duration `mapstructure:"StateRootSyncInterval"`
 
+	// FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb
+	FlushIdCheckInterval types.Duration `mapstructure:"FlushIdCheckInterval"`
+
 	// HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.
 	// The Sequencer will halt after it closes the batch equal to this number
 	HaltOnBatchNumber uint64 `mapstructure:"HaltOnBatchNumber"`
