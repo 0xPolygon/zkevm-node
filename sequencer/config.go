@@ -3,6 +3,7 @@ package sequencer
 import (
 	"github.com/0xPolygonHermez/zkevm-data-streamer/log"
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // Config represents the configuration of a sequencer
@@ -24,6 +25,9 @@ type Config struct {
 
 	// StateConsistencyCheckInterval is the time the sequencer waits to check if a state inconsistency has happened
 	StateConsistencyCheckInterval types.Duration `mapstructure:"StateConsistencyCheckInterval"`
+
+	// L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase
+	L2Coinbase common.Address `mapstructure:"L2Coinbase"`
 
 	// Finalizer's specific config properties
 	Finalizer FinalizerCfg `mapstructure:"Finalizer"`

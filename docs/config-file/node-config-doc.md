@@ -1958,16 +1958,17 @@ CheckLastL2BlockHashOnCloseBatch=true
 **Type:** : `object`
 **Description:** Configuration of the sequencer service
 
-| Property                                                                             | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                |
-| ------------------------------------------------------------------------------------ | ------- | ------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------ |
-| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool |
-| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string  | No         | -          | Duration                                                                                         |
-| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string  | No         | -          | Duration                                                                                         |
-| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string  | No         | -          | Duration                                                                                         |
-| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string  | No         | -          | Duration                                                                                         |
-| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string  | No         | -          | Duration                                                                                         |
-| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object  | No         | -          | Finalizer's specific config properties                                                           |
-| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object  | No         | -          | StreamServerCfg is the config for the stream server                                              |
+| Property                                                                             | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                      |
+| ------------------------------------------------------------------------------------ | ------- | ---------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer          | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool                       |
+| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string           | No         | -          | Duration                                                                                                               |
+| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [L2Coinbase](#Sequencer_L2Coinbase )                                               | No      | array of integer | No         | -          | L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase |
+| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object           | No         | -          | Finalizer's specific config properties                                                                                 |
+| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object           | No         | -          | StreamServerCfg is the config for the stream server                                                                    |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -2113,7 +2114,12 @@ LoadPoolTxsCheckInterval="500ms"
 StateConsistencyCheckInterval="5s"
 ```
 
-### <a name="Sequencer_Finalizer"></a>10.7. `[Sequencer.Finalizer]`
+### <a name="Sequencer_L2Coinbase"></a>10.7. `Sequencer.L2Coinbase`
+
+**Type:** : `array of integer`
+**Description:** L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase
+
+### <a name="Sequencer_Finalizer"></a>10.8. `[Sequencer.Finalizer]`
 
 **Type:** : `object`
 **Description:** Finalizer's specific config properties
@@ -2135,7 +2141,7 @@ StateConsistencyCheckInterval="5s"
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
 | - [Metrics](#Sequencer_Finalizer_Metrics )                                                     | No      | object  | No         | -          | Metrics is the config for the sequencer metrics                                                                                                                                                               |
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.7.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
+#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.8.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
 
 **Title:** Duration
 
@@ -2161,7 +2167,7 @@ StateConsistencyCheckInterval="5s"
 ForcedBatchesTimeout="1m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.7.2. `Sequencer.Finalizer.NewTxsWaitInterval`
+#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.8.2. `Sequencer.Finalizer.NewTxsWaitInterval`
 
 **Title:** Duration
 
@@ -2187,7 +2193,7 @@ ForcedBatchesTimeout="1m0s"
 NewTxsWaitInterval="100ms"
 ```
 
-#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.7.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
+#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.8.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
 
 **Type:** : `integer`
 
@@ -2201,7 +2207,7 @@ NewTxsWaitInterval="100ms"
 ResourceExhaustedMarginPct=10
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.7.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.8.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -2215,7 +2221,7 @@ ResourceExhaustedMarginPct=10
 ForcedBatchesL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.7.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.8.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -2229,7 +2235,7 @@ ForcedBatchesL1BlockConfirmations=64
 L1InfoTreeL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.7.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
+#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.8.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
 
 **Title:** Duration
 
@@ -2255,7 +2261,7 @@ L1InfoTreeL1BlockConfirmations=64
 ForcedBatchesCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.7.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
+#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.8.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
 
 **Title:** Duration
 
@@ -2281,7 +2287,7 @@ ForcedBatchesCheckInterval="10s"
 L1InfoTreeCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.7.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.8.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
 
 **Title:** Duration
 
@@ -2307,7 +2313,7 @@ L1InfoTreeCheckInterval="10s"
 BatchMaxDeltaTimestamp="30m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.7.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.8.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
 
 **Title:** Duration
 
@@ -2333,7 +2339,7 @@ BatchMaxDeltaTimestamp="30m0s"
 L2BlockMaxDeltaTimestamp="3s"
 ```
 
-#### <a name="Sequencer_Finalizer_StateRootSyncInterval"></a>10.7.10. `Sequencer.Finalizer.StateRootSyncInterval`
+#### <a name="Sequencer_Finalizer_StateRootSyncInterval"></a>10.8.10. `Sequencer.Finalizer.StateRootSyncInterval`
 
 **Title:** Duration
 
@@ -2360,7 +2366,7 @@ the stateroot used in the tx-by-tx execution
 StateRootSyncInterval="1h0m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.7.11. `Sequencer.Finalizer.HaltOnBatchNumber`
+#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.8.11. `Sequencer.Finalizer.HaltOnBatchNumber`
 
 **Type:** : `integer`
 
@@ -2375,7 +2381,7 @@ The Sequencer will halt after it closes the batch equal to this number
 HaltOnBatchNumber=0
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.7.12. `Sequencer.Finalizer.SequentialBatchSanityCheck`
+#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.8.12. `Sequencer.Finalizer.SequentialBatchSanityCheck`
 
 **Type:** : `boolean`
 
@@ -2390,7 +2396,7 @@ sequential way (instead than in parallel)
 SequentialBatchSanityCheck=false
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.7.13. `Sequencer.Finalizer.SequentialProcessL2Block`
+#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.8.13. `Sequencer.Finalizer.SequentialProcessL2Block`
 
 **Type:** : `boolean`
 
@@ -2405,7 +2411,7 @@ in the processPendingL2Blocks go func
 SequentialProcessL2Block=false
 ```
 
-#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.14. `[Sequencer.Finalizer.Metrics]`
+#### <a name="Sequencer_Finalizer_Metrics"></a>10.8.14. `[Sequencer.Finalizer.Metrics]`
 
 **Type:** : `object`
 **Description:** Metrics is the config for the sequencer metrics
@@ -2415,7 +2421,7 @@ SequentialProcessL2Block=false
 | - [Interval](#Sequencer_Finalizer_Metrics_Interval )   | No      | string  | No         | -          | Duration                                           |
 | - [EnableLog](#Sequencer_Finalizer_Metrics_EnableLog ) | No      | boolean | No         | -          | EnableLog is a flag to enable/disable metrics logs |
 
-##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.14.1. `Sequencer.Finalizer.Metrics.Interval`
+##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.8.14.1. `Sequencer.Finalizer.Metrics.Interval`
 
 **Title:** Duration
 
@@ -2441,7 +2447,7 @@ SequentialProcessL2Block=false
 Interval="1h0m0s"
 ```
 
-##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.14.2. `Sequencer.Finalizer.Metrics.EnableLog`
+##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.8.14.2. `Sequencer.Finalizer.Metrics.EnableLog`
 
 **Type:** : `boolean`
 
@@ -2455,7 +2461,7 @@ Interval="1h0m0s"
 EnableLog=true
 ```
 
-### <a name="Sequencer_StreamServer"></a>10.8. `[Sequencer.StreamServer]`
+### <a name="Sequencer_StreamServer"></a>10.9. `[Sequencer.StreamServer]`
 
 **Type:** : `object`
 **Description:** StreamServerCfg is the config for the stream server
@@ -2470,7 +2476,7 @@ EnableLog=true
 | - [Log](#Sequencer_StreamServer_Log )                                         | No      | object  | No         | -          | Log is the log configuration                                     |
 | - [UpgradeEtrogBatchNumber](#Sequencer_StreamServer_UpgradeEtrogBatchNumber ) | No      | integer | No         | -          | UpgradeEtrogBatchNumber is the batch number of the upgrade etrog |
 
-#### <a name="Sequencer_StreamServer_Port"></a>10.8.1. `Sequencer.StreamServer.Port`
+#### <a name="Sequencer_StreamServer_Port"></a>10.9.1. `Sequencer.StreamServer.Port`
 
 **Type:** : `integer`
 
@@ -2484,7 +2490,7 @@ EnableLog=true
 Port=0
 ```
 
-#### <a name="Sequencer_StreamServer_Filename"></a>10.8.2. `Sequencer.StreamServer.Filename`
+#### <a name="Sequencer_StreamServer_Filename"></a>10.9.2. `Sequencer.StreamServer.Filename`
 
 **Type:** : `string`
 
@@ -2498,7 +2504,7 @@ Port=0
 Filename=""
 ```
 
-#### <a name="Sequencer_StreamServer_Version"></a>10.8.3. `Sequencer.StreamServer.Version`
+#### <a name="Sequencer_StreamServer_Version"></a>10.9.3. `Sequencer.StreamServer.Version`
 
 **Type:** : `integer`
 
@@ -2512,7 +2518,7 @@ Filename=""
 Version=0
 ```
 
-#### <a name="Sequencer_StreamServer_ChainID"></a>10.8.4. `Sequencer.StreamServer.ChainID`
+#### <a name="Sequencer_StreamServer_ChainID"></a>10.9.4. `Sequencer.StreamServer.ChainID`
 
 **Type:** : `integer`
 
@@ -2526,7 +2532,7 @@ Version=0
 ChainID=0
 ```
 
-#### <a name="Sequencer_StreamServer_Enabled"></a>10.8.5. `Sequencer.StreamServer.Enabled`
+#### <a name="Sequencer_StreamServer_Enabled"></a>10.9.5. `Sequencer.StreamServer.Enabled`
 
 **Type:** : `boolean`
 
@@ -2540,7 +2546,7 @@ ChainID=0
 Enabled=false
 ```
 
-#### <a name="Sequencer_StreamServer_Log"></a>10.8.6. `[Sequencer.StreamServer.Log]`
+#### <a name="Sequencer_StreamServer_Log"></a>10.9.6. `[Sequencer.StreamServer.Log]`
 
 **Type:** : `object`
 **Description:** Log is the log configuration
@@ -2551,7 +2557,7 @@ Enabled=false
 | - [Level](#Sequencer_StreamServer_Log_Level )             | No      | enum (of string) | No         | -          | -                 |
 | - [Outputs](#Sequencer_StreamServer_Log_Outputs )         | No      | array of string  | No         | -          | -                 |
 
-##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.8.6.1. `Sequencer.StreamServer.Log.Environment`
+##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.9.6.1. `Sequencer.StreamServer.Log.Environment`
 
 **Type:** : `enum (of string)`
 
@@ -2567,7 +2573,7 @@ Must be one of:
 * "production"
 * "development"
 
-##### <a name="Sequencer_StreamServer_Log_Level"></a>10.8.6.2. `Sequencer.StreamServer.Log.Level`
+##### <a name="Sequencer_StreamServer_Log_Level"></a>10.9.6.2. `Sequencer.StreamServer.Log.Level`
 
 **Type:** : `enum (of string)`
 
@@ -2588,11 +2594,11 @@ Must be one of:
 * "panic"
 * "fatal"
 
-##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.8.6.3. `Sequencer.StreamServer.Log.Outputs`
+##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.9.6.3. `Sequencer.StreamServer.Log.Outputs`
 
 **Type:** : `array of string`
 
-#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.8.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
+#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.9.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
 
 **Type:** : `integer`
 
