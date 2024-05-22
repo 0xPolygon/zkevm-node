@@ -780,6 +780,15 @@
 						"300ms"
 					]
 				},
+				"L2Coinbase": {
+					"items": {
+						"type": "integer"
+					},
+					"type": "array",
+					"maxItems": 20,
+					"minItems": 20,
+					"description": "L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase"
+				},
 				"Finalizer": {
 					"properties": {
 						"ForcedBatchesTimeout": {
