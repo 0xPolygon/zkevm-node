@@ -128,7 +128,7 @@ func NewSynchronizer(
 		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
 	}
 	if cfg.L1BlockCheck.Enable {
-		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
+		log.Infof("L1BlockChecker enabled: %s ", cfg.L1BlockCheck.String())
 		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(ethMan, res.state,
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
