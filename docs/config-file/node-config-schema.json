@@ -698,6 +698,11 @@
 				},
 				"L2Synchronization": {
 					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"description": "Enable if is true then the L2 sync process is permitted (only for permissionless)",
+							"default": true
+						},
 						"AcceptEmptyClosedBatches": {
 							"type": "boolean",
 							"description": "AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.\nif true, the synchronizer will accept empty batches and process them.",

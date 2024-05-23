@@ -2,6 +2,8 @@ package l2_sync
 
 // Config configuration of L2 sync process
 type Config struct {
+	// Enable if is true then the L2 sync process is permitted (only for permissionless)
+	Enable bool `mapstructure:"Enable"`
 	// AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.
 	// if true, the synchronizer will accept empty batches and process them.
 	AcceptEmptyClosedBatches bool `mapstructure:"AcceptEmptyClosedBatches"`

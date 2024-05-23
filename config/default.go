@@ -128,6 +128,7 @@ L1SyncCheckL2BlockNumberModulus = 600
 			AceptableInacctivityTime = "5s"
 			ApplyAfterNumRollupReceived = 10
 	[Synchronizer.L2Synchronization]
+		Enable = true
 		AcceptEmptyClosedBatches = false
 		ReprocessFullBatchOnClose = true
 		CheckLastL2BlockHashOnCloseBatch = true

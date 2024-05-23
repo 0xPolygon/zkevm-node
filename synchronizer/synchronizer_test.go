@@ -16,6 +16,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/executor"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	mock_syncinterfaces "github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces/mocks"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync"
 	syncMocks "github.com/0xPolygonHermez/zkevm-node/synchronizer/mocks"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -132,6 +133,9 @@ func TestForcedBatchEtrog(t *testing.T) {
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
+		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
 		},
 	}
 
@@ -677,6 +681,9 @@ func setupGenericTest(t *testing.T) (*state.Genesis, *Config, *mocks) {
 			RollupInfoRetriesSpacing:               cfgTypes.Duration{Duration: 1 * time.Second},
 			FallbackToSequentialModeOnSynchronized: false,
 		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
+		},
 	}
 
 	m := mocks{
@@ -934,6 +941,9 @@ func TestReorg(t *testing.T) {
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
+		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
 		},
 	}
 
@@ -1255,6 +1265,9 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
+		},
 	}
 
 	m := mocks{
@@ -1468,6 +1481,9 @@ func TestRegularReorg(t *testing.T) {
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
+		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
 		},
 	}
 
@@ -1751,6 +1767,9 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 		L1BlockCheck: L1BlockCheckConfig{
 			Enable: false,
 		},
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
+		},
 	}
 
 	m := mocks{
@@ -2024,6 +2043,9 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L2Synchronization: l2_sync.Config{
+			Enable: true,
+		},
 	}
 
 	m := mocks{
