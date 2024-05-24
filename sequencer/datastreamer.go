@@ -1,11 +1,13 @@
 package sequencer
 
 import (
-	"github.com/0xPolygonHermez/zkevm-node/log"
+	"context"
+	"fmt"
+
 	"github.com/0xPolygonHermez/zkevm-node/state"
 )
 
-func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32) error {
+func (f *finalizer) DSSendL2Block(ctx context.Context, batchNumber uint64, blockResponse *state.ProcessBlockResponse, l1InfoTreeIndex uint32) error {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
 
 	// Send data to streamer
@@ -43,23 +45,36 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 			l2Transactions = append(l2Transactions, l2Transaction)
 		}
 
-		log.Infof("[ds-debug] sending l2block %d to datastream channel", blockResponse.BlockNumber)
+		f.checkDSBufferIsFull(ctx)
+
 		f.dataToStream <- state.DSL2FullBlock{
 			DSL2Block: l2Block,
 			Txs:       l2Transactions,
 		}
+
+		f.dataToStreamCount.Add(1)
 	}
 
 	return nil
 }
 
-func (f *finalizer) DSSendBatchBookmark(batchNumber uint64) {
+func (f *finalizer) DSSendBatchBookmark(ctx context.Context, batchNumber uint64) {
 	// Check if stream server enabled
 	if f.streamServer != nil {
+		f.checkDSBufferIsFull(ctx)
+
 		// Send batch bookmark to the streamer
 		f.dataToStream <- state.DSBookMark{
 			Type:  state.BookMarkTypeBatch,
 			Value: batchNumber,
 		}
+
+		f.dataToStreamCount.Add(1)
+	}
+}
+
+func (f *finalizer) checkDSBufferIsFull(ctx context.Context) {
+	if f.dataToStreamCount.Load() == datastreamChannelBufferSize {
+		f.Halt(ctx, fmt.Errorf("datastream channel buffer full"), true)
 	}
 }
