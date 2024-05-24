@@ -64,6 +64,10 @@ func Test_Defaults(t *testing.T) {
 			path:          "Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch",
 			expectedValue: true,
 		},
+		{
+			path:          "Synchronizer.L2Synchronization.Enable",
+			expectedValue: true,
+		},
 
 		{
 			path:          "Sequencer.DeletePoolTxsL1BlockConfirmations",
@@ -132,6 +136,10 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "Sequencer.Finalizer.BatchMaxDeltaTimestamp",
 			expectedValue: types.NewDuration(1800 * time.Second),
+		},
+		{
+			path:          "Sequencer.Finalizer.FlushIdCheckInterval",
+			expectedValue: types.NewDuration(50 * time.Millisecond),
 		},
 		{
 			path:          "Sequencer.Finalizer.Metrics.Interval",
@@ -297,6 +305,10 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "Pool.GlobalQueue",
 			expectedValue: uint64(1024),
+		},
+		{
+			path:          "Pool.TxFeeCap",
+			expectedValue: float64(1),
 		},
 		{
 			path:          "Pool.EffectiveGasPrice.Enabled",

@@ -116,6 +116,7 @@ StateConsistencyCheckInterval = "5s"
 		L2BlockMaxDeltaTimestamp = "4s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "60s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = false
