@@ -541,7 +541,7 @@
 					"properties": {
 						"Enabled": {
 							"type": "boolean",
-							"description": "Enabled if is true then the check l1 Block Hash is active",
+							"description": "If enabled then the check l1 Block Hash is active",
 							"default": true
 						},
 						"L1SafeBlockPoint": {
@@ -566,7 +566,7 @@
 						},
 						"PreCheckEnabled": {
 							"type": "boolean",
-							"description": "PreCheckEnabled if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock",
+							"description": "If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock",
 							"default": true
 						},
 						"L1PreSafeBlockPoint": {
@@ -700,7 +700,7 @@
 					"properties": {
 						"Enabled": {
 							"type": "boolean",
-							"description": "Enabled if enabled then the L2 sync process is permitted (only for permissionless)",
+							"description": "If enabled then the L2 sync process is permitted (only for permissionless)",
 							"default": true
 						},
 						"AcceptEmptyClosedBatches": {

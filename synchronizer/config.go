@@ -37,7 +37,7 @@ type Config struct {
 
 // L1BlockCheckConfig Configuration for L1 Block Checker
 type L1BlockCheckConfig struct {
-	// Enabled if is true then the check l1 Block Hash is active
+	// If enabled then the check l1 Block Hash is active
 	Enabled bool `mapstructure:"Enabled"`
 	// L1SafeBlockPoint is the point that a block is considered safe enough to be checked
 	// it can be: finalized, safe,pending or latest
@@ -49,7 +49,7 @@ type L1BlockCheckConfig struct {
 	// ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks
 	ForceCheckBeforeStart bool `mapstructure:"ForceCheckBeforeStart"`
 
-	// PreCheckEnabled if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+	// If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
 	PreCheckEnabled bool `mapstructure:"PreCheckEnabled"`
 	// L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
 	// it can be: finalized, safe,pending or latest

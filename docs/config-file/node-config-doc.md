@@ -1466,11 +1466,11 @@ L1SyncCheckL2BlockNumberhModulus=600
 
 | Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
 | ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [Enabled](#Synchronizer_L1BlockCheck_Enabled )                             | No      | boolean          | No         | -          | Enabled if is true then the check l1 Block Hash is active                                                                                                                                                                                               |
+| - [Enabled](#Synchronizer_L1BlockCheck_Enabled )                             | No      | boolean          | No         | -          | If enabled then the check l1 Block Hash is active                                                                                                                                                                                                       |
 | - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                    |
 | - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block             |
 | - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                                    |
-| - [PreCheckEnabled](#Synchronizer_L1BlockCheck_PreCheckEnabled )             | No      | boolean          | No         | -          | PreCheckEnabled if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                       |
+| - [PreCheckEnabled](#Synchronizer_L1BlockCheck_PreCheckEnabled )             | No      | boolean          | No         | -          | If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                                       |
 | - [L1PreSafeBlockPoint](#Synchronizer_L1BlockCheck_L1PreSafeBlockPoint )     | No      | enum (of string) | No         | -          | L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                 |
 | - [L1PreSafeBlockOffset](#Synchronizer_L1BlockCheck_L1PreSafeBlockOffset )   | No      | integer          | No         | -          | L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
 
@@ -1480,7 +1480,7 @@ L1SyncCheckL2BlockNumberhModulus=600
 
 **Default:** `true`
 
-**Description:** Enabled if is true then the check l1 Block Hash is active
+**Description:** If enabled then the check l1 Block Hash is active
 
 **Example setting the default value** (true):
 ```
@@ -1544,7 +1544,7 @@ ForceCheckBeforeStart=true
 
 **Default:** `true`
 
-**Description:** PreCheckEnabled if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+**Description:** If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
 
 **Example setting the default value** (true):
 ```
@@ -1876,7 +1876,7 @@ FallbackToSequentialModeOnSynchronized=false
 
 | Property                                                                                                | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [Enabled](#Synchronizer_L2Synchronization_Enabled )                                                   | No      | boolean | No         | -          | Enabled if enabled then the L2 sync process is permitted (only for permissionless)                                                                                  |
+| - [Enabled](#Synchronizer_L2Synchronization_Enabled )                                                   | No      | boolean | No         | -          | If enabled then the L2 sync process is permitted (only for permissionless)                                                                                          |
 | - [AcceptEmptyClosedBatches](#Synchronizer_L2Synchronization_AcceptEmptyClosedBatches )                 | No      | boolean | No         | -          | AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.<br />if true, the synchronizer will accept empty batches and process them. |
 | - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
 | - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
@@ -1887,7 +1887,7 @@ FallbackToSequentialModeOnSynchronized=false
 
 **Default:** `true`
 
-**Description:** Enabled if enabled then the L2 sync process is permitted (only for permissionless)
+**Description:** If enabled then the L2 sync process is permitted (only for permissionless)
 
 **Example setting the default value** (true):
 ```
