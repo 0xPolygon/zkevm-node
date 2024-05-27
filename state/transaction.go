@@ -288,8 +288,8 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 }
 
 // PreProcessUnsignedTransaction processes the unsigned transaction in order to calculate its zkCounters
-func (s *State) PreProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, sender common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
-	response, err := s.internalProcessUnsignedTransaction(ctx, tx, sender, l2BlockNumber, false, dbTx)
+func (s *State) PreProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, sender common.Address, l2BlockNumber *uint64, overrides StateOverride, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
+	response, err := s.internalProcessUnsignedTransaction(ctx, tx, sender, l2BlockNumber, overrides, false, dbTx)
 	if err != nil {
 		return response, err
 	}
@@ -304,7 +304,7 @@ func (s *State) PreProcessTransaction(ctx context.Context, tx *types.Transaction
 		return nil, err
 	}
 
-	response, err := s.internalProcessUnsignedTransaction(ctx, tx, sender, nil, false, dbTx)
+	response, err := s.internalProcessUnsignedTransaction(ctx, tx, sender, nil, nil, false, dbTx)
 	if err != nil {
 		return response, err
 	}
@@ -313,9 +313,9 @@ func (s *State) PreProcessTransaction(ctx context.Context, tx *types.Transaction
 }
 
 // ProcessUnsignedTransaction processes the given unsigned transaction.
-func (s *State) ProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, noZKEVMCounters bool, dbTx pgx.Tx) (*runtime.ExecutionResult, error) {
+func (s *State) ProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, overrides StateOverride, noZKEVMCounters bool, dbTx pgx.Tx) (*runtime.ExecutionResult, error) {
 	result := new(runtime.ExecutionResult)
-	response, err := s.internalProcessUnsignedTransaction(ctx, tx, senderAddress, l2BlockNumber, noZKEVMCounters, dbTx)
+	response, err := s.internalProcessUnsignedTransaction(ctx, tx, senderAddress, l2BlockNumber, overrides, noZKEVMCounters, dbTx)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +337,7 @@ func (s *State) ProcessUnsignedTransaction(ctx context.Context, tx *types.Transa
 }
 
 // internalProcessUnsignedTransaction processes the given unsigned transaction.
-func (s *State) internalProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
+func (s *State) internalProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, overrides StateOverride, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
 	var l2Block *L2Block
 	var err error
 	if l2BlockNumber == nil {
@@ -356,15 +356,15 @@ func (s *State) internalProcessUnsignedTransaction(ctx context.Context, tx *type
 
 	forkID := s.GetForkIDByBatchNumber(batch.BatchNumber)
 	if forkID < FORKID_ETROG {
-		return s.internalProcessUnsignedTransactionV1(ctx, tx, senderAddress, *batch, *l2Block, forkID, noZKEVMCounters, dbTx)
+		return s.internalProcessUnsignedTransactionV1(ctx, tx, senderAddress, *batch, *l2Block, forkID, overrides, noZKEVMCounters, dbTx)
 	} else {
-		return s.internalProcessUnsignedTransactionV2(ctx, tx, senderAddress, *batch, *l2Block, forkID, noZKEVMCounters, dbTx)
+		return s.internalProcessUnsignedTransactionV2(ctx, tx, senderAddress, *batch, *l2Block, forkID, overrides, noZKEVMCounters, dbTx)
 	}
 }
 
 // internalProcessUnsignedTransactionV1 processes the given unsigned transaction.
 // pre ETROG
-func (s *State) internalProcessUnsignedTransactionV1(ctx context.Context, tx *types.Transaction, senderAddress common.Address, batch Batch, l2Block L2Block, forkID uint64, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
+func (s *State) internalProcessUnsignedTransactionV1(ctx context.Context, tx *types.Transaction, senderAddress common.Address, batch Batch, l2Block L2Block, forkID uint64, overrides StateOverride, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
 	var attempts = 1
 
 	if s.executorClient == nil {
@@ -397,6 +397,7 @@ func (s *State) internalProcessUnsignedTransactionV1(ctx context.Context, tx *ty
 	}
 
 	// Create Batch V1
+	processBatchStateOverride := overrides.toExecutorStateOverride()
 	processBatchRequestV1 := &executor.ProcessBatchRequest{
 		From:             senderAddress.String(),
 		OldBatchNum:      batch.BatchNumber,
@@ -408,6 +409,7 @@ func (s *State) internalProcessUnsignedTransactionV1(ctx context.Context, tx *ty
 		ChainId:          s.cfg.ChainID,
 		UpdateMerkleTree: cFalse,
 		ContextId:        uuid.NewString(),
+		StateOverride:    processBatchStateOverride,
 
 		// v1 fields
 		GlobalExitRoot: l2Block.GlobalExitRoot().Bytes(),
@@ -492,7 +494,7 @@ func (s *State) internalProcessUnsignedTransactionV1(ctx context.Context, tx *ty
 
 // internalProcessUnsignedTransactionV2 processes the given unsigned transaction.
 // post ETROG
-func (s *State) internalProcessUnsignedTransactionV2(ctx context.Context, tx *types.Transaction, senderAddress common.Address, batch Batch, l2Block L2Block, forkID uint64, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
+func (s *State) internalProcessUnsignedTransactionV2(ctx context.Context, tx *types.Transaction, senderAddress common.Address, batch Batch, l2Block L2Block, forkID uint64, overrides StateOverride, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
 	var attempts = 1
 
 	if s.executorClient == nil {
@@ -518,6 +520,8 @@ func (s *State) internalProcessUnsignedTransactionV2(ctx context.Context, tx *ty
 
 	transactions = append(transactions, batchL2Data...)
 
+	processBatchStateOverride := overrides.toExecutorStateOverrideV2()
+
 	// Create a batch to be sent to the executor
 	processBatchRequestV2 := &executor.ProcessBatchRequestV2{
 		From:             senderAddress.String(),
@@ -530,6 +534,7 @@ func (s *State) internalProcessUnsignedTransactionV2(ctx context.Context, tx *ty
 		ChainId:          s.cfg.ChainID,
 		UpdateMerkleTree: cFalse,
 		ContextId:        uuid.NewString(),
+		StateOverride:    processBatchStateOverride,
 
 		// v2 fields
 		L1InfoRoot:             l2Block.BlockInfoRoot().Bytes(),
@@ -703,7 +708,7 @@ func CheckSupersetBatchTransactions(existingTxHashes []common.Hash, processedTxs
 }
 
 // EstimateGas for a transaction
-func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, overrides StateOverride, dbTx pgx.Tx) (uint64, []byte, error) {
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
@@ -808,9 +813,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	var gasUsed uint64
 	var returnValue []byte
 	if forkID < FORKID_ETROG {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, overrides, highEnd, nonce, false)
 	} else {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, overrides, highEnd, nonce, false)
 	}
 
 	if failed {
@@ -843,9 +848,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 		log.Debugf("Estimate gas. Trying to execute TX with %v gas", mid)
 		if forkID < FORKID_ETROG {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, overrides, mid, nonce, true)
 		} else {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, overrides, mid, nonce, true)
 		}
 		executionTime := time.Since(txExecutionStart)
 		totalExecutionTime += executionTime
@@ -878,7 +883,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 // during the binary search process to define the gas estimation of a given tx for l2 blocks
 // before ETROG
 func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
-	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
+	transaction *types.Transaction, forkID uint64, senderAddress common.Address, overrides StateOverride,
 	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
 	timestamp := l2Block.Time()
 	if l2Block.NumberU64() == latestL2BlockNumber {
@@ -900,6 +905,8 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 		return false, false, gasUsed, nil, err
 	}
 
+	processBatchStateOverride := overrides.toExecutorStateOverride()
+
 	// Create a batch to be sent to the executor
 	processBatchRequestV1 := &executor.ProcessBatchRequest{
 		From:             senderAddress.String(),
@@ -912,6 +919,7 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 		ChainId:          s.cfg.ChainID,
 		UpdateMerkleTree: cFalse,
 		ContextId:        uuid.NewString(),
+		StateOverride:    processBatchStateOverride,
 
 		// v1 fields
 		GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
@@ -928,6 +936,8 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 	log.Debugf("EstimateGas[processBatchRequestV1.ChainId]: %v", processBatchRequestV1.ChainId)
 	log.Debugf("EstimateGas[processBatchRequestV1.UpdateMerkleTree]: %v", processBatchRequestV1.UpdateMerkleTree)
 	log.Debugf("EstimateGas[processBatchRequestV1.ContextId]: %v", processBatchRequestV1.ContextId)
+	log.Debugf("EstimateGas[processBatchRequestV1.StateOverride]: %v", processBatchRequestV1.StateOverride)
+
 	log.Debugf("EstimateGas[processBatchRequestV1.GlobalExitRoot]: %v", hex.EncodeToHex(processBatchRequestV1.GlobalExitRoot))
 	log.Debugf("EstimateGas[processBatchRequestV1.EthTimestamp]: %v", processBatchRequestV1.EthTimestamp)
 
@@ -974,7 +984,7 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 // during the binary search process to define the gas estimation of a given tx for l2 blocks
 // after ETROG
 func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
-	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
+	transaction *types.Transaction, forkID uint64, senderAddress common.Address, overrides StateOverride,
 	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
 	deltaTimestamp := uint32(uint64(time.Now().Unix()) - l2Block.Time())
 	transactions := s.BuildChangeL2Block(deltaTimestamp, uint32(0))
@@ -996,6 +1006,8 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 
 	transactions = append(transactions, batchL2Data...)
 
+	processBatchStateOverride := overrides.toExecutorStateOverrideV2()
+
 	// Create a batch to be sent to the executor
 	processBatchRequestV2 := &executor.ProcessBatchRequestV2{
 		From:             senderAddress.String(),
@@ -1008,6 +1020,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 		ChainId:          s.cfg.ChainID,
 		UpdateMerkleTree: cFalse,
 		ContextId:        uuid.NewString(),
+		StateOverride:    processBatchStateOverride,
 
 		// v2 fields
 		L1InfoRoot:             l2Block.BlockInfoRoot().Bytes(),
@@ -1025,6 +1038,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	log.Debugf("EstimateGas[processBatchRequestV2.ChainId]: %v", processBatchRequestV2.ChainId)
 	log.Debugf("EstimateGas[processBatchRequestV2.UpdateMerkleTree]: %v", processBatchRequestV2.UpdateMerkleTree)
 	log.Debugf("EstimateGas[processBatchRequestV2.ContextId]: %v", processBatchRequestV2.ContextId)
+	log.Debugf("EstimateGas[processBatchRequestV2.StateOverride]: %v", processBatchRequestV2.StateOverride)
 
 	log.Debugf("EstimateGas[processBatchRequestV2.L1InfoRoot]: %v", hex.EncodeToHex(processBatchRequestV2.L1InfoRoot))
 	log.Debugf("EstimateGas[processBatchRequestV2.TimestampLimit]: %v", processBatchRequestV2.TimestampLimit)

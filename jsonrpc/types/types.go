@@ -111,6 +111,12 @@ func (b ArgBig) Hex() string {
 	return string(bb)
 }
 
+// ArgBigPtr helps to marshal big value provided in the RPC requests
+func ArgBigPtr(b big.Int) *ArgBig {
+	bb := ArgBig(b)
+	return &bb
+}
+
 func decodeToHex(b []byte) ([]byte, error) {
 	str := string(b)
 	str = strings.TrimPrefix(str, "0x")
@@ -697,6 +703,78 @@ func NewLog(l types.Log) Log {
 		LogIndex:    ArgUint64(l.Index),
 		Removed:     l.Removed,
 	}
+}
+
+// OverrideAccount indicates the overriding fields of account during the execution
+// of a message call.
+// Note, state and stateDiff can't be specified at the same time. If state is
+// set, message execution will only use the data in the given state. Otherwise
+// if statDiff is set, all diff will be applied first and then execute the call
+// message.
+type OverrideAccount struct {
+	Nonce     *ArgUint64           `json:"nonce"`
+	Code      *ArgBytes            `json:"code"`
+	Balance   *ArgBig              `json:"balance"`
+	State     *map[ArgHash]ArgHash `json:"state"`
+	StateDiff *map[ArgHash]ArgHash `json:"stateDiff"`
+}
+
+// StateOverride is the collection of overridden accounts.
+type StateOverride map[ArgAddress]OverrideAccount
+
+// ToStateOverride converts StateOverride into state.StateOverride
+func (so *StateOverride) ToStateOverride() state.StateOverride {
+	overrides := state.StateOverride{}
+	if so == nil {
+		return overrides
+	}
+
+	for addr, accOverride := range *so {
+		var nonce *uint64
+		if accOverride.Nonce != nil {
+			aux := uint64(*accOverride.Nonce)
+			nonce = &aux
+		}
+
+		var code *[]byte
+		if accOverride.Code != nil {
+			aux := []byte(*accOverride.Code)
+			code = &aux
+		}
+
+		var balance *big.Int
+		if accOverride.Balance != nil {
+			aux := big.Int(*accOverride.Balance)
+			balance = &aux
+		}
+
+		var st *map[common.Hash]common.Hash
+		if accOverride.State != nil {
+			aux := map[common.Hash]common.Hash{}
+			for k, v := range *accOverride.State {
+				aux[k.Hash()] = v.Hash()
+			}
+			st = &aux
+		}
+
+		var stDiff *map[common.Hash]common.Hash
+		if accOverride.StateDiff != nil {
+			aux := map[common.Hash]common.Hash{}
+			for k, v := range *accOverride.StateDiff {
+				aux[k.Hash()] = v.Hash()
+			}
+			stDiff = &aux
+		}
+
+		overrides[addr.Address()] = state.OverrideAccount{
+			Nonce:     nonce,
+			Code:      code,
+			Balance:   balance,
+			State:     st,
+			StateDiff: stDiff,
+		}
+	}
+	return overrides
 }
 
 // ExitRoots structure

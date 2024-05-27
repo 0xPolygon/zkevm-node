@@ -64,7 +64,7 @@ func (e *EthEndpoints) BlockNumber() (interface{}, types.Error) {
 // executed contract and potential error.
 // Note, this function doesn't make any changes in the state/blockchain and is
 // useful to execute view/pure methods and retrieve values.
-func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride) (interface{}, types.Error) {
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
@@ -101,7 +101,7 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
-		result, err := e.state.ProcessUnsignedTransaction(ctx, tx, sender, blockToProcess, true, dbTx)
+		result, err := e.state.ProcessUnsignedTransaction(ctx, tx, sender, blockToProcess, stateOverride.ToStateOverride(), true, dbTx)
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to execute the unsigned transaction: %v", err.Error())
 			logError := !executor.IsROMOutOfCountersError(executor.RomErrorCode(err)) && !errors.Is(err, runtime.ErrOutOfGas)
@@ -160,7 +160,7 @@ func (e *EthEndpoints) getCoinbaseFromSequencerNode() (interface{}, types.Error)
 // Note that the estimate may be significantly more than the amount of gas actually
 // used by the transaction, for a variety of reasons including EVM mechanics and
 // node performance.
-func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride) (interface{}, types.Error) {
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
@@ -188,7 +188,7 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
-		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, blockToProcess, dbTx)
+		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, blockToProcess, stateOverride.ToStateOverride(), dbTx)
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
 			copy(data, returnValue)

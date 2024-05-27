@@ -435,9 +435,9 @@ func (z *ZKEVMEndpoints) GetExitRootsByGER(globalExitRoot common.Hash) (interfac
 }
 
 // EstimateGasPrice returns an estimate gas price for the transaction.
-func (z *ZKEVMEndpoints) EstimateGasPrice(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (z *ZKEVMEndpoints) EstimateGasPrice(arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride) (interface{}, types.Error) {
 	return z.txMan.NewDbTxScope(z.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		gasPrice, _, err := z.internalEstimateGasPriceAndFee(ctx, arg, blockArg, dbTx)
+		gasPrice, _, err := z.internalEstimateGasPriceAndFee(ctx, arg, blockArg, stateOverride, dbTx)
 		if err != nil {
 			return nil, err
 		}
@@ -446,9 +446,9 @@ func (z *ZKEVMEndpoints) EstimateGasPrice(arg *types.TxArgs, blockArg *types.Blo
 }
 
 // EstimateFee returns an estimate fee for the transaction.
-func (z *ZKEVMEndpoints) EstimateFee(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (z *ZKEVMEndpoints) EstimateFee(arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride) (interface{}, types.Error) {
 	return z.txMan.NewDbTxScope(z.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		_, fee, err := z.internalEstimateGasPriceAndFee(ctx, arg, blockArg, dbTx)
+		_, fee, err := z.internalEstimateGasPriceAndFee(ctx, arg, blockArg, stateOverride, dbTx)
 		if err != nil {
 			return nil, err
 		}
@@ -457,7 +457,7 @@ func (z *ZKEVMEndpoints) EstimateFee(arg *types.TxArgs, blockArg *types.BlockNum
 }
 
 // internalEstimateGasPriceAndFee computes the estimated gas price and the estimated fee for the transaction
-func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg *types.TxArgs, blockArg *types.BlockNumberOrHash, dbTx pgx.Tx) (*big.Int, *big.Int, types.Error) {
+func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride, dbTx pgx.Tx) (*big.Int, *big.Int, types.Error) {
 	if arg == nil {
 		return nil, nil, types.NewRPCError(types.InvalidParamsErrorCode, "missing value for required argument 0")
 	}
@@ -484,7 +484,7 @@ func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg
 		return nil, nil, types.NewRPCError(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction")
 	}
 
-	gasEstimation, returnValue, err := z.state.EstimateGas(tx, sender, blockToProcess, dbTx)
+	gasEstimation, returnValue, err := z.state.EstimateGas(tx, sender, blockToProcess, stateOverride.ToStateOverride(), dbTx)
 	if errors.Is(err, runtime.ErrExecutionReverted) {
 		data := make([]byte, len(returnValue))
 		copy(data, returnValue)
@@ -539,7 +539,7 @@ func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg
 
 // EstimateCounters returns an estimation of the counters that are going to be used while executing
 // this transaction.
-func (z *ZKEVMEndpoints) EstimateCounters(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (z *ZKEVMEndpoints) EstimateCounters(arg *types.TxArgs, blockArg *types.BlockNumberOrHash, stateOverride *types.StateOverride) (interface{}, types.Error) {
 	return z.txMan.NewDbTxScope(z.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
@@ -568,7 +568,7 @@ func (z *ZKEVMEndpoints) EstimateCounters(arg *types.TxArgs, blockArg *types.Blo
 		}
 
 		var oocErr error
-		processBatchResponse, err := z.state.PreProcessUnsignedTransaction(ctx, tx, sender, blockToProcess, dbTx)
+		processBatchResponse, err := z.state.PreProcessUnsignedTransaction(ctx, tx, sender, blockToProcess, stateOverride.ToStateOverride(), dbTx)
 		if err != nil {
 			if executor.IsROMOutOfCountersError(executor.RomErrorCode(err)) {
 				oocErr = err
