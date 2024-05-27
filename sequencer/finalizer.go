@@ -83,8 +83,9 @@ type finalizer struct {
 	// interval metrics
 	metrics *intervalMetrics
 	// stream server
-	streamServer *datastreamer.StreamServer
-	dataToStream chan interface{}
+	streamServer      *datastreamer.StreamServer
+	dataToStream      chan interface{}
+	dataToStreamCount atomic.Int32
 }
 
 // newFinalizer returns a new instance of Finalizer.
@@ -883,6 +884,11 @@ func (f *finalizer) logZKCounters(counters state.ZKCounters) string {
 	return fmt.Sprintf("{gasUsed: %d, keccakHashes: %d, poseidonHashes: %d, poseidonPaddings: %d, memAligns: %d, arithmetics: %d, binaries: %d, sha256Hashes: %d, steps: %d}",
 		counters.GasUsed, counters.KeccakHashes, counters.PoseidonHashes, counters.PoseidonPaddings, counters.MemAligns, counters.Arithmetics,
 		counters.Binaries, counters.Sha256Hashes_V2, counters.Steps)
+}
+
+// Decrease datastreamChannelCount variable
+func (f *finalizer) DataToStreamChannelCountAdd(ct int32) {
+	f.dataToStreamCount.Add(ct)
 }
 
 // Halt halts the finalizer

@@ -2,8 +2,8 @@ package sequencer
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
 	"github.com/ethereum/go-ethereum/common"
@@ -58,28 +58,41 @@ func (f *finalizer) DSSendL2Block(ctx context.Context, batchNumber uint64, block
 			l2Transactions = append(l2Transactions, l2Transaction)
 		}
 
-		log.Infof("[ds-debug] sending l2block %d to datastream channel", blockResponse.BlockNumber)
+		f.checkDSBufferIsFull(ctx)
+
 		f.dataToStream <- state.DSL2FullBlock{
 			DSL2Block: l2Block,
 			Txs:       l2Transactions,
 		}
+
+		f.dataToStreamCount.Add(1)
 	}
 
 	return nil
 }
 
-func (f *finalizer) DSSendBatchBookmark(batchNumber uint64) {
+func (f *finalizer) DSSendBatchBookmark(ctx context.Context, batchNumber uint64) {
 	// Check if stream server enabled
 	if f.streamServer != nil {
+		f.checkDSBufferIsFull(ctx)
+
 		// Send batch bookmark to the streamer
 		f.dataToStream <- datastream.BookMark{
 			Type:  datastream.BookmarkType_BOOKMARK_TYPE_BATCH,
 			Value: batchNumber,
 		}
+
+		f.dataToStreamCount.Add(1)
 	}
 }
 
-func (f *finalizer) DSSendBatchStart(batchNumber uint64, isForced bool) {
+func (f *finalizer) checkDSBufferIsFull(ctx context.Context) {
+	if f.dataToStreamCount.Load() == datastreamChannelBufferSize {
+		f.Halt(ctx, fmt.Errorf("datastream channel buffer full"), true)
+	}
+}
+
+func (f *finalizer) DSSendBatchStart(ctx context.Context, batchNumber uint64, isForced bool) {
 	forkID := f.stateIntf.GetForkIDByBatchNumber(batchNumber)
 
 	batchStart := datastream.BatchStart{
@@ -94,18 +107,26 @@ func (f *finalizer) DSSendBatchStart(batchNumber uint64, isForced bool) {
 	}
 
 	if f.streamServer != nil {
+		f.checkDSBufferIsFull(ctx)
+
 		// Send batch start to the streamer
 		f.dataToStream <- batchStart
+
+		f.dataToStreamCount.Add(1)
 	}
 }
 
-func (f *finalizer) DSSendBatchEnd(batchNumber uint64, stateRoot common.Hash, localExitRoot common.Hash) {
+func (f *finalizer) DSSendBatchEnd(ctx context.Context, batchNumber uint64, stateRoot common.Hash, localExitRoot common.Hash) {
 	if f.streamServer != nil {
+		f.checkDSBufferIsFull(ctx)
+
 		// Send batch end to the streamer
 		f.dataToStream <- datastream.BatchEnd{
 			Number:        batchNumber,
 			StateRoot:     stateRoot.Bytes(),
 			LocalExitRoot: localExitRoot.Bytes(),
 		}
+
+		f.dataToStreamCount.Add(1)
 	}
 }

@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	datastreamChannelMultiplier = 2
+	datastreamChannelBufferSize = 20
 )
 
 // Sequencer represents a sequencer
@@ -53,9 +53,7 @@ func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txP
 		eventLog:  eventLog,
 	}
 
-	// TODO: Make configurable
-	channelBufferSize := 200 * datastreamChannelMultiplier // nolint:gomnd
-	sequencer.dataToStream = make(chan interface{}, channelBufferSize)
+	sequencer.dataToStream = make(chan interface{}, datastreamChannelBufferSize)
 
 	return sequencer, nil
 }
@@ -258,6 +256,8 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 		// Read data from channel
 		dataStream := <-s.dataToStream
 
+		s.finalizer.DataToStreamChannelCountAdd(-1)
+
 		if s.streamServer != nil {
 			switch data := dataStream.(type) {
 			// Stream a complete L2 block with its transactions
@@ -275,8 +275,6 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					Value: l2Block.L2BlockNumber,
 				}
 
-				//TODO: remove this log
-				log.Infof("[ds-debug] add stream bookmark for l2block %d", l2Block.L2BlockNumber)
 				marshalledBookMark, err := proto.Marshal(bookMark)
 				if err != nil {
 					log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
@@ -297,8 +295,6 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 						Value: l2Block.L2BlockNumber - 1,
 					}
 
-					//TODO: remove this log
-					log.Infof("[ds-debug] get previous l2block %d", l2Block.L2BlockNumber-1)
 					marshalledBookMark, err := proto.Marshal(bookMark)
 					if err != nil {
 						log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
@@ -338,8 +334,6 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					continue
 				}
 
-				//TODO: remove this log
-				log.Infof("[ds-debug] add l2blockStart stream entry for l2block %d", l2Block.L2BlockNumber)
 				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK), marshalledL2Block)
 				if err != nil {
 					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
@@ -375,14 +369,11 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					}
 				}
 
-				//TODO: remove this log
-				log.Infof("[ds-debug] commit atomic op for l2block %d", l2Block.L2BlockNumber)
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
 					log.Errorf("failed to commit atomic op for l2block %d, error: %v ", l2Block.L2BlockNumber, err)
 					continue
 				}
-
 			// Stream a bookmark
 			case datastream.BookMark:
 				err = s.streamServer.StartAtomicOp()
