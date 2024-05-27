@@ -125,13 +125,13 @@ func NewSynchronizer(
 		syncBlockProtection:           syncBlockProtection,
 		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
 	}
-	if cfg.L1BlockCheck.Enable {
+	if cfg.L1BlockCheck.Enabled {
 		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
 		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(ethMan, res.state,
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
 		var preCheckAsync syncinterfaces.AsyncL1BlockChecker
-		if cfg.L1BlockCheck.PreCheckEnable {
+		if cfg.L1BlockCheck.PreCheckEnabled {
 			log.Infof("L1BlockChecker enabled precheck from: %s/%d to: %s/%d",
 				cfg.L1BlockCheck.L1SafeBlockPoint, cfg.L1BlockCheck.L1SafeBlockOffset,
 				cfg.L1BlockCheck.L1PreSafeBlockPoint, cfg.L1BlockCheck.L1PreSafeBlockOffset)
@@ -151,7 +151,7 @@ func NewSynchronizer(
 			time.Second)
 	}
 
-	if !isTrustedSequencer && cfg.L2Synchronization.Enable {
+	if !isTrustedSequencer && cfg.L2Synchronization.Enabled {
 		log.Info("Permissionless: creating and Initializing L2 synchronization components")
 		L1SyncChecker := l2_sync_etrog.NewCheckSyncStatusToProcessBatch(res.zkEVMClient, res.state)
 		sync := &res
