@@ -1107,7 +1107,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 			// error message and return it
 			result.reverted = true
 			result.returnValue = txResponse.ReturnValue
-			result.executionError = ConstructErrorFromRevert(err, txResponse.ReturnValue)
+			result.executionError = ConstructErrorFromRevert(result.executionError, txResponse.ReturnValue)
 		} else if isOOCError(result.executionError) {
 			// The EVM got into an OOC error
 			result.ooc = true
