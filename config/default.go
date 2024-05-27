@@ -107,11 +107,11 @@ L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
 L1SyncCheckL2BlockNumberModulus = 600
 	[Synchronizer.L1BlockCheck]
-		Enable = true
+		Enabled = true
 		L1SafeBlockPoint = "finalized"
 		L1SafeBlockOffset = 0
 		ForceCheckBeforeStart = true
-		PreCheckEnable = true
+		PreCheckEnabled = true
 		L1PreSafeBlockPoint = "safe"
 		L1PreSafeBlockOffset = 0
 	[Synchronizer.L1ParallelSynchronization]
@@ -128,7 +128,7 @@ L1SyncCheckL2BlockNumberModulus = 600
 			AceptableInacctivityTime = "5s"
 			ApplyAfterNumRollupReceived = 10
 	[Synchronizer.L2Synchronization]
-		Enable = true
+		Enabled = true
 		AcceptEmptyClosedBatches = false
 		ReprocessFullBatchOnClose = true
 		CheckLastL2BlockHashOnCloseBatch = true

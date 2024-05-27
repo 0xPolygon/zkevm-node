@@ -132,10 +132,10 @@ func TestForcedBatchEtrog(t *testing.T) {
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
-			Enable: false,
+			Enabled: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -682,7 +682,7 @@ func setupGenericTest(t *testing.T) (*state.Genesis, *Config, *mocks) {
 			FallbackToSequentialModeOnSynchronized: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -940,10 +940,10 @@ func TestReorg(t *testing.T) {
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
-			Enable: false,
+			Enabled: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -1263,10 +1263,10 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
-			Enable: false,
+			Enabled: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -1480,10 +1480,10 @@ func TestRegularReorg(t *testing.T) {
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
-			Enable: false,
+			Enabled: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -1765,10 +1765,10 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
 		L1BlockCheck: L1BlockCheckConfig{
-			Enable: false,
+			Enabled: false,
 		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
@@ -2043,8 +2043,11 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 		SyncChunkSize:         3,
 		L1SynchronizationMode: SequentialMode,
 		SyncBlockProtection:   "latest",
+		L1BlockCheck: L1BlockCheckConfig{
+			Enabled: false,
+		},
 		L2Synchronization: l2_sync.Config{
-			Enable: true,
+			Enabled: true,
 		},
 	}
 
