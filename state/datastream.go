@@ -512,9 +512,13 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 						BlockGasLimit:   l2Block.BlockGasLimit,
 					}
 
-					if l2Block.ForkID >= FORKID_ETROG {
-						streamL2Block.Hash = l2Block.StateRoot.Bytes()
-					}
+					// Keep the l2 block hash as it is, as the state root can be found in the StateRoot field
+					// So disable this
+					/*
+						if l2Block.ForkID >= FORKID_ETROG {
+							streamL2Block.Hash = l2Block.StateRoot.Bytes()
+						}
+					*/
 
 					if l2Block.ForkID == FORKID_ETROG && batch.EtrogTimestamp != nil {
 						streamL2Block.MinTimestamp = uint64(batch.EtrogTimestamp.Unix())

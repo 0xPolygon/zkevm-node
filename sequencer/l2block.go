@@ -423,7 +423,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	// Store L2 block in the state
-	err = f.stateIntf.StoreL2Block(ctx, l2Block.batch.batchNumber, blockResponse, txsEGPLog, dbTx)
+	blockHash, err := f.stateIntf.StoreL2Block(ctx, l2Block.batch.batchNumber, blockResponse, txsEGPLog, dbTx)
 	if err != nil {
 		return rollbackOnError(fmt.Errorf("database error on storing L2 block %d [%d], error: %v", blockResponse.BlockNumber, l2Block.trackingNum, err))
 	}
@@ -490,7 +490,7 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 	}
 
 	// Send L2 block to data streamer
-	err = f.DSSendL2Block(ctx, l2Block.batch.batchNumber, blockResponse, l2Block.getL1InfoTreeIndex(), l2Block.timestamp)
+	err = f.DSSendL2Block(ctx, l2Block.batch.batchNumber, blockResponse, l2Block.getL1InfoTreeIndex(), l2Block.timestamp, blockHash)
 	if err != nil {
 		//TODO: we need to halt/rollback the L2 block if we had an error sending to the data streamer?
 		log.Errorf("error sending L2 block %d [%d] to data streamer, error: %v", blockResponse.BlockNumber, l2Block.trackingNum, err)

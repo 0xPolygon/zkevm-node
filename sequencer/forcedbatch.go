@@ -180,7 +180,7 @@ func (f *finalizer) handleProcessForcedBatchResponse(ctx context.Context, newBat
 	// process L2 blocks responses for the forced batch
 	for _, forcedL2BlockResponse := range batchResponse.BlockResponses {
 		// Store forced L2 blocks in the state
-		err := f.stateIntf.StoreL2Block(ctx, newBatchNumber, forcedL2BlockResponse, nil, dbTx)
+		blockHash, err := f.stateIntf.StoreL2Block(ctx, newBatchNumber, forcedL2BlockResponse, nil, dbTx)
 		if err != nil {
 			return fmt.Errorf("database error on storing L2 block %d, error: %v", forcedL2BlockResponse.BlockNumber, err)
 		}
@@ -198,7 +198,7 @@ func (f *finalizer) handleProcessForcedBatchResponse(ctx context.Context, newBat
 		}
 
 		// Send L2 block to data streamer
-		err = f.DSSendL2Block(ctx, newBatchNumber, forcedL2BlockResponse, 0, forcedL2BlockResponse.Timestamp)
+		err = f.DSSendL2Block(ctx, newBatchNumber, forcedL2BlockResponse, 0, forcedL2BlockResponse.Timestamp, blockHash)
 		if err != nil {
 			//TODO: we need to halt/rollback the L2 block if we had an error sending to the data streamer?
 			log.Errorf("error sending L2 block %d to data streamer, error: %v", forcedL2BlockResponse.BlockNumber, err)
