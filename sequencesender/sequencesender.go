@@ -95,50 +95,58 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	retry := false
 	// process monitored sequences before starting a next cycle
 	s.ethTxManager.ProcessPendingMonitoredTxs(ctx, ethTxManagerOwner, func(result ethtxmanager.MonitoredTxResult, dbTx pgx.Tx) {
-		if result.Status == ethtxmanager.MonitoredTxStatusFailed {
-			retry = true
-			mTxResultLogger := ethtxmanager.CreateMonitoredTxResultLogger(ethTxManagerOwner, result)
-			mTxResultLogger.Error("failed to send sequence, TODO: review this fatal and define what to do in this case")
-		}
-
-		if len(result.Txs) == 1 {
-			var txL1BlockNumber uint64
-			var txHash common.Hash
-			for _, tx := range result.Txs {
-				txL1BlockNumber = tx.Receipt.BlockNumber.Uint64()
-				txHash = tx.Tx.Hash()
-				break
-			}
-
-			// wait L1 confirmation blocks
-			log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d, tx: %s",
-				s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, txL1BlockNumber, txHash)
-			for {
-				lastL1BlockHeader, err := s.etherman.GetLatestBlockHeader(ctx)
-				if err != nil {
-					log.Errorf("failed to get last L1 block number, err: %v", err)
-				} else {
-					lastL1BlockNumber := lastL1BlockHeader.Number.Uint64()
-
-					if lastL1BlockNumber >= txL1BlockNumber+s.cfg.SequenceL1BlockConfirmations {
-						log.Infof("continuing, last L1 block: %d", lastL1BlockNumber)
+		if result.Status == ethtxmanager.MonitoredTxStatusConfirmed {
+			if len(result.Txs) > 0 {
+				var txL1BlockNumber uint64
+				var txHash common.Hash
+				receiptFound := false
+				for _, tx := range result.Txs {
+					if tx.Receipt != nil {
+						txL1BlockNumber = tx.Receipt.BlockNumber.Uint64()
+						txHash = tx.Tx.Hash()
+						receiptFound = true
 						break
 					}
 				}
-				time.Sleep(waitRetryGetL1Block)
-			}
 
-			lastSCBatchNum, err := s.etherman.GetLatestBatchNumber()
-			if err != nil {
-				log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
-				return
-			}
+				if !receiptFound {
+					s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] is confirmed but doesn't have a receipt", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+				}
 
-			if lastSCBatchNum != s.lastSequenceEndBatch {
-				s.halt(ctx, fmt.Errorf("last sequenced batch from SC %d doesn't match last sequenced batch sent %d", lastSCBatchNum, s.lastSequenceEndBatch))
+				// wait L1 confirmation blocks
+				log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d, tx: %s",
+					s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, txL1BlockNumber, txHash)
+				for {
+					lastL1BlockHeader, err := s.etherman.GetLatestBlockHeader(ctx)
+					if err != nil {
+						log.Errorf("failed to get last L1 block number, err: %v", err)
+					} else {
+						lastL1BlockNumber := lastL1BlockHeader.Number.Uint64()
+
+						if lastL1BlockNumber >= txL1BlockNumber+s.cfg.SequenceL1BlockConfirmations {
+							log.Infof("continuing, last L1 block: %d", lastL1BlockNumber)
+							break
+						}
+					}
+					time.Sleep(waitRetryGetL1Block)
+				}
+
+				lastSCBatchNum, err := s.etherman.GetLatestBatchNumber()
+				if err != nil {
+					log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
+					return
+				}
+
+				if lastSCBatchNum != s.lastSequenceEndBatch {
+					s.halt(ctx, fmt.Errorf("last sequenced batch from SC %d doesn't match last sequenced batch sent %d", lastSCBatchNum, s.lastSequenceEndBatch))
+				}
+			} else {
+				s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] doesn't have transactions to be checked", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
 			}
-		} else {
-			s.halt(ctx, fmt.Errorf("monitored txs length is %d and should be <= 1", len(result.Txs)))
+		} else { // Monitored tx is failed
+			retry = true
+			mTxResultLogger := ethtxmanager.CreateMonitoredTxResultLogger(ethTxManagerOwner, result)
+			mTxResultLogger.Error("failed to send sequence, TODO: review this fatal and define what to do in this case")
 		}
 	}, nil)
 
