@@ -363,6 +363,13 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 						ImStateRoot:                 l2Transaction.ImStateRoot.Bytes(),
 					}
 
+					// Clear the state root if the ForkID is >= ETROG
+					// currently this is redundant as the current implementation of the sequencer
+					// leaves the ImStateRoot empty
+					if l2Block.ForkID >= state.FORKID_ETROG {
+						streamL2Transaction.ImStateRoot = common.Hash{}.Bytes()
+					}
+
 					marshalledL2Transaction, err := proto.Marshal(streamL2Transaction)
 					if err != nil {
 						log.Errorf("failed to marshal l2tx for l2block %d, error: %v", l2Block.L2BlockNumber, err)
