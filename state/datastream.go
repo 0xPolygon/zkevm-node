@@ -49,7 +49,7 @@ type DSL2Block struct {
 	BatchNumber     uint64
 	L2BlockNumber   uint64
 	Timestamp       uint64
-	Min_timestamp   uint64
+	MinTimestamp    uint64
 	L1InfoTreeIndex uint32
 	L1BlockHash     common.Hash
 	GlobalExitRoot  common.Hash
@@ -522,6 +522,10 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 
 					if l2Block.ForkID == FORKID_ETROG && batch.EtrogTimestamp != nil {
 						streamL2Block.MinTimestamp = uint64(batch.EtrogTimestamp.Unix())
+					}
+
+					if l2Block.ForkID >= FORKID_ETROG && l2Block.L1InfoTreeIndex == 0 {
+						streamL2Block.MinTimestamp = 0
 					}
 
 					previousTimestamp = l2Block.Timestamp

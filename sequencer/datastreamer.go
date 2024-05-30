@@ -18,7 +18,7 @@ func (f *finalizer) DSSendL2Block(ctx context.Context, batchNumber uint64, block
 			BatchNumber:     batchNumber,
 			L2BlockNumber:   blockResponse.BlockNumber,
 			Timestamp:       blockResponse.Timestamp,
-			Min_timestamp:   minTimestamp,
+			MinTimestamp:    minTimestamp,
 			L1InfoTreeIndex: l1InfoTreeIndex,
 			L1BlockHash:     blockResponse.BlockHashL1,
 			GlobalExitRoot:  blockResponse.GlobalExitRoot,
@@ -27,6 +27,10 @@ func (f *finalizer) DSSendL2Block(ctx context.Context, batchNumber uint64, block
 			BlockHash:       blockHash,
 			StateRoot:       blockResponse.BlockHash, //From etrog, the blockhash is the block root
 			BlockInfoRoot:   blockResponse.BlockInfoRoot,
+		}
+
+		if l2Block.ForkID >= state.FORKID_ETROG && l2Block.L1InfoTreeIndex == 0 {
+			l2Block.MinTimestamp = 0
 		}
 
 		l2Transactions := []state.DSL2Transaction{}

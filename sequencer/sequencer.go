@@ -318,7 +318,7 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					BatchNumber:     l2Block.BatchNumber,
 					Timestamp:       l2Block.Timestamp,
 					DeltaTimestamp:  uint32(l2Block.Timestamp - previousL2Block.Timestamp),
-					MinTimestamp:    l2Block.Min_timestamp,
+					MinTimestamp:    l2Block.MinTimestamp,
 					L1Blockhash:     l2Block.L1BlockHash.Bytes(),
 					L1InfotreeIndex: l2Block.L1InfoTreeIndex,
 					Hash:            l2Block.BlockHash.Bytes(),
