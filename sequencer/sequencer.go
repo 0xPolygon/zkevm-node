@@ -12,6 +12,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
+	"github.com/ethereum/go-ethereum/common"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -346,6 +347,13 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 						Encoded:                     l2Transaction.Encoded,
 						EffectiveGasPricePercentage: uint32(l2Transaction.EffectiveGasPricePercentage),
 						ImStateRoot:                 l2Transaction.ImStateRoot.Bytes(),
+					}
+
+					// Clear the state root if the ForkID is >= ETROG
+					// Currently this is redundant as the current implementation of the sequencer
+					// Leaves the state the ImStateRoot empty
+					if l2Block.ForkID >= state.FORKID_ETROG {
+						streamL2Transaction.ImStateRoot = common.Hash{}.Bytes()
 					}
 
 					marshalledL2Transaction, err := proto.Marshal(streamL2Transaction)
