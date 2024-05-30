@@ -2603,6 +2603,7 @@ UpgradeEtrogBatchNumber=0
 | - [PrivateKey](#SequenceSender_PrivateKey )                                                             | No      | object           | No         | -          | PrivateKey defines all the key store files that are going<br />to be read in order to provide the private keys to sign the L1 txs                                                                                                                                                                                                                                                                                             |
 | - [ForkUpgradeBatchNumber](#SequenceSender_ForkUpgradeBatchNumber )                                     | No      | integer          | No         | -          | Batch number where there is a forkid change (fork upgrade)                                                                                                                                                                                                                                                                                                                                                                    |
 | - [GasOffset](#SequenceSender_GasOffset )                                                               | No      | integer          | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
+| - [SequenceL1BlockConfirmations](#SequenceSender_SequenceL1BlockConfirmations )                         | No      | integer          | No         | -          | SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final                                                                                                                                                                                                                                                                                                                                   |
 
 ### <a name="SequenceSender_WaitPeriodSendSequence"></a>11.1. `SequenceSender.WaitPeriodSendSequence`
 
@@ -2795,6 +2796,20 @@ final gas: 1100
 ```
 [SequenceSender]
 GasOffset=80000
+```
+
+### <a name="SequenceSender_SequenceL1BlockConfirmations"></a>11.10. `SequenceSender.SequenceL1BlockConfirmations`
+
+**Type:** : `integer`
+
+**Default:** `4`
+
+**Description:** SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final
+
+**Example setting the default value** (4):
+```
+[SequenceSender]
+SequenceL1BlockConfirmations=4
 ```
 
 ## <a name="Aggregator"></a>12. `[Aggregator]`
