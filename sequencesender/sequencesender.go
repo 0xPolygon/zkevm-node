@@ -137,7 +137,10 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 					return
 				}
 
-				if lastSCBatchNum != s.lastSequenceEndBatch {
+				// If it's the first time we call that function after the restart of the sequence-sender (lastSequenceBatch is 0) and we are having the
+				// confirmation of a pending L1 tx sent before the sequence-sender was restarted, we don't know which batch was the last sequenced.
+				// Therefore we cannot compare the last sequenced batch in the SC with the last sequenced from sequence-sender. We skip this check
+				if s.lastSequenceEndBatch != 0 && (lastSCBatchNum != s.lastSequenceEndBatch) {
 					s.halt(ctx, fmt.Errorf("last sequenced batch from SC %d doesn't match last sequenced batch sent %d", lastSCBatchNum, s.lastSequenceEndBatch))
 				}
 			} else {
