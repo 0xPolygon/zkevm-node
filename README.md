@@ -58,9 +58,11 @@ This role can be performed by anyone.
 Required services and components:
 
 - JSON RPC: can run in a separated instance, and can have multiple instances
+- Pool DB: Postgres SQL that can be run in a separate instance
 - Synchronizer: single instance that can run on a separate instance
-- Executor & Merkletree: service that can run on a separate instance
 - State DB: Postgres SQL that can be run in a separate instance
+- Executor & Merkletree: service that can run on a separate instance
+- HashDB: service that stores the Merkletree, containing all the account information (balances, nonces, smart contract code, and smart contract storage)
 
 There must be only one synchronizer, and it's recommended that it has exclusive access to an executor instance, although it's not necessary. This role can perfectly be run in a single instance, however, the JSON RPC and executor services can benefit from running in multiple instances, if the performance decreases due to the number of requests received
 
