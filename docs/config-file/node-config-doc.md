@@ -2839,14 +2839,14 @@ GasOffset=80000
 
 **Type:** : `integer`
 
-**Default:** `4`
+**Default:** `32`
 
 **Description:** SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final
 
-**Example setting the default value** (4):
+**Example setting the default value** (32):
 ```
 [SequenceSender]
-SequenceL1BlockConfirmations=4
+SequenceL1BlockConfirmations=32
 ```
 
 ## <a name="Aggregator"></a>12. `[Aggregator]`

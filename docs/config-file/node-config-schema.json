@@ -1095,7 +1095,7 @@
 				"SequenceL1BlockConfirmations": {
 					"type": "integer",
 					"description": "SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final",
-					"default": 4
+					"default": 32
 				}
 			},
 			"additionalProperties": false,
