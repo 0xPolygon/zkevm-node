@@ -403,17 +403,6 @@ func (f *finalizer) closeSIPBatch(ctx context.Context, dbTx pgx.Tx) error {
 		go func() {
 			_, _ = f.batchSanityCheck(ctx, batchNumber, initialStateRoot, finalStateRoot)
 		}()
-
-		/* TODO: NOT SURE ABOUT THIS
-		err := dbTx.Commit(ctx)
-		if err != nil {
-			log.Errorf("error committing close wip batch, error: %v", err)
-			return err
-		}
-
-		// Sent batch to DS
-		f.DSSendBatch(f.wipBatch.batchNumber, f.wipBatch.finalStateRoot, f.wipBatch.finalLocalExitRoot)
-		*/
 	}
 
 	// Sent batch to DS
