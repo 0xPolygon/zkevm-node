@@ -112,6 +112,7 @@ StateConsistencyCheckInterval = "5s"
 	[Sequencer.StreamServer]
 		Port = 0
 		Filename = ""
+		WriteTimeout = "5s"
 		Enabled = false
 
 [SequenceSender]
