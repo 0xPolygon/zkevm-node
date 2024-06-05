@@ -2625,7 +2625,7 @@ Must be one of:
 UpgradeEtrogBatchNumber=0
 ```
 
-#### <a name="Sequencer_StreamServer_WriteTimeout"></a>10.8.8. `Sequencer.StreamServer.WriteTimeout`
+#### <a name="Sequencer_StreamServer_WriteTimeout"></a>10.9.8. `Sequencer.StreamServer.WriteTimeout`
 
 **Title:** Duration
 
