@@ -2594,7 +2594,7 @@ UpgradeEtrogBatchNumber=0
 
 **Type:** : `string`
 
-**Default:** `"3s"`
+**Default:** `"5s"`
 
 **Description:** WriteTimeout is the TCP write timeout when sending data to a datastream client
 
@@ -2608,10 +2608,10 @@ UpgradeEtrogBatchNumber=0
 "300ms"
 ```
 
-**Example setting the default value** ("3s"):
+**Example setting the default value** ("5s"):
 ```
 [Sequencer.StreamServer]
-WriteTimeout="3s"
+WriteTimeout="5s"
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`
