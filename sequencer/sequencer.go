@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	datastreamChannelBufferSize = 10
+	datastreamChannelBufferSize = 50
 )
 
 // Sequencer represents a sequencer

@@ -128,7 +128,7 @@ StateConsistencyCheckInterval = "5s"
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
 		ChainID = 1337
-		WriteTimeout = "3s"
+		WriteTimeout = "5s"
 		Enabled = true
 
 [SequenceSender]
