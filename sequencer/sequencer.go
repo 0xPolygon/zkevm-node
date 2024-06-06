@@ -349,10 +349,10 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 						ImStateRoot:                 l2Transaction.ImStateRoot.Bytes(),
 					}
 
-					// Clear the state root if the ForkID is >= ETROG
+					// Clear the state root if the ForkID is > ETROG
 					// currently this is redundant as the current implementation of the sequencer
 					// leaves the ImStateRoot empty
-					if l2Block.ForkID >= state.FORKID_ETROG {
+					if l2Block.ForkID > state.FORKID_ETROG {
 						streamL2Transaction.ImStateRoot = common.Hash{}.Bytes()
 					}
 
