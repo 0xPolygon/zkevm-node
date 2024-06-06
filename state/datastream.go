@@ -590,8 +590,8 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 							ImStateRoot:                 tx.StateRoot.Bytes(),
 						}
 
-						// Clear the state root if the ForkID is >= ETROG
-						if l2Block.ForkID >= FORKID_ETROG {
+						// Clear the state root if the ForkID is > ETROG
+						if l2Block.ForkID > FORKID_ETROG {
 							transaction.ImStateRoot = common.Hash{}.Bytes()
 						}
 
