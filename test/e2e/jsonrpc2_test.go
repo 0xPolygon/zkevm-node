@@ -38,6 +38,7 @@ func Test_Misc(t *testing.T) {
 	ctx := context.Background()
 	setup()
 	defer teardown()
+
 	for _, network := range networks {
 		log.Infof("Network %s", network.Name)
 
@@ -68,6 +69,7 @@ func Test_Misc(t *testing.T) {
 		sc_retrieve := common.HexToHash("0x2a")
 		auth, err := operations.GetAuth(operations.DefaultSequencerPrivateKey, network.ChainID)
 		require.NoError(t, err)
+		auth.GasPrice = big.NewInt(1000000000)
 		contractAddress, tx, storageSC, err := Storage.DeployStorage(auth, ethereumClient)
 		require.NoError(t, err)
 		err = operations.WaitTxToBeMined(ctx, ethereumClient, tx, operations.DefaultTimeoutTxToBeMined)
@@ -274,6 +276,7 @@ func Test_RevertOnConstructorTransaction(t *testing.T) {
 		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
 
 		auth.GasLimit = 1000000
+		auth.GasPrice = big.NewInt(1000000000)
 
 		_, scTx, _, err := Revert.DeployRevert(auth, client)
 		require.NoError(t, err)
@@ -330,9 +333,12 @@ func Test_RevertOnSCCallTransaction(t *testing.T) {
 		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
 
 		auth.GasLimit = 1000000
+		auth.GasPrice = big.NewInt(1000000000)
 
 		_, scTx, sc, err := Revert2.DeployRevert2(auth, client)
 		require.NoError(t, err)
+
+		log.Debugf("waiting tx to be mined: %v", scTx.Hash().String())
 
 		err = operations.WaitTxToBeMined(ctx, client, scTx, operations.DefaultTimeoutTxToBeMined)
 		require.NoError(t, err)
@@ -391,6 +397,7 @@ func Test_RevertOnSCCallGasEstimation(t *testing.T) {
 		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
 
 		auth.GasLimit = 1000000
+		auth.GasPrice = big.NewInt(1000000000)
 
 		_, scTx, sc, err := Revert2.DeployRevert2(auth, client)
 		require.NoError(t, err)
@@ -608,15 +615,16 @@ func TestEstimateGas(t *testing.T) {
 		ethereumClient, err := ethclient.Dial(network.URL)
 		require.NoError(t, err)
 
-		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
+		gasPrice, err := ethereumClient.SuggestGasPrice(ctx)
+		require.NoError(t, err)
+		gasPrice = big.NewInt(1000000000)
 
+		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
+		auth.GasPrice = gasPrice
 		// deploy a smart contract
 		_, tx, sc, err := Counter.DeployCounter(auth, ethereumClient)
 		require.NoError(t, err)
 		err = operations.WaitTxToBeMined(ctx, ethereumClient, tx, operations.DefaultTimeoutTxToBeMined)
-		require.NoError(t, err)
-
-		gasPrice, err := ethereumClient.SuggestGasPrice(ctx)
 		require.NoError(t, err)
 
 		// prepare a tx information to be estimated

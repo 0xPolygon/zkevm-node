@@ -1,0 +1,39 @@
+datadir: '~/datadir'
+chain: "dynamic-test"
+http: true
+private.api.addr: "localhost:9096"
+zkevm.l2-chain-id: 1001
+zkevm.l2-sequencer-rpc-url: "http://zkevm-json-rpc:8123"
+zkevm.l2-datastreamer-url: "zkevm-sequencer:6900"
+zkevm.l1-chain-id: 1337
+zkevm.l1-rpc-url: "http://zkevm-mock-l1-network:8545"
+
+zkevm.address-admin: "0x40aDF03fEff7079d37Bbf2BF06E51D02c659FBB0"
+
+zkevm.address-sequencer: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+zkevm.address-zkevm: "0x8dAF17A20c9DBA35f005b6324F493785D239719d"
+zkevm.address-rollup: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
+zkevm.address-ger-manager: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
+
+zkevm.l1-matic-contract-address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+zkevm.l1-block-range: 20000
+zkevm.l1-query-delay: 6000
+zkevm.l1-first-block: 136
+zkevm.rpc-ratelimit: 250
+zkevm.data-stream-port: 6900
+zkevm.datastream-version: 2
+zkevm.data-stream-host: "127.0.0.1"
+zkevm.sequencer-initial-fork-id: 9
+zkevm.executor-strict: false
+zkevm.executor-urls: "zkevm-prover:50071"
+zkevm.witness-full: false
+# zkevm.sequencer-block-seal-time: "6s"
+# zkevm.sequencer-batch-seal-time: "1h"
+zkevm.allow-pre-eip155-transactions: true
+
+externalcl: true
+http.api: ["eth","debug","net","trace","web3","erigon","txpool","zkevm"]
+http.addr: "0.0.0.0"
+http.port: 8223
+http.vhosts: '*'
+ws: true

@@ -60,7 +60,7 @@ services:
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
-      - ./:/datastreamer
+      # - ./:/datastreamer
     command:
       - "/bin/sh"
       - "-c"
@@ -82,7 +82,7 @@ services:
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis-v1tov2.config.json:/app/genesis.json
-      - ./:/datastreamer
+      # - ./:/datastreamer
     command:
       - "/bin/sh"
       - "-c"
@@ -145,6 +145,24 @@ services:
       - "-c"
       - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components rpc"
 
+  zkevm-erigon-rpc:
+    container_name: zkevm-erigon-rpc
+    image: hermeznetwork/cdk-erigon:v1.1.2
+    ports:
+      - 0.0.0.0:8223:8223
+    environment:
+      - CDK_ERIGON_SEQUENCER=0
+    volumes:
+      # - ./erigon:/Volumes/External/hermez/dev
+      - ./config/erigon/config.yaml:/etc/erigon/config.yaml:ro
+      - ./config/erigon/dynamic-test-allocs.json:/home/erigon/dynamic-configs/dynamic-test-allocs.json
+      - ./config/erigon/dynamic-test-chainspec.json:/home/erigon/dynamic-configs/dynamic-test-chainspec.json
+      - ./config/erigon/dynamic-test-conf.json:/home/erigon/dynamic-configs/dynamic-test-conf.json
+      - ./config/erigon/dynamic-test-allocs.json:/home/erigon/dynamic-configs/-allocs.json
+      - ./config/erigon/dynamic-test-chainspec.json:/home/erigon/dynamic-configs/-chainspec.json
+      - ./config/erigon/dynamic-test-conf.json:/home/erigon/dynamic-configs/-conf.json
+    command: ["--config", "/etc/erigon/config.yaml"]
+    
   zkevm-json-rpc-v1tov2:
     container_name: zkevm-json-rpc-v1tov2
     image: zkevm-node

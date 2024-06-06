@@ -34,27 +34,33 @@ var (
 	opsMan    *operations.Manager
 )
 
-var networks = []struct {
+type network struct {
 	Name         string
 	URL          string
 	WebSocketURL string
 	ChainID      uint64
 	PrivateKey   string
-}{
-	{
-		Name:         "Local L1",
-		URL:          operations.DefaultL1NetworkURL,
-		WebSocketURL: operations.DefaultL1NetworkWebSocketURL,
-		ChainID:      operations.DefaultL1ChainID,
-		PrivateKey:   operations.DefaultSequencerPrivateKey,
-	},
-	{
-		Name:         "Local L2",
-		URL:          operations.DefaultL2NetworkURL,
-		WebSocketURL: operations.DefaultL2NetworkWebSocketURL,
-		ChainID:      operations.DefaultL2ChainID,
-		PrivateKey:   operations.DefaultSequencerPrivateKey,
-	},
+}
+
+var localGethNetwork = network{
+	Name:         "Local L1",
+	URL:          operations.DefaultL1NetworkURL,
+	WebSocketURL: operations.DefaultL1NetworkWebSocketURL,
+	ChainID:      operations.DefaultL1ChainID,
+	PrivateKey:   operations.DefaultSequencerPrivateKey,
+}
+
+var localErigonNetwork = network{
+	Name:         "Local Erigon L2",
+	URL:          operations.DefaultL2NetworkURL,
+	WebSocketURL: operations.DefaultL2NetworkWebSocketURL,
+	ChainID:      operations.DefaultL2ChainID,
+	PrivateKey:   operations.DefaultSequencerPrivateKey,
+}
+
+var networks = []network{
+	localGethNetwork,
+	localErigonNetwork,
 }
 
 func setup() {
@@ -93,10 +99,11 @@ func createTX(client *ethclient.Client, auth *bind.TransactOpts, to common.Addre
 		return nil, err
 	}
 
-	gasPrice, err := client.SuggestGasPrice(context.Background())
-	if err != nil {
-		return nil, err
-	}
+	// gasPrice, err := client.SuggestGasPrice(context.Background())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	gasPrice := big.NewInt(1000000000)
 
 	log.Infof("\nTX details:\n\tNonce:    %d\n\tGasLimit: %d\n\tGasPrice: %d", nonce, gasLimit, gasPrice)
 	if gasLimit != uint64(21000) { //nolint:gomnd

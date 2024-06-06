@@ -34,6 +34,7 @@ func TestJSONRPC(t *testing.T) {
 	}
 	setup()
 	defer teardown()
+
 	for _, network := range networks {
 		log.Infof("Network %s", network.Name)
 		sc, err := deployContracts(network.URL, operations.DefaultSequencerPrivateKey, network.ChainID)
@@ -54,6 +55,8 @@ func deployContracts(url, privateKey string, chainId uint64) (*Double.Double, er
 	client := operations.MustGetClient(url)
 	auth := operations.MustGetAuth(privateKey, chainId)
 
+	auth.GasPrice = big.NewInt(1000000000)
+
 	_, scTx, sc, err := Double.DeployDouble(auth, client)
 	if err != nil {
 		return nil, err
@@ -73,6 +76,7 @@ func Test_Filters(t *testing.T) {
 	ctx := context.Background()
 	setup()
 	defer teardown()
+
 	for _, network := range networks {
 		// test newBlockFilter creation
 		log.Infof("Network %s", network.Name)
@@ -467,6 +471,7 @@ func Test_Transactions(t *testing.T) {
 	ctx := context.Background()
 	setup()
 	defer teardown()
+
 	for _, network := range networks {
 		log.Infof("Network %s", network.Name)
 		ethClient, err := ethclient.Dial(network.URL)
@@ -539,7 +544,7 @@ func Test_Transactions(t *testing.T) {
 		balance, err := ethClient.BalanceAt(context.Background(), auth.From, nil)
 		require.NoError(t, err)
 
-		nonce, err = ethClient.NonceAt(context.Background(), auth.From, nil)
+		nonce, err = ethClient.PendingNonceAt(context.Background(), auth.From)
 		require.NoError(t, err)
 
 		log.Infof("Balance: %d", balance)

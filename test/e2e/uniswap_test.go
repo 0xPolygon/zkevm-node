@@ -53,7 +53,7 @@ func TestUniswap(t *testing.T) {
 	require.NoError(t, opsman.StartNode())
 	require.NoError(t, opsman.InitNetwork())
 
-	client, err := ethclient.Dial("http://localhost:8123")
+	client, err := ethclient.Dial(operations.DefaultL2NetworkURL)
 	require.NoError(t, err)
 	accountAddr := common.HexToAddress("0xC949254d682D8c9ad5682521675b8F43b102aec4")
 
