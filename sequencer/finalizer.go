@@ -208,8 +208,15 @@ func (f *finalizer) updateProverIdAndFlushId(ctx context.Context) {
 					f.storedFlushID = storedFlushID
 					f.storedFlushIDCond.Broadcast()
 					f.storedFlushIDCond.L.Unlock()
+
+					// Exit the for loop o the storedFlushId is greater or equal that the lastPendingFlushID
+					if f.storedFlushID >= f.lastPendingFlushID {
+						break
+					}
 				}
 			}
+
+			time.Sleep(f.cfg.FlushIdCheckInterval.Duration)
 		}
 	}
 }

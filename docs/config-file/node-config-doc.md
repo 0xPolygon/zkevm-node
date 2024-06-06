@@ -2136,6 +2136,7 @@ StateConsistencyCheckInterval="5s"
 | - [BatchMaxDeltaTimestamp](#Sequencer_Finalizer_BatchMaxDeltaTimestamp )                       | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [L2BlockMaxDeltaTimestamp](#Sequencer_Finalizer_L2BlockMaxDeltaTimestamp )                   | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [StateRootSyncInterval](#Sequencer_Finalizer_StateRootSyncInterval )                         | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
+| - [FlushIdCheckInterval](#Sequencer_Finalizer_FlushIdCheckInterval )                           | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [HaltOnBatchNumber](#Sequencer_Finalizer_HaltOnBatchNumber )                                 | No      | integer | No         | -          | HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.<br />The Sequencer will halt after it closes the batch equal to this number |
 | - [SequentialBatchSanityCheck](#Sequencer_Finalizer_SequentialBatchSanityCheck )               | No      | boolean | No         | -          | SequentialBatchSanityCheck indicates if the reprocess of a closed batch (sanity check) must be done in a<br />sequential way (instead than in parallel)                                                       |
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
@@ -2364,6 +2365,32 @@ the stateroot used in the tx-by-tx execution
 ```
 [Sequencer.Finalizer]
 StateRootSyncInterval="1h0m0s"
+```
+
+#### <a name="Sequencer_Finalizer_FlushIdCheckInterval"></a>10.7.11. `Sequencer.Finalizer.FlushIdCheckInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"50ms"`
+
+**Description:** FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("50ms"):
+```
+[Sequencer.Finalizer]
+FlushIdCheckInterval="50ms"
 ```
 
 #### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.8.11. `Sequencer.Finalizer.HaltOnBatchNumber`
