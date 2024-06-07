@@ -1,6 +1,6 @@
 # Datastream Tool
 
-This tool was designed to be used internally with the legacy zkEVM node, but some of its options are compatible with the CDK-Erigon node, as they share the same data stream format.
+This tool was designed to be used internally with the legacy zkEVM node, but most of its options are compatible with the CDK-Erigon node, as they share the same data stream format. The only non-compatible option is the data stream generation (generate-file).
 
 The DataStream format spec can be found [here](https://github.com/0xPolygonHermez/cdk-erigon/blob/zkevm/docs/datastream/datastream.md).
 
