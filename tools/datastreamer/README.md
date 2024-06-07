@@ -77,7 +77,7 @@ All the decode options can work online, connecting to a node serving the stream,
 - **Decode Batch**: Decodes a Batch from a given number and shows all its data, l2blocks and transactions.
 - **Decode Entry**: Decodes an entry and shows its content. Entry can be anything: bookmark, batch start, batch end, l2block, updateGER or transaction.
 - **Decode L2Block**: Decodes a L2Block from a given number and shows all its data and transactions.
-- **Truncate**: Truncates the file to a given entry number. Useful in case of unwinding the network. It can be updated to be able to truncate to a given batch number instead of entry number.
+- **Truncate**: Truncates the file to a given entry number. Useful in case of unwinding the network.
 - **Generate file**: Connects to StateDB and MerkleTree and generates the data stream files.
 - **Dump batch**: Used to extract the binary data of a batch following the DS Spec. Usefull during development of the integration with the Stateless Executor and Prover to generate test vectors.
 
