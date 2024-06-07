@@ -14,6 +14,7 @@ decode-batch: check-go
 decode-batch-offline: check-go
 truncate: check-go
 dump-batch: check-go
+dump-batch-offline: check-go
 
 arguments := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
@@ -33,6 +34,10 @@ decode-l2block: ## Runs the tool to decode a given L2 block
 decode-batch: ## Runs the tool to decode a given batch
 	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
 
+.PHONY: dump-batch
+dump-batch: ## Runs the tool to dump a given batch to file
+	go run main.go dump-batch -cfg config/tool.config.toml -d -batch $(arguments)
+
 .PHONY: decode-entry-offline
 decode-entry-offline: ## Runs the offline tool to decode a given entry number
 	go run main.go decode-entry-offline -cfg config/tool.config.toml -entry $(arguments)
@@ -45,17 +50,14 @@ decode-l2block-offline: ## Runs the offline tool to decode a given L2 block
 decode-batch-offline: ## Runs the offline tool to decode a given batch
 	go run main.go decode-batch-offline -cfg config/tool.config.toml -batch $(arguments)
 
+.PHONY: dump-batch-offline
+dump-batch-offline: ## Runs the tool to dump a given batch to file offline
+	go run main.go dump-batch-offline -cfg config/tool.config.toml -d -batch $(arguments)
+
 .PHONY: truncate
 truncate: ## Runs the offline tool to truncate the stream file
 	go run main.go truncate -cfg config/tool.config.toml -entry $(arguments)
 
-.PHONY: dump-batch
-dump-batch: ## Runs the tool to dump a given batch to file
-	go run main.go dump-batch -cfg config/tool.config.toml -d -batch $(arguments)
-
-.PHONY: dump-batch-offline
-dump-batch-offline: ## Runs the tool to dump a given batch to file offline
-	go run main.go dump-batch-offline -cfg config/tool.config.toml -d -batch $(arguments)
 
 ## Help display.
 ## Pulls comments from beside commands and prints a nicely formatted
@@ -64,10 +66,7 @@ dump-batch-offline: ## Runs the tool to dump a given batch to file offline
 
 .PHONY: help
 help: ## Prints this help
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-	| sort \
-	| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' | sort
 
-.DEFAULT: 
+.DEFAULT:
 	@echo ""
-
