@@ -25,7 +25,7 @@ type stateProcessSequenceBatches interface {
 	GetNextForcedBatches(ctx context.Context, nextForcedBatches int, dbTx pgx.Tx) ([]state.ForcedBatch, error)
 	GetBatchByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.Batch, error)
 	ProcessAndStoreClosedBatchV2(ctx context.Context, processingCtx state.ProcessingContextV2, dbTx pgx.Tx, caller metrics.CallerLabel) (common.Hash, uint64, string, error)
-	ExecuteBatchV2(ctx context.Context, batch state.Batch, L1InfoTreeRoot common.Hash, l1InfoTreeData map[uint32]state.L1DataV2, timestampLimit time.Time, updateMerkleTree bool, skipVerifyL1InfoRoot uint32, forcedBlockHashL1 *common.Hash, dbTx pgx.Tx) (*executor.ProcessBatchResponseV2, error)
+	ExecuteBatchV2(ctx context.Context, batch state.Batch, L1InfoTreeRoot common.Hash, l1InfoTreeData map[uint32]state.L1DataV2, timestampLimit time.Time, updateMerkleTree bool, skipVerifyL1InfoRoot uint32, forcedBlockHashL1 *common.Hash, noCountersFlag bool, dbTx pgx.Tx) (*executor.ProcessBatchResponseV2, error)
 	AddAccumulatedInputHash(ctx context.Context, batchNum uint64, accInputHash common.Hash, dbTx pgx.Tx) error
 	ResetTrustedState(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error
 	AddSequence(ctx context.Context, sequence state.Sequence, dbTx pgx.Tx) error
@@ -41,6 +41,11 @@ type syncProcessSequenceBatchesInterface interface {
 	CleanTrustedState()
 }
 
+// ProcessorConfig configuration for ProcessorL1SequenceBatchesEtrog
+type ProcessorConfig struct {
+	NoCounters bool
+}
+
 // ProcessorL1SequenceBatchesEtrog implements L1EventProcessor
 type ProcessorL1SequenceBatchesEtrog struct {
 	actions.ProcessorBase[ProcessorL1SequenceBatchesEtrog]
@@ -48,13 +53,15 @@ type ProcessorL1SequenceBatchesEtrog struct {
 	sync         syncProcessSequenceBatchesInterface
 	timeProvider syncCommon.TimeProvider
 	halter       syncinterfaces.CriticalErrorHandler
+	cfg          ProcessorConfig
 }
 
 // NewProcessorL1SequenceBatches returns instance of a processor for SequenceBatchesOrder
 func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
 	sync syncProcessSequenceBatchesInterface,
 	timeProvider syncCommon.TimeProvider,
-	halter syncinterfaces.CriticalErrorHandler) *ProcessorL1SequenceBatchesEtrog {
+	halter syncinterfaces.CriticalErrorHandler,
+	cfg ProcessorConfig) *ProcessorL1SequenceBatchesEtrog {
 	return &ProcessorL1SequenceBatchesEtrog{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatchesEtrog]{
 			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder, etherman.InitialSequenceBatchesOrder},
@@ -63,6 +70,7 @@ func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
 		sync:         sync,
 		timeProvider: timeProvider,
 		halter:       halter,
+		cfg:          cfg,
 	}
 }
 
@@ -158,6 +166,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 				ForcedBlockHashL1:    forcedBlockHashL1,
 				SkipVerifyL1InfoRoot: 1,
 				ClosingReason:        state.SyncL1EventSequencedForcedBatchClosingReason,
+				NoCountersFlag:       p.cfg.NoCounters,
 			}
 		} else if sbatch.PolygonRollupBaseEtrogBatchData.ForcedTimestamp > 0 && sbatch.BatchNumber == 1 { // This is the initial batch (injected)
 			log.Debug("Processing initial batch")
@@ -175,6 +184,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 				ForcedBlockHashL1:    forcedBlockHashL1,
 				SkipVerifyL1InfoRoot: 1,
 				ClosingReason:        state.SyncL1EventInitialBatchClosingReason,
+				NoCountersFlag:       p.cfg.NoCounters,
 			}
 		} else {
 			var maxGER common.Hash
@@ -200,6 +210,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 				SkipVerifyL1InfoRoot: 1,
 				GlobalExitRoot:       batch.GlobalExitRoot,
 				ClosingReason:        state.SyncL1EventSequencedBatchClosingReason,
+				NoCountersFlag:       p.cfg.NoCounters,
 			}
 			if batch.GlobalExitRoot == (common.Hash{}) {
 				if len(leaves) > 0 {
@@ -264,7 +275,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 				}
 			}
 			// Reprocess batch to compare the stateRoot with tBatch.StateRoot and get accInputHash
-			batchRespose, err := p.state.ExecuteBatchV2(ctx, batch, processCtx.L1InfoRoot, leaves, *processCtx.Timestamp, false, processCtx.SkipVerifyL1InfoRoot, processCtx.ForcedBlockHashL1, dbTx)
+			batchRespose, err := p.state.ExecuteBatchV2(ctx, batch, processCtx.L1InfoRoot, leaves, *processCtx.Timestamp, false, processCtx.SkipVerifyL1InfoRoot, processCtx.ForcedBlockHashL1, p.cfg.NoCounters, dbTx)
 			if err != nil {
 				log.Errorf("error executing L1 batch: %+v, error: %v", batch, err)
 				rollbackErr := dbTx.Rollback(ctx)

@@ -303,7 +303,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 				NewAccInputHash:  common.Hash{}.Bytes(),
 				NewLocalExitRoot: common.Hash{}.Bytes(),
 			}
-			m.State.EXPECT().ExecuteBatchV2(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			m.State.EXPECT().ExecuteBatchV2(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, false, mock.Anything).
 				Return(&executionResponse, nil).
 				Times(1)
 

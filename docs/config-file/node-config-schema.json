@@ -722,6 +722,11 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "L2Synchronization Configuration for L2 synchronization"
+				},
+				"ExecuteBatchNoCountersFlag": {
+					"type": "boolean",
+					"description": "ExecuteBatchNoCountersFlag if is true then the executor will execute the batch with the flag NoCounters set\nthis a very dangerous option, if you are not sure set to FALSE",
+					"default": false
 				}
 			},
 			"additionalProperties": false,

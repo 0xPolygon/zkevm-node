@@ -9,7 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
 )
 
-func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions.CheckL2BlockHash) *processor_manager.L1EventProcessors {
+func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions.CheckL2BlockHash, cfg Config) *processor_manager.L1EventProcessors {
 	p := processor_manager.NewL1EventProcessorsBuilder()
 	p.Register(incaberry.NewProcessorL1GlobalExitRoot(sync.state))
 	p.Register(actions.NewCheckL2BlockDecorator(incaberry.NewProcessorL1SequenceBatches(sync.state, sync.etherMan, sync.pool, sync.eventLog, sync), l2Blockchecker))
@@ -17,7 +17,7 @@ func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions
 	p.Register(actions.NewCheckL2BlockDecorator(incaberry.NewProcessL1SequenceForcedBatches(sync.state, sync), l2Blockchecker))
 	p.Register(incaberry.NewProcessorForkId(sync.state, sync))
 	p.Register(etrog.NewProcessorL1InfoTreeUpdate(sync.state))
-	sequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(sync.state, sync, common.DefaultTimeProvider{}, sync.halter)
+	sequenceBatchesProcessor := etrog.NewProcessorL1SequenceBatches(sync.state, sync, common.DefaultTimeProvider{}, sync.halter, etrog.ProcessorConfig{NoCounters: cfg.ExecuteBatchNoCountersFlag})
 	p.Register(actions.NewCheckL2BlockDecorator(sequenceBatchesProcessor, l2Blockchecker))
 	p.Register(incaberry.NewProcessorL1VerifyBatch(sync.state))
 	p.Register(etrog.NewProcessorL1UpdateEtrogSequence(sync.state, sync, common.DefaultTimeProvider{}))

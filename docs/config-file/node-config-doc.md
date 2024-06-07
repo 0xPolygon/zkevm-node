@@ -1362,6 +1362,7 @@ because depending of this values is going to ask to a trusted node for trusted t
 | - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )                       | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
 | - [L1ParallelSynchronization](#Synchronizer_L1ParallelSynchronization )               | No      | object           | No         | -          | L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')                                                                                                                                                |
 | - [L2Synchronization](#Synchronizer_L2Synchronization )                               | No      | object           | No         | -          | L2Synchronization Configuration for L2 synchronization                                                                                                                                                                                                  |
+| - [ExecuteBatchNoCountersFlag](#Synchronizer_ExecuteBatchNoCountersFlag )             | No      | boolean          | No         | -          | ExecuteBatchNoCountersFlag if is true then the executor will execute the batch with the flag NoCounters set<br />this a very dangerous option, if you are not sure set to FALSE                                                                         |
 
 ### <a name="Synchronizer_SyncInterval"></a>9.1. `Synchronizer.SyncInterval`
 
@@ -1936,6 +1937,21 @@ ReprocessFullBatchOnClose=false
 ```
 [Synchronizer.L2Synchronization]
 CheckLastL2BlockHashOnCloseBatch=true
+```
+
+### <a name="Synchronizer_ExecuteBatchNoCountersFlag"></a>9.11. `Synchronizer.ExecuteBatchNoCountersFlag`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** ExecuteBatchNoCountersFlag if is true then the executor will execute the batch with the flag NoCounters set
+this a very dangerous option, if you are not sure set to FALSE
+
+**Example setting the default value** (false):
+```
+[Synchronizer]
+ExecuteBatchNoCountersFlag=false
 ```
 
 ## <a name="Sequencer"></a>10. `[Sequencer]`

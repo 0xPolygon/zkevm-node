@@ -196,7 +196,7 @@ func NewSynchronizer(
 		}
 	}
 
-	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks)
+	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks, cfg)
 	switch cfg.L1SynchronizationMode {
 	case ParallelMode:
 		log.Info("L1SynchronizationMode is parallel")
