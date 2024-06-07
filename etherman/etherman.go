@@ -145,6 +145,8 @@ const (
 	ForkIDsOrder EventOrder = "forkIDs"
 	// InitialSequenceBatchesOrder identifies a VerifyBatch event
 	InitialSequenceBatchesOrder EventOrder = "InitialSequenceBatches"
+	// MainnetChainID is the chain ID of the Ethereum Mainnet
+	MainnetChainID = 1
 )
 
 type ethereumClient interface {
@@ -156,7 +158,7 @@ type ethereumClient interface {
 	ethereum.LogFilterer
 	ethereum.TransactionReader
 	ethereum.TransactionSender
-
+	ethereum.ChainIDReader
 	bind.DeployBackend
 }
 
@@ -285,6 +287,15 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		cfg:   cfg,
 		auth:  map[common.Address]bind.TransactOpts{},
 	}, nil
+}
+
+// L1ChainID returns the chain ID of the L1 network
+func (etherMan *Client) L1ChainID(ctx context.Context) (uint64, error) {
+	chainID, err := etherMan.EthClient.ChainID(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return chainID.Uint64(), nil
 }
 
 // VerifyGenBlockNumber verifies if the genesis Block Number is valid

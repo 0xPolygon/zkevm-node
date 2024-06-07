@@ -45,6 +45,16 @@ type mocks struct {
 	//EventLog     *eventLogMock
 }
 
+// #3693 NoCounters no suitable for mainnet
+func TestNoCountersForbiddenOnMainnet(t *testing.T) {
+	genesis, cfg, m := setupGenericTest(t)
+	cfg.ExecuteBatchNoCountersFlag = true
+	ethermanForL1 := []syncinterfaces.EthermanFullInterface{m.Etherman}
+	m.Etherman.EXPECT().L1ChainID(mock.Anything).Return(etherman.MainnetChainID, nil)
+	_, err := NewSynchronizer(false, m.Etherman, ethermanForL1, m.State, m.Pool, m.EthTxManager, m.ZKEVMClient, m.zkEVMClientEthereumCompatible, nil, *genesis, *cfg, false)
+	require.Error(t, err)
+}
+
 // Feature #2220 and  #2239: Optimize Trusted state synchronization
 //
 //	this Check partially point 2: Use previous batch stored in memory to avoid getting from database
@@ -303,7 +313,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 				NewAccInputHash:  common.Hash{}.Bytes(),
 				NewLocalExitRoot: common.Hash{}.Bytes(),
 			}
-			m.State.EXPECT().ExecuteBatchV2(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			m.State.EXPECT().ExecuteBatchV2(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, false, mock.Anything).
 				Return(&executionResponse, nil).
 				Times(1)
 

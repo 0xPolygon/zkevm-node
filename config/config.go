@@ -55,6 +55,8 @@ const (
 	FlagMaxAmount = "max-amount"
 	// FlagDocumentationFileType is the flag for the choose which file generate json-schema
 	FlagDocumentationFileType = "config-file"
+	// FlagAllowExecuteBatchNoCounters is the flag to allow execute batch with NoCounters flag Synchronizer.ExecuteBatchNoCountersFlag
+	FlagAllowExecuteBatchNoCounters = "allow-execute-batch-no-counters-flag"
 )
 
 /*

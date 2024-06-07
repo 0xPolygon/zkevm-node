@@ -92,6 +92,12 @@ var (
 		Usage:    fmt.Sprintf("Indicate the type of file to generate json-schema: %v,%v ", NODE_CONFIGFILE, NETWORK_CONFIGFILE),
 		Required: true,
 	}
+
+	allowExecuteBatchNoCountersTypeFlag = cli.BoolFlag{
+		Name:     config.FlagAllowExecuteBatchNoCounters,
+		Usage:    "Allow to use execcutor with noCounters, is a development option not suitable for production",
+		Required: false,
+	}
 )
 
 func main() {
@@ -116,7 +122,7 @@ func main() {
 			Aliases: []string{},
 			Usage:   "Run the zkevm-node",
 			Action:  start,
-			Flags:   append(flags, &networkFlag, &customNetworkFlag, &migrationsFlag),
+			Flags:   append(flags, &networkFlag, &customNetworkFlag, &migrationsFlag, &allowExecuteBatchNoCountersTypeFlag),
 		},
 		{
 			Name:    "approve",

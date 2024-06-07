@@ -20,6 +20,8 @@ type EthermanFullInterface interface {
 
 	EthermanGetLatestBatchNumber
 	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
+
+	L1ChainID(ctx context.Context) (uint64, error)
 }
 
 type EthermanGetLatestBatchNumber interface {

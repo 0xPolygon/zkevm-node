@@ -436,6 +436,62 @@ func (_c *EthermanFullInterface_HeaderByNumber_Call) RunAndReturn(run func(conte
 	return _c
 }
 
+// L1ChainID provides a mock function with given fields: ctx
+func (_m *EthermanFullInterface) L1ChainID(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for L1ChainID")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_L1ChainID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'L1ChainID'
+type EthermanFullInterface_L1ChainID_Call struct {
+	*mock.Call
+}
+
+// L1ChainID is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *EthermanFullInterface_Expecter) L1ChainID(ctx interface{}) *EthermanFullInterface_L1ChainID_Call {
+	return &EthermanFullInterface_L1ChainID_Call{Call: _e.mock.On("L1ChainID", ctx)}
+}
+
+func (_c *EthermanFullInterface_L1ChainID_Call) Run(run func(ctx context.Context)) *EthermanFullInterface_L1ChainID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_L1ChainID_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_L1ChainID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_L1ChainID_Call) RunAndReturn(run func(context.Context) (uint64, error)) *EthermanFullInterface_L1ChainID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // VerifyGenBlockNumber provides a mock function with given fields: ctx, genBlockNumber
 func (_m *EthermanFullInterface) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	ret := _m.Called(ctx, genBlockNumber)

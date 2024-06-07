@@ -54,7 +54,7 @@ func createMocks(t *testing.T) *mocksEtrogProcessorL1 {
 
 func createSUT(mocks *mocksEtrogProcessorL1) *ProcessorL1SequenceBatchesEtrog {
 	return NewProcessorL1SequenceBatches(mocks.State, mocks.Synchronizer,
-		mocks.TimeProvider, mocks.CriticalErrorHandler)
+		mocks.TimeProvider, mocks.CriticalErrorHandler, ProcessorConfig{})
 }
 
 func TestL1SequenceBatchesNoData(t *testing.T) {
@@ -175,7 +175,7 @@ func TestL1SequenceBatchesTrustedBatchSequencedThatAlreadyExistsMismatch(t *test
 	mocks := createMocks(t)
 	CriticalErrorHandlerPanic := CriticalErrorHandlerPanic{}
 	sut := NewProcessorL1SequenceBatches(mocks.State, mocks.Synchronizer,
-		mocks.TimeProvider, CriticalErrorHandlerPanic)
+		mocks.TimeProvider, CriticalErrorHandlerPanic, ProcessorConfig{})
 	ctx := context.Background()
 	batch := newStateBatch(3)
 	l1InfoRoot := common.HexToHash(hashExamplesValues[0])
@@ -248,7 +248,7 @@ func expectationsProcessAndStoreClosedBatchV2(t *testing.T, mocks *mocksEtrogPro
 func expectationsForExecution(t *testing.T, mocks *mocksEtrogProcessorL1, ctx context.Context, sequencedBatch etherman.SequencedBatch, timestampLimit time.Time, response *executor.ProcessBatchResponseV2) {
 	mocks.State.EXPECT().ExecuteBatchV2(ctx,
 		mock.Anything, *sequencedBatch.L1InfoRoot, mock.Anything, timestampLimit, false,
-		uint32(1), (*common.Hash)(nil), mocks.DbTx).Return(response, nil)
+		uint32(1), (*common.Hash)(nil), false, mocks.DbTx).Return(response, nil)
 }
 
 func newProcessBatchResponseV2(batch *state.Batch) *executor.ProcessBatchResponseV2 {

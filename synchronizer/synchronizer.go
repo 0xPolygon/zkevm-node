@@ -125,6 +125,18 @@ func NewSynchronizer(
 		syncBlockProtection:           syncBlockProtection,
 		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
 	}
+	if cfg.ExecuteBatchNoCountersFlag {
+		log.Warn("ExecuteBatchNoCountersFlag is enabled, the executor will execute the batch with the flag NoCounters set")
+		l1chainId, err := ethMan.L1ChainID(ctx)
+		if err != nil {
+			log.Errorf("error getting L1ChainID. Error: %v", err)
+			return nil, err
+		}
+		if l1chainId == etherman.MainnetChainID {
+			log.Errorf("Feature ExecuteBatchNoCountersFlag is not allowed in mainnet")
+			return nil, fmt.Errorf("feature ExecuteBatchNoCountersFlag is not allowed in mainnet")
+		}
+	}
 	if cfg.L1BlockCheck.Enabled {
 		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
 		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(ethMan, res.state,
@@ -196,7 +208,7 @@ func NewSynchronizer(
 		}
 	}
 
-	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks)
+	res.l1EventProcessors = defaultsL1EventProcessors(res, l1checkerL2Blocks, cfg)
 	switch cfg.L1SynchronizationMode {
 	case ParallelMode:
 		log.Info("L1SynchronizationMode is parallel")
