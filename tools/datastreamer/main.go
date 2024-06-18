@@ -222,15 +222,21 @@ func generate(cliCtx *cli.Context) error {
 	stateDBStorage := pgstatestorage.NewPostgresStorage(state.Config{}, stateSqlDB)
 	log.Debug("Connected to the database")
 
-	mtDBServerConfig := merkletree.Config{URI: c.MerkleTree.URI}
-	var mtDBCancel context.CancelFunc
-	mtDBServiceClient, mtDBClientConn, mtDBCancel := merkletree.NewMTDBServiceClient(cliCtx.Context, mtDBServerConfig)
-	defer func() {
-		mtDBCancel()
-		mtDBClientConn.Close()
-	}()
-	stateTree := merkletree.NewStateTree(mtDBServiceClient)
-	log.Debug("Connected to the merkle tree")
+	var stateTree *merkletree.StateTree
+
+	if c.MerkleTree.MaxThreads > 0 {
+		mtDBServerConfig := merkletree.Config{URI: c.MerkleTree.URI}
+		var mtDBCancel context.CancelFunc
+		mtDBServiceClient, mtDBClientConn, mtDBCancel := merkletree.NewMTDBServiceClient(cliCtx.Context, mtDBServerConfig)
+		defer func() {
+			mtDBCancel()
+			mtDBClientConn.Close()
+		}()
+		stateTree = merkletree.NewStateTree(mtDBServiceClient)
+		log.Debug("Connected to the merkle tree")
+	} else {
+		log.Debug("Merkle tree disabled")
+	}
 
 	stateDB := state.NewState(state.Config{}, stateDBStorage, nil, stateTree, nil, nil, nil)
 
@@ -288,7 +294,7 @@ func generate(cliCtx *cli.Context) error {
 	wg.Wait()
 
 	// Convert imStateRoots to a json and save it to a file
-	if c.MerkleTree.CacheFile != "" {
+	if c.MerkleTree.CacheFile != "" && c.MerkleTree.MaxThreads > 0 {
 		jsonFile, _ := json.Marshal(imStateRoots)
 		err = os.WriteFile(c.MerkleTree.CacheFile, jsonFile, 0644) // nolint:gosec, gomnd
 		if err != nil {
