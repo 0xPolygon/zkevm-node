@@ -34,6 +34,10 @@ decode-l2block: ## Runs the tool to decode a given L2 block
 decode-batch: ## Runs the tool to decode a given batch
 	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
 
+.PHONY: decode-batchl2data
+decode-batchl2data: ## Runs the tool to decode a given batch and show its l2 data
+	go run main.go decode-batchl2data -cfg config/tool.config.toml -batch $(arguments)	
+
 .PHONY: dump-batch
 dump-batch: ## Runs the tool to dump a given batch to file
 	go run main.go dump-batch -cfg config/tool.config.toml -d -batch $(arguments)
@@ -49,6 +53,10 @@ decode-l2block-offline: ## Runs the offline tool to decode a given L2 block
 .PHONY: decode-batch-offline
 decode-batch-offline: ## Runs the offline tool to decode a given batch
 	go run main.go decode-batch-offline -cfg config/tool.config.toml -batch $(arguments)
+
+.PHONY: decode-batchl2data-offline
+decode-batchl2data-offline: ## Runs the offline tool to decode a given batch and show its l2 data
+	go run main.go decode-batchl2data-offline -cfg config/tool.config.toml -batch $(arguments)
 
 .PHONY: dump-batch-offline
 dump-batch-offline: ## Runs the tool to dump a given batch to file offline

@@ -112,6 +112,16 @@ func main() {
 			},
 		},
 		{
+			Name:    "decode-batchl2data-offline",
+			Aliases: []string{},
+			Usage:   "Decodes a batch offline and shows the l2 data",
+			Action:  decodeBatchL2DataOffline,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
+			},
+		},
+		{
 			Name:    "decode-entry",
 			Aliases: []string{},
 			Usage:   "Decodes an entry",
@@ -134,8 +144,8 @@ func main() {
 		{
 			Name:    "decode-batch",
 			Aliases: []string{},
-			Usage:   "Decodes a batch",
-			Action:  decodeBatch,
+			Usage:   "Decodes a batch and shows the l2 data",
+			Action:  decodeBatchL2Data,
 			Flags: []cli.Flag{
 				&configFileFlag,
 				&batchFlag,
@@ -574,44 +584,37 @@ func decodeBatch(cliCtx *cli.Context) error {
 		return err
 	}
 
-	firstEntry, err := client.ExecCommandGetBookmark(marshalledBookMark)
+	entry, err := client.ExecCommandGetBookmark(marshalledBookMark)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-	printEntry(firstEntry)
+	printEntry(entry)
 
-	batchData = append(batchData, firstEntry.Encode()...)
+	batchData = append(batchData, entry.Encode()...)
 
-	secondEntry, err := client.ExecCommandGetEntry(firstEntry.Number + 1)
+	entry, err = client.ExecCommandGetEntry(entry.Number + 1)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-	printEntry(secondEntry)
+	printEntry(entry)
 
-	batchData = append(batchData, secondEntry.Encode()...)
+	batchData = append(batchData, entry.Encode()...)
 
-	i := uint64(2) //nolint:gomnd
+	i := uint64(1) //nolint:gomnd
 	for {
-		entry, err := client.ExecCommandGetEntry(firstEntry.Number + i)
+		entry, err := client.ExecCommandGetEntry(entry.Number + i)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
 		}
 
-		if entry.Type == state.EntryTypeBookMark {
-			if err := proto.Unmarshal(entry.Data, bookMark); err != nil {
-				return err
-			}
-			if bookMark.Type == datastream.BookmarkType_BOOKMARK_TYPE_BATCH {
-				break
-			}
+		printEntry(entry)
+		batchData = append(batchData, entry.Encode()...)
+		if entry.Type == datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END) {
+			break
 		}
-
-		secondEntry = entry
-		printEntry(secondEntry)
-		batchData = append(batchData, secondEntry.Encode()...)
 		i++
 	}
 
@@ -622,6 +625,8 @@ func decodeBatch(cliCtx *cli.Context) error {
 			log.Error(err)
 			os.Exit(1)
 		}
+		// Log the batch data as hex string
+		log.Infof("Batch data: %s", common.Bytes2Hex(batchData))
 	}
 
 	return nil
@@ -655,41 +660,35 @@ func decodeBatchOffline(cliCtx *cli.Context) error {
 		return err
 	}
 
-	firstEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMark)
+	entry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMark)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-	printEntry(firstEntry)
-	batchData = append(batchData, firstEntry.Encode()...)
+	printEntry(entry)
+	batchData = append(batchData, entry.Encode()...)
 
-	secondEntry, err := streamServer.GetEntry(firstEntry.Number + 1)
+	entry, err = streamServer.GetEntry(entry.Number + 1)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
 
-	i := uint64(2) //nolint:gomnd
-	printEntry(secondEntry)
-	batchData = append(batchData, secondEntry.Encode()...)
+	i := uint64(1) //nolint:gomnd
+	printEntry(entry)
+	batchData = append(batchData, entry.Encode()...)
 	for {
-		secondEntry, err = streamServer.GetEntry(firstEntry.Number + i)
+		entry, err = streamServer.GetEntry(entry.Number + i)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
 		}
 
-		if secondEntry.Type == state.EntryTypeBookMark {
-			if err := proto.Unmarshal(secondEntry.Data, bookMark); err != nil {
-				return err
-			}
-			if bookMark.Type == datastream.BookmarkType_BOOKMARK_TYPE_BATCH {
-				break
-			}
+		printEntry(entry)
+		batchData = append(batchData, entry.Encode()...)
+		if entry.Type == datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END) {
+			break
 		}
-
-		printEntry(secondEntry)
-		batchData = append(batchData, secondEntry.Encode()...)
 		i++
 	}
 
@@ -700,6 +699,8 @@ func decodeBatchOffline(cliCtx *cli.Context) error {
 			log.Error(err)
 			os.Exit(1)
 		}
+		// Log the batch data as hex string
+		log.Infof("Batch data: %s", common.Bytes2Hex(batchData))
 	}
 
 	return nil
