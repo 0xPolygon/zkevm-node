@@ -61,6 +61,7 @@ To see avalible options type `make` once in the tool folder.
 ```
 decode-batch                   Runs the tool to decode a given batch
 decode-batch-offline           Runs the offline tool to decode a given batch
+decode-batchl2data             Runs the tool to decode a given batch and shows its l2 data
 decode-entry                   Runs the tool to decode a given entry number
 decode-entry-offline           Runs the offline tool to decode a given entry number
 decode-l2block                 Runs the tool to decode a given L2 block
@@ -72,9 +73,10 @@ help                           Prints this help
 truncate                       Runs the offline tool to truncate the stream file
 ```
 
-All the decode options can work online, connecting to a node serving the stream, or offline, accessing the data stream files directly.
+Almost all the decode options can work online, connecting to a node serving the stream, or offline, accessing the data stream files directly. The only one that only works online is `decode-batchl2data`.
 
 - **Decode Batch**: Decodes a Batch from a given number and shows all its data, l2blocks and transactions.
+- **Decode BatchL2Data**: Decodes a Batch from a given number and shows its BatchL2Data. It may be useful to compare results against the RPC endpoint `zkevm_getBatchByNumber`
 - **Decode Entry**: Decodes an entry and shows its content. Entry can be anything: bookmark, batch start, batch end, l2block, updateGER or transaction.
 - **Decode L2Block**: Decodes a L2Block from a given number and shows all its data and transactions.
 - **Truncate**: Truncates the file to a given entry number. Useful in case of unwinding the network.
@@ -136,6 +138,14 @@ Entry Number....: 10
 Batch Number....: 1
 State Root......: 0xada6af5a8bf491712d5ba14c67283a7b516245cd571151c5ade13f82532a398d
 Local Exit Root.: 0x0000000000000000000000000000000000000000000000000000000000000000
+```
+
+### Get BatchL2Data from Batch 2 in the Data Stream
+
+`make decode-batchl2data 1`
+
+```
+
 ```
 
 ### Get content of L2Block 1 from an online Data Stream

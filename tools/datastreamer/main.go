@@ -806,28 +806,16 @@ func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client
 			}
 
 			// Print batch data
-			if h.currentStreamBatch.BatchNumber != 0 {
-				var batchl2Data []byte
-
-				batchl2Data, err = state.EncodeBatchV2(&h.currentStreamBatchRaw)
-				if err != nil {
-					log.Errorf("Error encoding batch: %v", err)
-					return err
-				}
-
-				// Log batchL2Data as hex string
-				printColored(color.FgGreen, "BatchL2Data.....: ")
-				printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.Bytes2Hex(batchl2Data)))
+			batchl2Data, err := state.EncodeBatchV2(&h.currentStreamBatchRaw)
+			if err != nil {
+				log.Errorf("Error encoding batch: %v", err)
+				return err
 			}
 
-			// Finish the process
-			/*
-				err = client.ExecCommandStop()
-				if err != nil {
-					log.Errorf("Error stopping the data stream: %v", err)
-					return err
-				}
-			*/
+			// Log batchL2Data as hex string
+			printColored(color.FgGreen, "BatchL2Data.....: ")
+			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batchl2Data)))
+
 			os.Exit(0)
 			return nil
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):

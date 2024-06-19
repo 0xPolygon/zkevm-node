@@ -35,7 +35,7 @@ decode-batch: ## Runs the tool to decode a given batch
 	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
 
 .PHONY: decode-batchl2data
-decode-batchl2data: ## Runs the tool to decode a given batch and show its l2 data
+decode-batchl2data: ## Runs the tool to decode a given batch and shows its l2 data
 	go run main.go decode-batchl2data -cfg config/tool.config.toml -batch $(arguments)	
 
 .PHONY: dump-batch
