@@ -66,6 +66,19 @@ var (
 	}
 )
 
+type batch struct {
+	state.Batch
+	L1InfoTreeIndex uint32
+	ChainID         uint64
+	ForkID          uint64
+	Type            datastream.BatchType
+}
+
+type l2BlockRaw struct {
+	state.L2BlockRaw
+	BlockNumber uint64
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = appName
@@ -111,18 +124,6 @@ func main() {
 				&batchFlag,
 			},
 		},
-		/*
-			{
-				Name:    "decode-batchl2data-offline",
-				Aliases: []string{},
-				Usage:   "Decodes a batch offline and shows the l2 data",
-				Action:  decodeBatchL2DataOffline,
-				Flags: []cli.Flag{
-					&configFileFlag,
-					&batchFlag,
-				},
-			},
-		*/
 		{
 			Name:    "decode-entry",
 			Aliases: []string{},
@@ -153,18 +154,16 @@ func main() {
 				&batchFlag,
 			},
 		},
-		/*
-			{
-				Name:    "decode-batch",
-				Aliases: []string{},
-				Usage:   "Decodes a batch and shows the l2 data",
-				Action:  decodeBatchL2Data,
-				Flags: []cli.Flag{
-					&configFileFlag,
-					&batchFlag,
-				},
+		{
+			Name:    "decode-batchl2data",
+			Aliases: []string{},
+			Usage:   "Decodes a batch and shows the l2 data",
+			Action:  decodeBatchL2Data,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
 			},
-		*/
+		},
 		{
 			Name:    "truncate",
 			Aliases: []string{},
@@ -715,6 +714,158 @@ func decodeBatchOffline(cliCtx *cli.Context) error {
 		}
 		// Log the batch data as hex string
 		log.Infof("Batch data: %s", common.Bytes2Hex(batchData))
+	}
+
+	return nil
+}
+
+func decodeBatchL2Data(cliCtx *cli.Context) error {
+	c, err := config.Load(cliCtx)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	log.Init(c.Log)
+
+	client, err := datastreamer.NewClient(c.Online.URI, c.Online.StreamType)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	client.SetProcessEntryFunc(handleReceivedDataStream)
+
+	err = client.Start()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	batchNumber := cliCtx.Uint64("batch")
+
+	bookMark := &datastream.BookMark{
+		Type:  datastream.BookmarkType_BOOKMARK_TYPE_BATCH,
+		Value: batchNumber,
+	}
+
+	marshalledBookMark, err := proto.Marshal(bookMark)
+	if err != nil {
+		log.Fatalf("failed to marshal bookmark: %v", err)
+	}
+
+	err = client.ExecCommandStartBookmark(marshalledBookMark)
+	if err != nil {
+		log.Fatalf("failed to connect to data stream: %v", err)
+	}
+
+	return nil
+}
+
+func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreamer.StreamClient, server *datastreamer.StreamServer) error {
+	// Data stream handling variables
+	var currentStreamBatch batch
+	var currentStreamBatchRaw state.BatchRawV2
+	var currentStreamL2Block l2BlockRaw
+
+	if entry.Type != datastreamer.EntryType(datastreamer.EtBookmark) {
+		switch entry.Type {
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
+			batch := &datastream.BatchStart{}
+			err := proto.Unmarshal(entry.Data, batch)
+			if err != nil {
+				log.Errorf("Error unmarshalling batch: %v", err)
+				return err
+			}
+
+			currentStreamBatch.BatchNumber = batch.Number
+			currentStreamBatch.ChainID = batch.ChainId
+			currentStreamBatch.ForkID = batch.ForkId
+			currentStreamBatch.Type = batch.Type
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
+			batch := &datastream.BatchEnd{}
+			err := proto.Unmarshal(entry.Data, batch)
+			if err != nil {
+				log.Errorf("Error unmarshalling batch: %v", err)
+				return err
+			}
+
+			currentStreamBatch.LocalExitRoot = common.BytesToHash(batch.LocalExitRoot)
+			currentStreamBatch.StateRoot = common.BytesToHash(batch.StateRoot)
+
+			// Add last block (if any) to the current batch
+			if currentStreamL2Block.BlockNumber != 0 {
+				currentStreamBatchRaw.Blocks = append(currentStreamBatchRaw.Blocks, currentStreamL2Block.L2BlockRaw)
+			}
+
+			// Print batch data
+			if currentStreamBatch.BatchNumber != 0 {
+				var batchl2Data []byte
+
+				batchl2Data, err = state.EncodeBatchV2(&currentStreamBatchRaw)
+				if err != nil {
+					log.Errorf("Error encoding batch: %v", err)
+					return err
+				}
+
+				// Log batchL2Data as hex string
+				log.Infof("Batch L2 Data: %s", common.Bytes2Hex(batchl2Data))
+			}
+
+			// Finish the process
+			err = client.ExecCommandStop()
+			if err != nil {
+				log.Errorf("Error stopping the data stream: %v", err)
+				return err
+			}
+			os.Exit(0)
+			return nil
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):
+			// Add previous block (if any) to the current batch
+			if currentStreamL2Block.BlockNumber != 0 {
+				currentStreamBatchRaw.Blocks = append(currentStreamBatchRaw.Blocks, currentStreamL2Block.L2BlockRaw)
+			}
+			// "Open" the new block
+			l2Block := &datastream.L2Block{}
+			err := proto.Unmarshal(entry.Data, l2Block)
+			if err != nil {
+				log.Errorf("Error unmarshalling L2Block: %v", err)
+				return err
+			}
+
+			header := state.ChangeL2BlockHeader{
+				DeltaTimestamp:  l2Block.DeltaTimestamp,
+				IndexL1InfoTree: l2Block.L1InfotreeIndex,
+			}
+
+			currentStreamL2Block.ChangeL2BlockHeader = header
+			currentStreamL2Block.Transactions = make([]state.L2TxRaw, 0)
+			currentStreamL2Block.BlockNumber = l2Block.Number
+			currentStreamBatch.L1InfoTreeIndex = l2Block.L1InfotreeIndex
+			currentStreamBatch.Coinbase = common.BytesToAddress(l2Block.Coinbase)
+			currentStreamBatch.GlobalExitRoot = common.BytesToHash(l2Block.GlobalExitRoot)
+
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
+			l2Tx := &datastream.Transaction{}
+			err := proto.Unmarshal(entry.Data, l2Tx)
+			if err != nil {
+				log.Errorf("Error unmarshalling L2Tx: %v", err)
+				return err
+			}
+			// New Tx raw
+			tx, err := state.DecodeTx(common.Bytes2Hex(l2Tx.Encoded))
+			if err != nil {
+				log.Errorf("Error decoding tx: %v", err)
+				return err
+			}
+
+			l2TxRaw := state.L2TxRaw{
+				EfficiencyPercentage: uint8(l2Tx.EffectiveGasPricePercentage),
+				TxAlreadyEncoded:     false,
+				Tx:                   *tx,
+			}
+			currentStreamL2Block.Transactions = append(currentStreamL2Block.Transactions, l2TxRaw)
+		}
 	}
 
 	return nil
