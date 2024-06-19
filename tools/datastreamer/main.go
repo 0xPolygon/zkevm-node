@@ -806,15 +806,17 @@ func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client
 			}
 
 			// Print batch data
-			batchl2Data, err := state.EncodeBatchV2(&h.currentStreamBatchRaw)
-			if err != nil {
-				log.Errorf("Error encoding batch: %v", err)
-				return err
-			}
+			if h.currentStreamBatch.BatchNumber != 0 {
+				batchl2Data, err := state.EncodeBatchV2(&h.currentStreamBatchRaw)
+				if err != nil {
+					log.Errorf("Error encoding batch: %v", err)
+					return err
+				}
 
-			// Log batchL2Data as hex string
-			printColored(color.FgGreen, "BatchL2Data.....: ")
-			printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batchl2Data)))
+				// Log batchL2Data as hex string
+				printColored(color.FgGreen, "BatchL2Data.....: ")
+				printColored(color.FgHiWhite, fmt.Sprintf("%s\n", "0x"+common.Bytes2Hex(batchl2Data)))
+			}
 
 			os.Exit(0)
 			return nil
