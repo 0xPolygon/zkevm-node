@@ -79,6 +79,13 @@ type l2BlockRaw struct {
 	BlockNumber uint64
 }
 
+type handler struct {
+	// Data stream handling variables
+	currentStreamBatch    batch
+	currentStreamBatchRaw state.BatchRawV2
+	currentStreamL2Block  l2BlockRaw
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = appName
@@ -734,7 +741,9 @@ func decodeBatchL2Data(cliCtx *cli.Context) error {
 		os.Exit(1)
 	}
 
-	client.SetProcessEntryFunc(handleReceivedDataStream)
+	h := &handler{}
+
+	client.SetProcessEntryFunc(h.handleReceivedDataStream)
 
 	err = client.Start()
 	if err != nil {
@@ -759,21 +768,13 @@ func decodeBatchL2Data(cliCtx *cli.Context) error {
 		log.Fatalf("failed to connect to data stream: %v", err)
 	}
 
-	for {
-		time.Sleep(30 * time.Second) // nolint:gomnd
-	}
+	// This becomes a timeout for the process
+	time.Sleep(30 * time.Second) // nolint:gomnd
 
 	return nil
 }
 
-func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreamer.StreamClient, server *datastreamer.StreamServer) error {
-	// Data stream handling variables
-	var currentStreamBatch batch
-	var currentStreamBatchRaw state.BatchRawV2
-	var currentStreamL2Block l2BlockRaw
-
-	log.Infof("Entry type: %d", entry.Type)
-
+func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreamer.StreamClient, server *datastreamer.StreamServer) error {
 	if entry.Type != datastreamer.EntryType(datastreamer.EtBookmark) {
 		switch entry.Type {
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
@@ -784,10 +785,10 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 				return err
 			}
 
-			currentStreamBatch.BatchNumber = batch.Number
-			currentStreamBatch.ChainID = batch.ChainId
-			currentStreamBatch.ForkID = batch.ForkId
-			currentStreamBatch.Type = batch.Type
+			h.currentStreamBatch.BatchNumber = batch.Number
+			h.currentStreamBatch.ChainID = batch.ChainId
+			h.currentStreamBatch.ForkID = batch.ForkId
+			h.currentStreamBatch.Type = batch.Type
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
 			batch := &datastream.BatchEnd{}
 			err := proto.Unmarshal(entry.Data, batch)
@@ -796,19 +797,19 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 				return err
 			}
 
-			currentStreamBatch.LocalExitRoot = common.BytesToHash(batch.LocalExitRoot)
-			currentStreamBatch.StateRoot = common.BytesToHash(batch.StateRoot)
+			h.currentStreamBatch.LocalExitRoot = common.BytesToHash(batch.LocalExitRoot)
+			h.currentStreamBatch.StateRoot = common.BytesToHash(batch.StateRoot)
 
 			// Add last block (if any) to the current batch
-			if currentStreamL2Block.BlockNumber != 0 {
-				currentStreamBatchRaw.Blocks = append(currentStreamBatchRaw.Blocks, currentStreamL2Block.L2BlockRaw)
+			if h.currentStreamL2Block.BlockNumber != 0 {
+				h.currentStreamBatchRaw.Blocks = append(h.currentStreamBatchRaw.Blocks, h.currentStreamL2Block.L2BlockRaw)
 			}
 
 			// Print batch data
-			if currentStreamBatch.BatchNumber != 0 {
+			if h.currentStreamBatch.BatchNumber != 0 {
 				var batchl2Data []byte
 
-				batchl2Data, err = state.EncodeBatchV2(&currentStreamBatchRaw)
+				batchl2Data, err = state.EncodeBatchV2(&h.currentStreamBatchRaw)
 				if err != nil {
 					log.Errorf("Error encoding batch: %v", err)
 					return err
@@ -828,8 +829,8 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 			return nil
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):
 			// Add previous block (if any) to the current batch
-			if currentStreamL2Block.BlockNumber != 0 {
-				currentStreamBatchRaw.Blocks = append(currentStreamBatchRaw.Blocks, currentStreamL2Block.L2BlockRaw)
+			if h.currentStreamL2Block.BlockNumber != 0 {
+				h.currentStreamBatchRaw.Blocks = append(h.currentStreamBatchRaw.Blocks, h.currentStreamL2Block.L2BlockRaw)
 			}
 			// "Open" the new block
 			l2Block := &datastream.L2Block{}
@@ -844,12 +845,12 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 				IndexL1InfoTree: l2Block.L1InfotreeIndex,
 			}
 
-			currentStreamL2Block.ChangeL2BlockHeader = header
-			currentStreamL2Block.Transactions = make([]state.L2TxRaw, 0)
-			currentStreamL2Block.BlockNumber = l2Block.Number
-			currentStreamBatch.L1InfoTreeIndex = l2Block.L1InfotreeIndex
-			currentStreamBatch.Coinbase = common.BytesToAddress(l2Block.Coinbase)
-			currentStreamBatch.GlobalExitRoot = common.BytesToHash(l2Block.GlobalExitRoot)
+			h.currentStreamL2Block.ChangeL2BlockHeader = header
+			h.currentStreamL2Block.Transactions = make([]state.L2TxRaw, 0)
+			h.currentStreamL2Block.BlockNumber = l2Block.Number
+			h.currentStreamBatch.L1InfoTreeIndex = l2Block.L1InfotreeIndex
+			h.currentStreamBatch.Coinbase = common.BytesToAddress(l2Block.Coinbase)
+			h.currentStreamBatch.GlobalExitRoot = common.BytesToHash(l2Block.GlobalExitRoot)
 
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
 			l2Tx := &datastream.Transaction{}
@@ -870,7 +871,7 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 				TxAlreadyEncoded:     false,
 				Tx:                   *tx,
 			}
-			currentStreamL2Block.Transactions = append(currentStreamL2Block.Transactions, l2TxRaw)
+			h.currentStreamL2Block.Transactions = append(h.currentStreamL2Block.Transactions, l2TxRaw)
 		}
 	}
 
