@@ -768,6 +768,8 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 	var currentStreamBatchRaw state.BatchRawV2
 	var currentStreamL2Block l2BlockRaw
 
+	log.Debugf("Entry type: %d", entry.Type)
+
 	if entry.Type != datastreamer.EntryType(datastreamer.EtBookmark) {
 		switch entry.Type {
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
