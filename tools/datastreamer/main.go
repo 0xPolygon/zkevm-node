@@ -111,16 +111,18 @@ func main() {
 				&batchFlag,
 			},
 		},
-		{
-			Name:    "decode-batchl2data-offline",
-			Aliases: []string{},
-			Usage:   "Decodes a batch offline and shows the l2 data",
-			Action:  decodeBatchL2DataOffline,
-			Flags: []cli.Flag{
-				&configFileFlag,
-				&batchFlag,
+		/*
+			{
+				Name:    "decode-batchl2data-offline",
+				Aliases: []string{},
+				Usage:   "Decodes a batch offline and shows the l2 data",
+				Action:  decodeBatchL2DataOffline,
+				Flags: []cli.Flag{
+					&configFileFlag,
+					&batchFlag,
+				},
 			},
-		},
+		*/
 		{
 			Name:    "decode-entry",
 			Aliases: []string{},
@@ -141,16 +143,18 @@ func main() {
 				&l2blockFlag,
 			},
 		},
-		{
-			Name:    "decode-batch",
-			Aliases: []string{},
-			Usage:   "Decodes a batch and shows the l2 data",
-			Action:  decodeBatchL2Data,
-			Flags: []cli.Flag{
-				&configFileFlag,
-				&batchFlag,
+		/*
+			{
+				Name:    "decode-batch",
+				Aliases: []string{},
+				Usage:   "Decodes a batch and shows the l2 data",
+				Action:  decodeBatchL2Data,
+				Flags: []cli.Flag{
+					&configFileFlag,
+					&batchFlag,
+				},
 			},
-		},
+		*/
 		{
 			Name:    "truncate",
 			Aliases: []string{},
