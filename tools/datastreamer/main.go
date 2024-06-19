@@ -817,7 +817,7 @@ func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client
 
 				// Log batchL2Data as hex string
 				printColored(color.FgGreen, "BatchL2Data.....: ")
-				printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.Bytes2Hex(batchl2Data))
+				printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.Bytes2Hex(batchl2Data)))
 			}
 
 			// Finish the process
