@@ -759,6 +759,8 @@ func decodeBatchL2Data(cliCtx *cli.Context) error {
 		log.Fatalf("failed to connect to data stream: %v", err)
 	}
 
+	log.Infof("Waiting for data stream...")
+
 	go func() {
 		// This becomes a timeout for the process
 		time.Sleep(30 * time.Second) // nolint:gomnd
@@ -773,7 +775,7 @@ func handleReceivedDataStream(entry *datastreamer.FileEntry, client *datastreame
 	var currentStreamBatchRaw state.BatchRawV2
 	var currentStreamL2Block l2BlockRaw
 
-	log.Debugf("Entry type: %d", entry.Type)
+	log.Infof("Entry type: %d", entry.Type)
 
 	if entry.Type != datastreamer.EntryType(datastreamer.EtBookmark) {
 		switch entry.Type {
