@@ -143,6 +143,16 @@ func main() {
 				&l2blockFlag,
 			},
 		},
+		{
+			Name:    "decode-batch",
+			Aliases: []string{},
+			Usage:   "Decodes a batch",
+			Action:  decodeBatch,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
+			},
+		},
 		/*
 			{
 				Name:    "decode-batch",
