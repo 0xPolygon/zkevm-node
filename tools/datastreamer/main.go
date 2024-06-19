@@ -769,7 +769,7 @@ func decodeBatchL2Data(cliCtx *cli.Context) error {
 	}
 
 	// This becomes a timeout for the process
-	time.Sleep(30 * time.Second) // nolint:gomnd
+	time.Sleep(20 * time.Second) // nolint:gomnd
 
 	return nil
 }
@@ -816,7 +816,8 @@ func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client
 				}
 
 				// Log batchL2Data as hex string
-				log.Infof("Batch L2 Data: %s", common.Bytes2Hex(batchl2Data))
+				printColored(color.FgGreen, "BatchL2Data.....: ")
+				printColored(color.FgHiWhite, fmt.Sprintf("%s\n", common.Bytes2Hex(batchl2Data))
 			}
 
 			// Finish the process
