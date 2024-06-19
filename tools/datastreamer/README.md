@@ -76,7 +76,7 @@ truncate                       Runs the offline tool to truncate the stream file
 Almost all the decode options can work online, connecting to a node serving the stream, or offline, accessing the data stream files directly. The only one that only works online is `decode-batchl2data`.
 
 - **Decode Batch**: Decodes a Batch from a given number and shows all its data, l2blocks and transactions.
-- **Decode BatchL2Data**: Decodes a Batch from a given number and shows its BatchL2Data. It may be useful to compare results against the RPC endpoint `zkevm_getBatchByNumber`
+- **Decode BatchL2Data**: Decodes a Batch from a given number and shows its BatchL2Data. It may be useful to compare results against the RPC endpoint `zkevm_getBatchByNumber`.
 - **Decode Entry**: Decodes an entry and shows its content. Entry can be anything: bookmark, batch start, batch end, l2block, updateGER or transaction.
 - **Decode L2Block**: Decodes a L2Block from a given number and shows all its data and transactions.
 - **Truncate**: Truncates the file to a given entry number. Useful in case of unwinding the network.
@@ -145,7 +145,7 @@ Local Exit Root.: 0x000000000000000000000000000000000000000000000000000000000000
 `make decode-batchl2data 1`
 
 ```
-
+BatchL2Data.....: 0b662f5d4c00000000f9010380808401c9c38094ca127484cda2b723c4c03558b94749184d3cfa9880b8e4f811bff7000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a40d5f56745a118d0906a34e69aec8c0db1cb8fa000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005ca1ab1e0000000000000000000000000000000000000000000000000000000005ca1ab1e1bff
 ```
 
 ### Get content of L2Block 1 from an online Data Stream
