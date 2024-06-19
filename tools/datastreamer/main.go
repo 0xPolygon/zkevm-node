@@ -759,12 +759,9 @@ func decodeBatchL2Data(cliCtx *cli.Context) error {
 		log.Fatalf("failed to connect to data stream: %v", err)
 	}
 
-	log.Infof("Waiting for data stream...")
-
-	go func() {
-		// This becomes a timeout for the process
+	for {
 		time.Sleep(30 * time.Second) // nolint:gomnd
-	}()
+	}
 
 	return nil
 }
