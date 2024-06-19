@@ -821,11 +821,13 @@ func (h *handler) handleReceivedDataStream(entry *datastreamer.FileEntry, client
 			}
 
 			// Finish the process
-			err = client.ExecCommandStop()
-			if err != nil {
-				log.Errorf("Error stopping the data stream: %v", err)
-				return err
-			}
+			/*
+				err = client.ExecCommandStop()
+				if err != nil {
+					log.Errorf("Error stopping the data stream: %v", err)
+					return err
+				}
+			*/
 			os.Exit(0)
 			return nil
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):
