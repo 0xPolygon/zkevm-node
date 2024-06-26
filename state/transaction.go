@@ -839,7 +839,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	}
 
 	// sets
-	if lowEnd < estimationResult.gasUsed {
+	if lowEnd > estimationResult.gasUsed {
 		lowEnd = estimationResult.gasUsed
 	}
 
