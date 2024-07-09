@@ -236,6 +236,15 @@ func generate(cliCtx *cli.Context) error {
 
 	log.Init(c.Log)
 
+	// Check if config makes sense
+	if c.MerkleTree.MaxThreads > 0 && c.Offline.UpgradeEtrogBatchNumber == 0 {
+		log.Fatalf("MaxThreads is set to %d, but UpgradeEtrogBatchNumber is not set", c.MerkleTree.MaxThreads)
+	}
+
+	if c.MerkleTree.MaxThreads > 0 && c.MerkleTree.CacheFile == "" {
+		log.Warnf("MaxThreads is set to %d, but CacheFile is not set. Cache will not be persisted.", c.MerkleTree.MaxThreads)
+	}
+
 	streamServer, err := initializeStreamServer(c)
 	if err != nil {
 		log.Error(err)
@@ -282,6 +291,20 @@ func generate(cliCtx *cli.Context) error {
 	}
 
 	maxL2Block := lastL2BlockHeader.Number.Uint64()
+
+	// IM State Roots are only needed for l2 blocks previous to the etrog fork id
+	// So in case UpgradeEtrogBatchNumber is set, we will only calculate the IM State Roots for the
+	// blocks previous to the first in that batch
+	if c.Offline.UpgradeEtrogBatchNumber > 0 {
+		l2blocks, err := stateDB.GetL2BlocksByBatchNumber(cliCtx.Context, c.Offline.UpgradeEtrogBatchNumber, nil)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
+		maxL2Block = l2blocks[0].Number().Uint64() - 1
+	}
+
 	imStateRoots = make(map[uint64][]byte, maxL2Block)
 
 	// Check if a cache file exists
@@ -316,7 +339,7 @@ func generate(cliCtx *cli.Context) error {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			log.Debugf("Thread %d: Start: %d, End: %d, Total: %d", i, start, end, end-start)
+			log.Infof("Thread %d: Start: %d, End: %d, Total: %d", i, start, end, end-start)
 			getImStateRoots(cliCtx.Context, start, end, &imStateRoots, imStateRootsMux, stateDB)
 		}(x)
 	}

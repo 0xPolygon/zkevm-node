@@ -24,7 +24,7 @@ EnableLog = false
 MaxConns = 200
 
 [MerkleTree]
-URI = "localhost:50061"
+URI = ""
 MaxThreads = 0
 CacheFile = ""
 
