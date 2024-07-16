@@ -129,6 +129,8 @@ StateConsistencyCheckInterval = "5s"
 		Version = 4
 		ChainID = 1337
 		WriteTimeout = "5s"
+		InactivityTimeout = "120s"
+		InactivityCheckInterval = "5s"		
 		Enabled = true
 
 [SequenceSender]
