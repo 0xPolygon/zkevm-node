@@ -19,10 +19,6 @@ const (
 	FORKID_ELDERBERRY = 8
 	// FORKID_9 is the fork id 9
 	FORKID_9 = 9
-	// FORKID_10 is the fork id 10
-	FORKID_10 = 10
-	// FORKID_11 is the fork id 11
-	FORKID_11 = 11
 )
 
 // ForkIDInterval is a fork id interval
