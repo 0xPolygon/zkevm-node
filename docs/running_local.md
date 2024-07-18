@@ -174,10 +174,10 @@ To configure your Metamask to use your local environment, follow these steps:
 4. Click on `Add Network` button
 5. Fill up the L2 network information
     1. `Network Name:` Polygon zkEVM - Local
-    2. `New RPC URL:` <http://localhost:8123>
-    3. `ChainID:` 1001
+    2. `New RPC URL:` <https://rpc.ankr.com/polygon_zkevm>
+    3. `ChainID:` 1101
     4. `Currency Symbol:` ETH
-    5. `Block Explorer URL:` <http://localhost:4000>
+    5. `Block Explorer URL:` <https://zkevm.polygonscan.com>
 6. Click on Save
 7. Click on `Add Network` button
 8. Fill up the L1 network information
