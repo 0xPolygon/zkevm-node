@@ -271,12 +271,7 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 				return err
 			}
 
-			currentL2BlockEntryNumber, err := streamServer.GetBookmark(marshalledBookMarkCurrentL2Block)
-			if err != nil {
-				return err
-			}
-
-			currentL2BlockEntry, err := streamServer.GetEntry(currentL2BlockEntryNumber + 1)
+			currentL2BlockEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMarkCurrentL2Block)
 			if err != nil {
 				return err
 			}
@@ -299,12 +294,7 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 				return err
 			}
 
-			prevL2BlockEntryNumber, err := streamServer.GetBookmark(marshalledBookMarkPrevL2Block)
-			if err != nil {
-				return err
-			}
-
-			prevL2BlockEntry, err := streamServer.GetEntry(prevL2BlockEntryNumber + 1)
+			prevL2BlockEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMarkPrevL2Block)
 			if err != nil {
 				return err
 			}
