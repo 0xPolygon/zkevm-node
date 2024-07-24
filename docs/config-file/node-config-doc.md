@@ -4345,96 +4345,96 @@ MaxCumulativeGasUsed=1125899906842624
 
 **Type:** : `integer`
 
-**Default:** `2145`
+**Default:** `9268`
 
-**Example setting the default value** (2145):
+**Example setting the default value** (9268):
 ```
 [State.Batch.Constraints]
-MaxKeccakHashes=2145
+MaxKeccakHashes=9268
 ```
 
 ##### <a name="State_Batch_Constraints_MaxPoseidonHashes"></a>20.9.1.5. `State.Batch.Constraints.MaxPoseidonHashes`
 
 **Type:** : `integer`
 
-**Default:** `252357`
+**Default:** `1090693`
 
-**Example setting the default value** (252357):
+**Example setting the default value** (1090693):
 ```
 [State.Batch.Constraints]
-MaxPoseidonHashes=252357
+MaxPoseidonHashes=1090693
 ```
 
 ##### <a name="State_Batch_Constraints_MaxPoseidonPaddings"></a>20.9.1.6. `State.Batch.Constraints.MaxPoseidonPaddings`
 
 **Type:** : `integer`
 
-**Default:** `135191`
+**Default:** `584300`
 
-**Example setting the default value** (135191):
+**Example setting the default value** (584300):
 ```
 [State.Batch.Constraints]
-MaxPoseidonPaddings=135191
+MaxPoseidonPaddings=584300
 ```
 
 ##### <a name="State_Batch_Constraints_MaxMemAligns"></a>20.9.1.7. `State.Batch.Constraints.MaxMemAligns`
 
 **Type:** : `integer`
 
-**Default:** `236585`
+**Default:** `1022525`
 
-**Example setting the default value** (236585):
+**Example setting the default value** (1022525):
 ```
 [State.Batch.Constraints]
-MaxMemAligns=236585
+MaxMemAligns=1022525
 ```
 
 ##### <a name="State_Batch_Constraints_MaxArithmetics"></a>20.9.1.8. `State.Batch.Constraints.MaxArithmetics`
 
 **Type:** : `integer`
 
-**Default:** `236585`
+**Default:** `1022525`
 
-**Example setting the default value** (236585):
+**Example setting the default value** (1022525):
 ```
 [State.Batch.Constraints]
-MaxArithmetics=236585
+MaxArithmetics=1022525
 ```
 
 ##### <a name="State_Batch_Constraints_MaxBinaries"></a>20.9.1.9. `State.Batch.Constraints.MaxBinaries`
 
 **Type:** : `integer`
 
-**Default:** `473170`
+**Default:** `2045051`
 
-**Example setting the default value** (473170):
+**Example setting the default value** (2045051):
 ```
 [State.Batch.Constraints]
-MaxBinaries=473170
+MaxBinaries=2045051
 ```
 
 ##### <a name="State_Batch_Constraints_MaxSteps"></a>20.9.1.10. `State.Batch.Constraints.MaxSteps`
 
 **Type:** : `integer`
 
-**Default:** `7570538`
+**Default:** `32720619`
 
-**Example setting the default value** (7570538):
+**Example setting the default value** (32720619):
 ```
 [State.Batch.Constraints]
-MaxSteps=7570538
+MaxSteps=32720619
 ```
 
 ##### <a name="State_Batch_Constraints_MaxSHA256Hashes"></a>20.9.1.11. `State.Batch.Constraints.MaxSHA256Hashes`
 
 **Type:** : `integer`
 
-**Default:** `1596`
+**Default:** `7269`
 
-**Example setting the default value** (1596):
+**Example setting the default value** (7269):
 ```
 [State.Batch.Constraints]
-MaxSHA256Hashes=1596
+MaxSHA256Hashes=7269
 ```
 
 ### <a name="State_MaxLogsCount"></a>20.10. `State.MaxLogsCount`

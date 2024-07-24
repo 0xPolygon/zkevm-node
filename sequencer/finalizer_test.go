@@ -39,15 +39,15 @@ var (
 	bc           = state.BatchConstraintsCfg{
 		MaxTxsPerBatch:       300,
 		MaxBatchBytesSize:    120000,
-		MaxCumulativeGasUsed: 30000000,
-		MaxKeccakHashes:      2145,
-		MaxPoseidonHashes:    252357,
-		MaxPoseidonPaddings:  135191,
-		MaxMemAligns:         236585,
-		MaxArithmetics:       236585,
-		MaxBinaries:          473170,
-		MaxSteps:             7570538,
-		MaxSHA256Hashes:      1596,
+		MaxCumulativeGasUsed: 1125899906842624,
+		MaxKeccakHashes:      9268,
+		MaxPoseidonHashes:    1090693,
+		MaxPoseidonPaddings:  584300,
+		MaxMemAligns:         1022525,
+		MaxArithmetics:       1022525,
+		MaxBinaries:          2045051,
+		MaxSteps:             32720619,
+		MaxSHA256Hashes:      7269,
 	}
 	cfg = FinalizerCfg{
 		ForcedBatchesTimeout: cfgTypes.Duration{

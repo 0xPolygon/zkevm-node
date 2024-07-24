@@ -556,27 +556,35 @@ func Test_Defaults(t *testing.T) {
 		},
 		{
 			path:          "State.Batch.Constraints.MaxKeccakHashes",
-			expectedValue: uint32(2145),
+			expectedValue: uint32(9268),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxPoseidonHashes",
-			expectedValue: uint32(252357),
+			expectedValue: uint32(1090693),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxPoseidonPaddings",
-			expectedValue: uint32(135191),
+			expectedValue: uint32(584300),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxMemAligns",
-			expectedValue: uint32(236585),
+			expectedValue: uint32(1022525),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxArithmetics",
-			expectedValue: uint32(236585),
+			expectedValue: uint32(1022525),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxBinaries",
-			expectedValue: uint32(473170),
+			expectedValue: uint32(2045051),
+		},
+		{
+			path:          "State.Batch.Constraints.MaxSteps",
+			expectedValue: uint32(32720619),
+		},
+		{
+			path:          "State.Batch.Constraints.MaxSHA256Hashes",
+			expectedValue: uint32(7269),
 		},
 	}
 	file, err := os.CreateTemp("", "genesisConfig")

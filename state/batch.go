@@ -584,7 +584,26 @@ func (s *State) GetBatchTimestamp(ctx context.Context, batchNumber uint64, force
 		return nil, err
 	}
 	if forkid >= FORKID_ETROG {
-		return virtualTimestamp, nil
+		// If the batch is not virtualized then we will return the timestamp of the last L2 block in the batch
+		// If the batch doesn't have L2 blocks we will return the timestamp from state.batch (time of batch creation)
+		if virtualTimestamp == nil {
+			l2Block, err := s.GetLastL2BlockByBatchNumber(ctx, batchNumber, dbTx)
+			if err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return batchTimestamp, nil
+				}
+
+				return nil, err
+			}
+
+			if l2Block != nil {
+				return &l2Block.ReceivedAt, nil
+			}
+
+			return batchTimestamp, nil
+		} else {
+			return virtualTimestamp, nil
+		}
 	}
 	return batchTimestamp, nil
 }

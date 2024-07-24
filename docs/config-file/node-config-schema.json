@@ -1716,35 +1716,35 @@
 								},
 								"MaxKeccakHashes": {
 									"type": "integer",
-									"default": 2145
+									"default": 9268
 								},
 								"MaxPoseidonHashes": {
 									"type": "integer",
-									"default": 252357
+									"default": 1090693
 								},
 								"MaxPoseidonPaddings": {
 									"type": "integer",
-									"default": 135191
+									"default": 584300
 								},
 								"MaxMemAligns": {
 									"type": "integer",
-									"default": 236585
+									"default": 1022525
 								},
 								"MaxArithmetics": {
 									"type": "integer",
-									"default": 236585
+									"default": 1022525
 								},
 								"MaxBinaries": {
 									"type": "integer",
-									"default": 473170
+									"default": 2045051
 								},
 								"MaxSteps": {
 									"type": "integer",
-									"default": 7570538
+									"default": 32720619
 								},
 								"MaxSHA256Hashes": {
 									"type": "integer",
-									"default": 1596
+									"default": 7269
 								}
 							},
 							"additionalProperties": false,

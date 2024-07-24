@@ -169,6 +169,8 @@ func NewSynchronizer(
 			uint64(state.FORKID_ETROG):      syncTrustedStateEtrog,
 			uint64(state.FORKID_ELDERBERRY): syncTrustedStateEtrog,
 			uint64(state.FORKID_9):          syncTrustedStateEtrog,
+			uint64(state.FORKID_10):         syncTrustedStateEtrog,
+			uint64(state.FORKID_11):         syncTrustedStateEtrog,
 		}, res.state)
 	} else {
 		log.Info("L2 synchronization disabled or running in trusted sequencer mode")

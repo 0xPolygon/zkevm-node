@@ -12,8 +12,8 @@ Outputs = ["stderr"]
 	Name = "state_db"
 	Host = "localhost"
 	Port = "5432"
-	EnableLog = true
-	MaxConns = 10
+	EnableLog = false	
+	MaxConns = 200
 	[State.Batch]
 		[State.Batch.Constraints]
 		MaxTxsPerBatch = 300
@@ -32,13 +32,13 @@ Outputs = ["stderr"]
 FreeClaimGasLimit = 1500000
 IntervalToRefreshBlockedAddresses = "5m"
 IntervalToRefreshGasPrices = "5s"
-MaxTxBytesSize=30132
-MaxTxDataBytesSize=30000
+MaxTxBytesSize=100132
+MaxTxDataBytesSize=100000
 DefaultMinGasPriceAllowed = 1000000000
 MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
-AccountQueue = 64
-GlobalQueue = 1024
+AccountQueue = 0
+GlobalQueue = 0
 	[Pool.EffectiveGasPrice]
 		Enabled = false
 		L1GasPriceFactor = 0.25
@@ -47,8 +47,6 @@ GlobalQueue = 1024
 		NetProfit = 1
 	    BreakEvenFactor = 1.1			
 		FinalDeviationPct = 10
-		EthTransferGasPrice = 0
-		EthTransferL1GasPriceFactor = 0			
 		L2GasPriceSuggesterFactor = 0.5
 	[Pool.DB]
 	User = "pool_user"
@@ -57,13 +55,13 @@ GlobalQueue = 1024
 	Host = "localhost"
 	Port = "5433"
 	EnableLog = false
-	MaxConns = 10
+	MaxConns = 200
 
 [Etherman]
 URL = "http://localhost:8545"
 ForkIDChunkSize = 20000
 MultiGasProvider = false
-	[Etherman.Etherscan]
+	[Etherscan]
 		ApiKey = ""
 
 [RPC]
@@ -71,7 +69,7 @@ Host = "0.0.0.0"
 Port = 8123
 ReadTimeout = "60s"
 WriteTimeout = "60s"
-MaxRequestsPerIPAndSecond = 10000
+MaxRequestsPerIPAndSecond = 5000
 SequencerNodeURI = ""
 EnableL2SuggestedGasPricePolling = true
 	[RPC.WebSockets]
@@ -79,9 +77,23 @@ EnableL2SuggestedGasPricePolling = true
 		Port = 8133
 
 [Synchronizer]
-SyncInterval = "5s"
+SyncInterval = "1s"
 SyncChunkSize = 100
-TrustedSequencerURL = ""
+TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc.
+L1SynchronizationMode = "parallel"
+	[Synchronizer.L1ParallelSynchronization]
+		MaxClients = 10
+		MaxPendingNoProcessedBlocks = 25
+		RequestLastBlockPeriod = "5s"
+		RequestLastBlockTimeout = "5s"
+		RequestLastBlockMaxRetries = 3
+		StatisticsPeriod = "5m"
+		TimeoutMainLoop = "5m"
+		RollupInfoRetriesSpacing= "5s"
+		FallbackToSequentialModeOnSynchronized = false
+		[Synchronizer.L1ParallelSynchronization.PerformanceWarning]
+			AceptableInacctivityTime = "5s"
+			ApplyAfterNumRollupReceived = 10
 
 [Sequencer]
 DeletePoolTxsL1BlockConfirmations = 100
@@ -97,66 +109,62 @@ StateConsistencyCheckInterval = "5s"
 		ForcedBatchesCheckInterval = "10s"
 		L1InfoTreeL1BlockConfirmations = 0
 		L1InfoTreeCheckInterval = "10s"
-		BatchMaxDeltaTimestamp = "60s"
-		L2BlockMaxDeltaTimestamp = "3s"		
+		BatchMaxDeltaTimestamp = "40s"
+		L2BlockMaxDeltaTimestamp = "2s"		
 		ResourceExhaustedMarginPct = 10
-		StateRootSyncInterval = "120s"
-		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
-		SequentialProcessL2Block = false
-	[Sequencer.Finalizer.Metrics]
-		Interval = "60m"
-		EnableLog = true		
+		SequentialProcessL2Block = true
 	[Sequencer.StreamServer]
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
-		Version = 1
 		WriteTimeout = "5s"
-		InactivityTimeout = "120s"
+		nactivityTimeout = "120s"
 		InactivityCheckInterval = "5s"
 		Enabled = true
 
 [SequenceSender]
 WaitPeriodSendSequence = "15s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "10s"
-L1BlockTimestampMargin = "5s"
+L1BlockTimestampMargin = "15s"
 MaxTxSizeForL1 = 131072
 SequenceL1BlockConfirmations = 2
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
-PrivateKey = {Path = "./test/sequencer.keystore", Password = "testonly"}
+PrivateKey = {Path = "../test/sequencer.keystore", Password = "testonly"}
 
 [Aggregator]
 Host = "0.0.0.0"
 Port = 50081
 RetryTime = "5s"
-VerifyProofInterval = "30s"
+VerifyProofInterval = "10s"
 TxProfitabilityCheckerType = "acceptall"
 TxProfitabilityMinReward = "1.1"
 ProofStatePollingInterval = "5s"
 SenderAddress = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
 CleanupLockedProofsInterval = "2m"
 GeneratingProofCleanupThreshold = "10m"
-UpgradeEtrogBatchNumber = 0
-BatchProofL1BlockConfirmations = 2
+Update = 20
+BatchProofL1BlockConfirmations = 20
 
 [EthTxManager]
 ForcedGas = 0
 PrivateKeys = [
-	{Path = "../test/sequencer.keystore", Password = "testonly"},
-	{Path = "../test/aggregator.keystore", Password = "testonly"}
+	{Path = "/pk/sequencer.keystore", Password = "testonly"},
+	{Path = "/pk/aggregator.keystore", Password = "testonly"}
 ]
 
 [L2GasPriceSuggester]
 Type = "default"
+UpdatePeriod = "10s"
+Factor = 0.5
 DefaultGasPriceWei = 1000000000
 MaxGasPriceWei = 0
 
 [MTClient]
-URI = "127.0.0.1:50061"
+URI  = "localhost:50061"
 
 [Executor]
-URI = "127.0.0.1:50071"
+URI = "localhost:50071"
 MaxGRPCMessageSize = 100000000
 
 [Metrics]
@@ -165,7 +173,16 @@ Port = 9091
 Enabled = false
 ProfilingHost = "0.0.0.0"
 ProfilingPort = 6060
-ProfilingEnabled = false
+ProfilingEnabled = true
+
+[HashDB]
+User = "prover_user"
+Password = "prover_pass"
+Name = "prover_db"
+Host = "localhost"
+Port = "5432"
+EnableLog = false
+MaxConns = 200
 
 [EventLog]
 	[EventLog.DB]

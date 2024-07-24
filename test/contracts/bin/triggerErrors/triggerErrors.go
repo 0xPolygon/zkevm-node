@@ -31,8 +31,8 @@ var (
 
 // TriggerErrorsMetaData contains all meta data concerning the TriggerErrors contract.
 var TriggerErrorsMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"count\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersKeccaks\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"test\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersPoseidon\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersSteps\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfGas\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x60806040526000805534801561001457600080fd5b5061016c806100246000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c806306661abd1461005c5780632621002a1461007757806331fe52e8146100835780638bd7b5381461008d578063cb4e8cd114610095575b600080fd5b61006560005481565b60405190815260200160405180910390f35b620f4240600020610065565b61008b61009d565b005b61008b6100c3565b61008b6100e9565b60005b60648110156100c0578060005580806100b89061010d565b9150506100a0565b50565b60005b620186a08110156100c0576104d2600052806100e18161010d565b9150506100c6565b60005b61c3508110156100c0578060005580806101059061010d565b9150506100ec565b600060001982141561012f57634e487b7160e01b600052601160045260246000fd5b506001019056fea264697066735822122097beacfaa873e4896937143dfea406cc278b929a28023f7e7020b6dea6e9fc7364736f6c634300080c0033",
+	ABI: "[{\"inputs\":[],\"name\":\"count\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersKeccaks\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"test\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersPoseidon\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfCountersSteps\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"outOfGas\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x60806040526000805534801561001457600080fd5b50610175806100246000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c806306661abd1461005c5780632621002a1461007757806331fe52e8146100835780638bd7b5381461008d578063cb4e8cd114610095575b600080fd5b61006560005481565b60405190815260200160405180910390f35b621e8480600020610065565b61008b61009d565b005b61008b6100c3565b61008b6100f1565b60005b60648110156100c0578060005580806100b890610116565b9150506100a0565b50565b60005b62030d408110156100e9576104d2600052806100e181610116565b9150506100c6565b506001600055565b60005b6203d0908110156100c05780600055808061010e90610116565b9150506100f4565b600060001982141561013857634e487b7160e01b600052601160045260246000fd5b506001019056fea26469706673582212205b5cb714502f9c984709a8188156408a7fdbc6e8849774d7e057bb0639f18e1364736f6c634300080c0033",
 }
 
 // TriggerErrorsABI is the input ABI used to generate the binding from.
@@ -264,35 +264,6 @@ func (_TriggerErrors *TriggerErrorsCallerSession) OutOfCountersKeccaks() ([32]by
 	return _TriggerErrors.Contract.OutOfCountersKeccaks(&_TriggerErrors.CallOpts)
 }
 
-// OutOfCountersSteps is a free data retrieval call binding the contract method 0x8bd7b538.
-//
-// Solidity: function outOfCountersSteps() pure returns()
-func (_TriggerErrors *TriggerErrorsCaller) OutOfCountersSteps(opts *bind.CallOpts) error {
-	var out []interface{}
-	err := _TriggerErrors.contract.Call(opts, &out, "outOfCountersSteps")
-
-	if err != nil {
-		return err
-	}
-
-	return err
-
-}
-
-// OutOfCountersSteps is a free data retrieval call binding the contract method 0x8bd7b538.
-//
-// Solidity: function outOfCountersSteps() pure returns()
-func (_TriggerErrors *TriggerErrorsSession) OutOfCountersSteps() error {
-	return _TriggerErrors.Contract.OutOfCountersSteps(&_TriggerErrors.CallOpts)
-}
-
-// OutOfCountersSteps is a free data retrieval call binding the contract method 0x8bd7b538.
-//
-// Solidity: function outOfCountersSteps() pure returns()
-func (_TriggerErrors *TriggerErrorsCallerSession) OutOfCountersSteps() error {
-	return _TriggerErrors.Contract.OutOfCountersSteps(&_TriggerErrors.CallOpts)
-}
-
 // OutOfCountersPoseidon is a paid mutator transaction binding the contract method 0xcb4e8cd1.
 //
 // Solidity: function outOfCountersPoseidon() returns()
@@ -312,6 +283,27 @@ func (_TriggerErrors *TriggerErrorsSession) OutOfCountersPoseidon() (*types.Tran
 // Solidity: function outOfCountersPoseidon() returns()
 func (_TriggerErrors *TriggerErrorsTransactorSession) OutOfCountersPoseidon() (*types.Transaction, error) {
 	return _TriggerErrors.Contract.OutOfCountersPoseidon(&_TriggerErrors.TransactOpts)
+}
+
+// OutOfCountersSteps is a paid mutator transaction binding the contract method 0x8bd7b538.
+//
+// Solidity: function outOfCountersSteps() returns()
+func (_TriggerErrors *TriggerErrorsTransactor) OutOfCountersSteps(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _TriggerErrors.contract.Transact(opts, "outOfCountersSteps")
+}
+
+// OutOfCountersSteps is a paid mutator transaction binding the contract method 0x8bd7b538.
+//
+// Solidity: function outOfCountersSteps() returns()
+func (_TriggerErrors *TriggerErrorsSession) OutOfCountersSteps() (*types.Transaction, error) {
+	return _TriggerErrors.Contract.OutOfCountersSteps(&_TriggerErrors.TransactOpts)
+}
+
+// OutOfCountersSteps is a paid mutator transaction binding the contract method 0x8bd7b538.
+//
+// Solidity: function outOfCountersSteps() returns()
+func (_TriggerErrors *TriggerErrorsTransactorSession) OutOfCountersSteps() (*types.Transaction, error) {
+	return _TriggerErrors.Contract.OutOfCountersSteps(&_TriggerErrors.TransactOpts)
 }
 
 // OutOfGas is a paid mutator transaction binding the contract method 0x31fe52e8.
