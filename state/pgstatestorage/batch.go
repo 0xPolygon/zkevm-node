@@ -1013,7 +1013,7 @@ func (p *PostgresStorage) GetRawBatchTimestamps(ctx context.Context, batchNumber
 	}
 
 	lastL2Block, err := p.GetLastL2BlockByBatchNumber(ctx, batchNumber, dbTx)
-	if !errors.Is(err, pgx.ErrNoRows) {
+	if !errors.Is(err, state.ErrNotFound) {
 		return nil, nil, err
 	}
 
