@@ -436,29 +436,31 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			}
 
 			if len(batch.L2Blocks) == 0 {
-				// Empty batch
-				// Check if there is a GER update
-				if batch.GlobalExitRoot != currentGER && batch.GlobalExitRoot != (common.Hash{}) {
-					updateGER := &datastream.UpdateGER{
-						BatchNumber:    batch.BatchNumber,
-						Timestamp:      uint64(batch.Timestamp.Unix()),
-						GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
-						Coinbase:       batch.Coinbase.Bytes(),
-						ForkId:         batch.ForkID,
-						ChainId:        chainID,
-						StateRoot:      batch.StateRoot.Bytes(),
-					}
+				if !batch.WIP && batch.ForkID < FORKID_ETROG {
+					// Empty batch
+					// Check if there is a GER update
+					if batch.GlobalExitRoot != currentGER && batch.GlobalExitRoot != (common.Hash{}) {
+						updateGER := &datastream.UpdateGER{
+							BatchNumber:    batch.BatchNumber,
+							Timestamp:      uint64(batch.Timestamp.Unix()),
+							GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
+							Coinbase:       batch.Coinbase.Bytes(),
+							ForkId:         batch.ForkID,
+							ChainId:        chainID,
+							StateRoot:      batch.StateRoot.Bytes(),
+						}
 
-					marshalledUpdateGER, err := proto.Marshal(updateGER)
-					if err != nil {
-						return err
-					}
+						marshalledUpdateGER, err := proto.Marshal(updateGER)
+						if err != nil {
+							return err
+						}
 
-					_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER), marshalledUpdateGER)
-					if err != nil {
-						return err
+						_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER), marshalledUpdateGER)
+						if err != nil {
+							return err
+						}
+						currentGER = batch.GlobalExitRoot
 					}
-					currentGER = batch.GlobalExitRoot
 				}
 			} else {
 				for blockIndex, l2Block := range batch.L2Blocks {
