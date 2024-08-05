@@ -1008,8 +1008,23 @@ func (p *PostgresStorage) GetRawBatchTimestamps(ctx context.Context, batchNumber
 	err := e.QueryRow(ctx, sql, batchNumber).Scan(&batchTimestamp, &virtualBatchTimestamp)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil, nil
+	} else if err != nil {
+		return nil, nil, err
 	}
-	return batchTimestamp, virtualBatchTimestamp, err
+
+	if virtualBatchTimestamp == nil {
+		lastL2Block, err := p.GetLastL2BlockByBatchNumber(ctx, batchNumber, dbTx)
+		if err != nil {
+			return nil, nil, err
+		}
+		if lastL2Block != nil {
+			virtualBatchTimestamp = &lastL2Block.ReceivedAt
+		} else {
+			virtualBatchTimestamp = batchTimestamp
+		}
+	}
+
+	return batchTimestamp, virtualBatchTimestamp, nil
 }
 
 // GetVirtualBatchParentHash returns the parent hash of the virtual batch with the given number.
