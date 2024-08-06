@@ -568,14 +568,11 @@ func (s *State) GetLastBatch(ctx context.Context, dbTx pgx.Tx) (*Batch, error) {
 	return batches[0], nil
 }
 
-// GetBatchTimestamp returns the batch timestamp.
-// if batch >= etrog
-//
-//	if the batch is virtualized it will return virtual_batch.timestamp value
-//	if the batch is not virtualized (only in trusted state) and the batch doesn't have L2 blocks it will return batch.timestamp value
-//	if the batch has blocks it will return the timestamp of the last L2 block of the batch
-//
-// if batch < etrog it will return batch.timestamp value
+// GetBatchTimestamp returns the batch timestamp
+// If batch >= etrog and it's virtualized it will return virtual_batch.timestamp field value, otherwise it will return batchTimestamp (trusted state)
+// If batch < etrog it will return batchTimestamp value
+// The function GetRawBatchTimestamps will return as batchTimestamp the timestamp of the last L2 block of the batch,
+// if the batch doesn't have blocks it will return batch.timestamp field value
 func (s *State) GetBatchTimestamp(ctx context.Context, batchNumber uint64, forcedForkId *uint64, dbTx pgx.Tx) (*time.Time, error) {
 	var forkid uint64
 	if forcedForkId != nil {
