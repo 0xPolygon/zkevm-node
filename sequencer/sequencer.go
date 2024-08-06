@@ -201,7 +201,7 @@ func (s *Sequencer) loadFromPool(ctx context.Context) {
 			return
 		}
 
-		poolTransactions, err := s.pool.GetNonWIPPendingTxs(ctx)
+		poolTransactions, err := s.pool.GetNonWIPPendingTxs(ctx, s.cfg.LoadPendingTxsLimit)
 		if err != nil && err != pool.ErrNotFound {
 			log.Errorf("error loading txs from pool, error: %v", err)
 		}

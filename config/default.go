@@ -165,6 +165,7 @@ StateConsistencyCheckInterval = "5s"
 		Version = 0
 		WriteTimeout = "5s"
 		Enabled = false
+LoadPendingTxsLimit = 0
 
 [SequenceSender]
 WaitPeriodSendSequence = "5s"
