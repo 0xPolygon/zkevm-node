@@ -1008,21 +1008,7 @@ func (p *PostgresStorage) GetRawBatchTimestamps(ctx context.Context, batchNumber
 	err := e.QueryRow(ctx, sql, batchNumber).Scan(&batchTimestamp, &virtualBatchTimestamp)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil, nil
-	} else if err != nil {
-		return nil, nil, err
 	}
-
-	lastL2Block, err := p.GetLastL2BlockByBatchNumber(ctx, batchNumber, dbTx)
-	if err != nil && !errors.Is(err, state.ErrNotFound) {
-		return nil, nil, err
-	}
-
-	// If the batch has L2 blocks we will return the timestamp of the last L2 block as the timestamp of the batch
-	// else we will return the batch.timestamp value (timestamp of batch creation)
-	if lastL2Block != nil {
-		batchTimestamp = &lastL2Block.ReceivedAt
-	}
-
 	return batchTimestamp, virtualBatchTimestamp, nil
 }
 
