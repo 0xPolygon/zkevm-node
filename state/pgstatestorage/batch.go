@@ -1009,7 +1009,7 @@ func (p *PostgresStorage) GetRawBatchTimestamps(ctx context.Context, batchNumber
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil, nil
 	}
-	return batchTimestamp, virtualBatchTimestamp, nil
+	return batchTimestamp, virtualBatchTimestamp, err
 }
 
 // GetVirtualBatchParentHash returns the parent hash of the virtual batch with the given number.
