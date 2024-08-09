@@ -124,7 +124,6 @@ func (a *Aggregator) Start(ctx context.Context) error {
 	for !a.isSynced(ctx, nil) {
 		log.Info("Waiting for synchronizer to sync...")
 		time.Sleep(a.cfg.RetryTime.Duration)
-		continue
 	}
 
 	address := fmt.Sprintf("%s:%d", a.cfg.Host, a.cfg.Port)
