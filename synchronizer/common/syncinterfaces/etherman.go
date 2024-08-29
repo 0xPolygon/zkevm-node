@@ -20,8 +20,14 @@ type EthermanFullInterface interface {
 
 	EthermanGetLatestBatchNumber
 	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
+	EthermanPreRollup
 }
 
 type EthermanGetLatestBatchNumber interface {
 	GetLatestBatchNumber() (uint64, error)
+}
+
+type EthermanPreRollup interface {
+	GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock uint64) (uint64, error)
+	GetRollupInfoByBlockRangePreviousRollupGenesis(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)
 }
