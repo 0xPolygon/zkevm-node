@@ -641,7 +641,7 @@ func forkIDIntervals(ctx context.Context, st *state.State, etherman *etherman.Cl
 		if err != nil && !errors.Is(err, state.ErrStateNotSynchronized) {
 			return []state.ForkIDInterval{}, fmt.Errorf("error checking lastL1BlockSynced. Error: %v", err)
 		}
-		// If lastBlock is below genesisBlock means state.ErrStateNotSynchronized (haven't started yet the sync process, is doing pregenesis sync)
+		// If there are a lastBlock and is >= to genesisBlock, means that have started the sync process (if not if lastBlock!=nil then  is doing pregenesis sync)
 		if lastBlock != nil && lastBlock.BlockNumber >= genesisBlockNumber {
 			log.Info("Getting forkIDs intervals. Please wait...")
 			// Read Fork ID FROM POE SC
