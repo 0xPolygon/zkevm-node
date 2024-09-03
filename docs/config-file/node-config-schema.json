@@ -1311,6 +1311,11 @@
 							"minItems": 32,
 							"description": "Root hash of the genesis block"
 						},
+						"RollupManagerBlockNumber": {
+							"type": "integer",
+							"description": "RollupManagerBlockNumber is the block number where the RollupManager smc was deployed on L1 if if set to AutoDiscoverRollupManagerBlockNumber(0) then is auto-discovered",
+							"default": 0
+						},
 						"Actions": {
 							"items": {
 								"properties": {

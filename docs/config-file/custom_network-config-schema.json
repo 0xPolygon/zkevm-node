@@ -10,6 +10,10 @@
 			"type": "integer",
 			"description": "L1: block number of the genesis block"
 		},
+		"rollupManagerCreationBlockNumber": {
+			"type": "integer",
+			"description": "rollupManagerCreationBlockNumber is the block number where the RollupManager smc was deployed on L1 (0 auto-discover)"
+		},
 		"genesis": {
 			"items": {
 				"properties": {
