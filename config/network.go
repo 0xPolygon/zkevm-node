@@ -36,6 +36,8 @@ type GenesisFromJSON struct {
 	Root string `json:"root"`
 	// L1: block number of the genesis block
 	GenesisBlockNum uint64 `json:"genesisBlockNumber"`
+	// rollupManagerCreationBlockNumber is the block number where the RollupManager smc was deployed on L1 (0 auto-discover)
+	RollupManagerCreationBlockNumber uint64 `json:"rollupManagerCreationBlockNumber"`
 	// L2:  List of states contracts used to populate merkle tree at initial state
 	Genesis []genesisAccountFromJSON `json:"genesis"`
 	// L1: configuration of the network
@@ -122,9 +124,10 @@ func LoadGenesisFromJSONString(jsonStr string) (NetworkConfig, error) {
 
 	cfg.L1Config = cfgJSON.L1Config
 	cfg.Genesis = state.Genesis{
-		BlockNumber: cfgJSON.GenesisBlockNum,
-		Root:        common.HexToHash(cfgJSON.Root),
-		Actions:     []*state.GenesisAction{},
+		BlockNumber:              cfgJSON.GenesisBlockNum,
+		Root:                     common.HexToHash(cfgJSON.Root),
+		RollupManagerBlockNumber: cfgJSON.RollupManagerCreationBlockNumber,
+		Actions:                  []*state.GenesisAction{},
 	}
 
 	for _, account := range cfgJSON.Genesis {

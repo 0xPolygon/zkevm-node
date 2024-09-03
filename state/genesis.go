@@ -17,12 +17,19 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+const (
+	// AutoDiscoverRollupManagerBlockNumber is the value to auto-discover the RollupManager creation block number
+	AutoDiscoverRollupManagerBlockNumber = uint64(0)
+)
+
 // Genesis contains the information to populate state on creation
 type Genesis struct {
 	// BlockNumber is the block number where the polygonZKEVM smc was deployed on L1
 	BlockNumber uint64
 	// Root hash of the genesis block
 	Root common.Hash
+	// RollupManagerBlockNumber is the block number where the RollupManager smc was deployed on L1 if if set to AutoDiscoverRollupManagerBlockNumber(0) then is auto-discovered
+	RollupManagerBlockNumber uint64
 	// Actions is the data to populate into the state trie
 	Actions []*GenesisAction
 }

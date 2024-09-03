@@ -12,6 +12,7 @@ const CardonaNetworkConfigJSON = `
 	  "chainId": 11155111
 	},
 	"genesisBlockNumber": 4789190,
+	"rollupManagerCreationBlockNumber": 4789190,
 	"root": "0x91dfcdeb628dfdc51f3a2ee38cb17c78581e4e7ff91bcc2e327d24a9dfa46982",
 	"genesis": [
 	  {

@@ -12,6 +12,7 @@ const MainnetNetworkConfigJSON = `
 	},
     "root": "0x3f86b09b43e3e49a41fc20a07579b79eba044253367817d5c241d23c0e2bc5c9",
     "genesisBlockNumber": 16896721,
+    "rollupManagerCreationBlockNumber": 16896721,
     "genesis": [
      {
       "contractName": "PolygonZkEVMDeployer",
