@@ -341,7 +341,6 @@ func (etherMan *Client) VerifyGenBlockNumber(ctx context.Context, genBlockNumber
 
 // GetL1BlockUpgradeLxLy It returns the block genesis for LxLy before genesisBlock or error
 func (etherMan *Client) GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock uint64) (uint64, error) {
-
 	it, err := etherMan.GlobalExitRootManager.FilterUpdateL1InfoTree(&bind.FilterOpts{
 		Start:   1,
 		End:     &genesisBlock,

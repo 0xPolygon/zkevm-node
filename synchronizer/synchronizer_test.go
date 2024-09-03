@@ -78,7 +78,6 @@ func TestGetStartingL1BlockAutodiscover(t *testing.T) {
 		require.True(t, needProcess)
 		require.Equal(t, uint64(101), firstBlock)
 	})
-
 }
 
 // Feature #2220 and  #2239: Optimize Trusted state synchronization
