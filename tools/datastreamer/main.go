@@ -685,8 +685,9 @@ func decodeBatch(cliCtx *cli.Context) error {
 	batchData = append(batchData, entry.Encode()...)
 
 	i := uint64(1) //nolint:gomnd
+	start := entry.Number
 	for {
-		entry, err := client.ExecCommandGetEntry(entry.Number + i)
+		entry, err := client.ExecCommandGetEntry(start + i)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
@@ -760,8 +761,9 @@ func decodeBatchOffline(cliCtx *cli.Context) error {
 	i := uint64(1) //nolint:gomnd
 	printEntry(entry, shouldPrintJson)
 	batchData = append(batchData, entry.Encode()...)
+	start := entry.Number
 	for {
-		entry, err = streamServer.GetEntry(entry.Number + i)
+		entry, err = streamServer.GetEntry(start + i)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
