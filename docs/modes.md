@@ -27,7 +27,7 @@ Use the default [testnet config file](https://github.com/0xPolygonHermez/zkevm-n
 SequencerNodeURI = "https://public.zkevm-test.net:2083"
 ```
 
-Same goes for the Prover Config ([prover-config.json](https://github.com/0xPolygonHermez/zkevm-node/blob/develop/config/environments/testnet/testnet.prover.config.json)):
+Same goes for the Prover Config ([prover-config.json](https://github.com/0xPolygonHermez/zkevm-node/blob/develop/config/environments/testnet/prover.config.json)):
 
 ```json
 {
