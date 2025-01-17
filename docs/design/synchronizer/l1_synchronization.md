@@ -36,15 +36,15 @@ L1SynchronizationMode = parallel
 			ApplyAfterNumRollupReceived = 10
 
 ```
-## Remakable logs
+## Remarkable logs
 ### How to known the occupation of executor
-To check that executor are fully ocuppied you can check next log:
+To check that executor are fully occupied you can check next log:
 ```
 consumer: processing rollupInfo #808: range:[9606297, 9606397] num_blocks [7] statistics:wasted_time_waiting_for_data [0s] last_process_time [27.557166427s] block_per_second [0.318281]
 ```
 The `wasted_time_waiting_for_data` show the waiting time between this call and the previous to executor. It could generate a warning depending on the configuring `SSynchronizer.L1ParallelSynchronization.PerformanceWarning`
 
-### Estimated time to be fully synchronizer with L1
+### Estimated time to be fully synchronized with L1
 This log show the estimated time (**ETA**) to reach the block goal. You can configure the frequency with var `StatisticsPeriod`
 ```
 INFO	producer: Statistics: EstimatedTimeOfArrival: 1h58m42.730543611s percent:0.15  blocks_per_seconds:201.24 pending_block:2222/1435629 num_errors:0
@@ -55,7 +55,7 @@ INFO	producer: Statistics: EstimatedTimeOfArrival: 1h58m42.730543611s percent:0.
 
 
 ### The main objects are:
-- `l1SyncOrchestration`: is the entry point and the reponsable to launch the producer and consumer
+- `l1SyncOrchestration`: is the entry point and is responsible to launch the producer and consumer
 - `l1RollupInfoProducer`: this object send rollup data through the channel to the consumer
 - `l1RollupInfoConsumer`: that receive the data and execute it
 

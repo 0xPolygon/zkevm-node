@@ -45,7 +45,7 @@ Runs e2e tests divided in several groups executed in parallel, read more about
 ### When is executed
 
 PR opened and pushing changes to PRs. There are two variants, `trusted` and
-`from-fork`, depending on the procedence of the PR, more about it in the
+`from-fork`, depending on the precedence of the PR, more about it in the
 [ok-to-test document].
 
 ## test-full-non-e2e
@@ -55,7 +55,7 @@ Runs all the non-e2e tests.
 ### When is executed
 
 PR opened and pushing changes to PRs. There are two variants, `trusted` and
-`from-fork`, depending on the procedence of the PR, more about it in the
+`from-fork`, depending on the precedence of the PR, more about it in the
 [ok-to-test document].
 
 ## updatedeps
