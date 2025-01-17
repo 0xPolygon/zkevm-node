@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"sync"
 
@@ -102,7 +103,11 @@ func (s *State) GetBalance(ctx context.Context, address common.Address, root com
 	if s.tree == nil {
 		return nil, ErrStateTreeNil
 	}
-	return s.tree.GetBalance(ctx, address, root.Bytes())
+	balance, err := s.tree.GetBalance(ctx, address, root.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get balance from state tree: %w", err)
+	}
+	return balance, nil
 }
 
 // GetCode from a given address
@@ -182,7 +187,7 @@ func (s *State) GetStoredFlushID(ctx context.Context) (uint64, string, error) {
 	}
 	res, err := s.executorClient.GetFlushStatus(ctx, &emptypb.Empty{})
 	if err != nil {
-		return 0, "", err
+		return 0, "", fmt.Errorf("failed to get flush status from executor: %w", err)
 	}
 
 	return res.StoredFlushId, res.ProverId, nil
