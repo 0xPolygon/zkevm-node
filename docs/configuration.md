@@ -8,14 +8,14 @@ To configure a node you need 3 files:
 ### Node Config
 This file is a [TOML](https://en.wikipedia.org/wiki/TOML#) formatted file. 
 You can find some examples here: 
- - `config/environments/local/local.node.config.toml`: running a permisionless node
+ - `config/environments/local/local.node.config.toml`: running a permissionless node
   - `config/environments/mainnet/node.config.toml`
   - `config/environments/public/node.config.toml`
   - `test/config/test.node.config.toml`: configuration for a trusted node used in CI
 
   For details about the contents you can read the specifications [here](config-file/node-config-doc.md)
 
-This file is used for trusted and for permisionless nodes. In the case of permissionless node you only need to setup next sections: 
+This file is used for trusted and for permissionless nodes. In the case of permissionless node you only need to setup next sections: 
 
  You could **override values with environment variables**. The variables needs to have next format:
 `ZKEVM_NODE_`[<section in uppercase\>`_`]*<var in uppercase\>`

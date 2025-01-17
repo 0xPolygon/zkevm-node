@@ -2,7 +2,7 @@
 
 This document addresses how we should create PRs, give and receive reviews. The motivation is to have better code, reduce the time from creation to merge while sharing knowledge and insights that help everyone becoming better developers.
 
-Note that non of this is a hard rule, but suggestions / guidelines. Although everyone is encouraged to stick to this points as much as possible. Use your common sense if some of this do not apply well on a particular PR
+Note that none of this is a hard rule, but suggestions / guidelines. Although everyone is encouraged to stick to this points as much as possible. Use your common sense if some of this do not apply well on a particular PR
 
 ## How to create a good PR
 

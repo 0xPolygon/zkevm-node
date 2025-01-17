@@ -100,7 +100,7 @@ make run-approve-pol
     - `Database:` state-db
     - `Host:` localhost
     - `Port:` 5432
-    - `Url:` <postgres://state_user:srare_password@localhost:5432/state-db>
+    - `Url:` <postgres://state_user:state_password@localhost:5432/state-db>
   - zkEVM Node *Pool* Database 
     - `Type:` Postgres DB
     - `User:` pool_user

@@ -1,7 +1,7 @@
 # Test operations package
 
 We use the functionality provided by the [test operations package] in order to
-manage components used during tests, specially e2e.
+manage components used during tests, especially e2e.
 
 The main functionality used currently in the tests is related to managing
 containers, the package exposes the function `StartComponent` which takes a

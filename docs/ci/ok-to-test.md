@@ -20,7 +20,7 @@ don't require secrets and trusted actions are executed.
 executed, and the from-fork actions are executed after a user with write access
 comments in the PR `/ok-to-test sha=<commit sha>` with the sha of the commit over
 which the actions should run. Before adding this comment the user should have
-reviewed the code and verified that it won't suppose a security treat (for
+reviewed the code and verified that it won't suppose a security threat (for
 instance, the reviewer should verify that the PR is not adding new actions, or is
 not trying to disclose the existing secrets).
 

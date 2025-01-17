@@ -10,11 +10,11 @@ This tool allows to rerun a set of batches, you could set a flag to persist chan
 If you want to avoid passing network configuration (`--network` and `--custom-network-file`) you need to provide the L2ChainID (`--l2_chain_id`)
 
 ## Reprocess a set of batches and compare with state database
-This reexecute a batch/batches and check if match the data on DB.
+This re-execute a batch/batches and check if match the data on DB.
 It have some flags to allow:
 - `--write_on_hash_db`: this for each execution create the corresponding MT if possible
 it override state_db
-- `--fist_batch`: first batch to process (default: 1)
+- `--first_batch`: first batch to process (default: 1)
 - `--last_batch`: last batch to process (default: the highest batch on batch table)
 - `--l2_chain_id`:  Instead of asking to SMC you can set it 
 - `--dont_stop_on_error`: If a batch have an error the process doesn't stop
