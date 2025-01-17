@@ -128,7 +128,7 @@ func SequencedBatchesSigHash() common.Hash { return sequenceBatchesSignatureHash
 // TrustedVerifyBatchesSigHash returns the hash for the `TrustedVerifyBatches` event.
 func TrustedVerifyBatchesSigHash() common.Hash { return verifyBatchesTrustedAggregatorSignatureHash }
 
-// EventOrder is the the type used to identify the events order
+// EventOrder is the type used to identify the events order
 type EventOrder string
 
 const (
