@@ -1,3 +1,8 @@
+> [!WARNING]
+> **Deprecation Notice**  
+> This repository will be deprecated on [February 17, 2025]. After this date, it will no longer be maintained or updated.  
+> **Replacement:** The recommended replacement for `zkevm-node` is [`cdk-erigon`](https://github.com/0xPolygonHermez/cdk-erigon). Please transition to this repository for continued updates and support.
+
 # zkEVM Node
 
 zkEVM Node is a Go implementation of a node that operates the Polygon zkEVM Network.
