@@ -155,7 +155,7 @@ func (f *finalizer) processPendingL2Blocks(ctx context.Context) {
 	}
 }
 
-// storePendingTransactions stores the pending L2 blocks in the database
+// storePendingL2Blocks stores the pending L2 blocks in the database
 func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 	for {
 		select {

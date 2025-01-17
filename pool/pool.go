@@ -99,7 +99,7 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 	return p
 }
 
-// refresGasPRices refreshes the gas price
+// refreshGasPrices refreshes the gas price
 func (p *Pool) refreshGasPrices() {
 	gasPrices, err := p.GetGasPrices(context.Background())
 	if err != nil {

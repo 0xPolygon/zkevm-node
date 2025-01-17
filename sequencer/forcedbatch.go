@@ -159,7 +159,7 @@ func (f *finalizer) addForcedTxToWorker(forcedBatchResponse *state.ProcessBatchR
 	}
 }
 
-// handleProcessForcedTxsResponse handles the block/transactions responses for the processed forced batch.
+// handleProcessForcedBatchResponse handles the block/transactions responses for the processed forced batch.
 func (f *finalizer) handleProcessForcedBatchResponse(ctx context.Context, newBatchNumber uint64, batchResponse *state.ProcessBatchResponse, dbTx pgx.Tx) error {
 	f.addForcedTxToWorker(batchResponse)
 
