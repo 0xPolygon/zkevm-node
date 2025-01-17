@@ -103,7 +103,7 @@ func LoadGenesisFileAsString(cfgPath string) (string, error) {
 		}
 		return string(b), nil
 	} else {
-		return "", errors.New("custom netwrork file not provided. Please use the custom-network-file flag")
+		return "", errors.New("custom network file not provided. Please use the custom-network-file flag")
 	}
 }
 

@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS state.blob_inner_in
     blob_type_proof VARCHAR
 );
 
-comment on column state.blob_inner_in.updated_at is 'the creation time is blob_sequence.created_at, this is the last time when was updated (tipically Now() )';
+comment on column state.blob_inner_in.updated_at is 'the creation time is blob_sequence.created_at, this is the last time when was updated (typically Now() )';
 comment on column state.blob_inner_in.blob_type is 'call_data, blob or forced';
 comment on column state.blob_inner_in.blob_data_hash is 'is the hash of the blobData';
 

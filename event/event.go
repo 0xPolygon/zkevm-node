@@ -36,7 +36,7 @@ const (
 	EventID_FinalizerRestart EventID = "FINALIZER RESTART"
 	// EventID_FinalizerBreakEvenGasPriceBigDifference is triggered when the finalizer recalculates the break even gas price and detects a big difference
 	EventID_FinalizerBreakEvenGasPriceBigDifference EventID = "FINALIZER BREAK EVEN GAS PRICE BIG DIFFERENCE"
-	// EventID_SynchronizerRestart is triggered when the Synchonizer restarts
+	// EventID_SynchronizerRestart is triggered when the Synchronizer restarts
 	EventID_SynchronizerRestart EventID = "SYNCHRONIZER RESTART"
 	// EventID_SynchronizerHalt is triggered when the synchronizer halts
 	EventID_SynchronizerHalt EventID = "SYNCHRONIZER HALT"
