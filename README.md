@@ -1,7 +1,7 @@
 > [!WARNING]
-> **Deprecation Notice**  
-> This repository will be deprecated on [February 17, 2025]. After this date, it will no longer be maintained or updated.  
-> **Replacement:** The recommended replacement for `zkevm-node` is [`cdk-erigon`](https://github.com/0xPolygonHermez/cdk-erigon). Please transition to this repository for continued updates and support.
+> **Archival Notice**  
+> This repository will be archived on [February 17, 2025]. After this date, it will no longer be actively maintained or updated.  
+> **Replacement:** The recommended alternative to `zkevm-node` is [`cdk-erigon`](https://github.com/0xPolygonHermez/cdk-erigon). Please transition to this repository for continued updates and support.
 
 # zkEVM Node
 
