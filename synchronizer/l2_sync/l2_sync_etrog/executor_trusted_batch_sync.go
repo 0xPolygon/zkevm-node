@@ -21,10 +21,10 @@ var (
 	ErrNotImplemented = errors.New("not implemented")
 	// ErrFailExecuteBatch is returned when the batch is not executed correctly
 	ErrFailExecuteBatch = errors.New("fail execute batch")
-	// ErrCriticalClosedBatchDontContainExpectedData is returnted when try to close a batch that is already close but data doesnt match
-	ErrCriticalClosedBatchDontContainExpectedData = errors.New("when closing the batch, the batch is already close, but  the data on state doesnt match the expected")
+	// ErrCriticalClosedBatchDontContainExpectedData is returned when trying to close a batch that is already closed but data doesn't match
+	ErrCriticalClosedBatchDontContainExpectedData = errors.New("when closing the batch, the batch is already closed, but the data on state doesn't match the expected")
 	// ErrCantReprocessBatchMissingPreviousStateBatch can't reprocess a divergent batch because is missing previous state batch
-	ErrCantReprocessBatchMissingPreviousStateBatch = errors.New("cant reprocess batch because is missing previous state batch")
+	ErrCantReprocessBatchMissingPreviousStateBatch = errors.New("can't reprocess batch because is missing previous state batch")
 )
 
 // StateInterface contains the methods required to interact with the state.
@@ -59,7 +59,7 @@ func NewSyncTrustedBatchExecutorForEtrog(stateBatchExecutor StateInterface,
 }
 
 // NothingProcess process a batch that is already on database and no new L2batchData, so it is not going to be processed again.
-// Maybe it needs to be close
+// Maybe it needs to be closed
 func (b *SyncTrustedBatchExecutorForEtrog) NothingProcess(ctx context.Context, data *l2_shared.ProcessData, dbTx pgx.Tx) (*l2_shared.ProcessResponse, error) {
 	isEqual, strResult := l2_shared.AreEqualStateBatchAndTrustedBatch(data.StateBatch, data.TrustedBatch, l2_shared.CMP_BATCH_IGNORE_TSTAMP+l2_shared.CMP_BATCH_IGNORE_WIP)
 	if !isEqual {
