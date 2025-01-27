@@ -56,7 +56,7 @@ Outputs = ["stdout"]
 
 ## Options
 
-To see avalible options type `make` once in the tool folder.
+To see available options type `make` once in the tool folder.
 
 ```
 decode-batch                   Runs the tool to decode a given batch
