@@ -5,7 +5,7 @@ This way we can easily reproduce scenarios that are problematic.
 
 ## Run
 
-`cd` into this directory and `go run .`. You can decide which vectors will be run by seting `skip` to true/false, on the json files found at `./vectors`.
+`cd` into this directory and `go run .`. You can decide which vectors will be run by setting `skip` to true/false, on the json files found at `./vectors`.
 
 ## Generate vector
 
