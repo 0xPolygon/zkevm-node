@@ -1118,7 +1118,7 @@ func TestTryBuildFinalProof(t *testing.T) {
 			},
 		},
 		{
-			name: "can't verify proof (veryfy time not reached yet)",
+			name: "can't verify proof (verify  time not reached yet)",
 			setup: func(m mox, a *Aggregator) {
 				a.TimeSendFinalProof = time.Now().Add(10 * time.Second)
 				m.proverMock.On("Name").Return(proverName).Once()
