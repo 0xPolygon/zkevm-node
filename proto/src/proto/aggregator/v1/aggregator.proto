@@ -151,7 +151,7 @@ message GetStatusResponse {
 
 /**
  * @dev Result
- *  - OK: succesfully completed
+ *  - OK: successfully completed
  *  - ERROR: request is not correct, i.e. input data is wrong
  *  - INTERNAL_ERROR: internal server error when delivering the response
  */
