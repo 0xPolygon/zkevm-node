@@ -177,7 +177,7 @@ func (f *finalizer) Start(ctx context.Context) {
 	// Store L2 Blocks
 	go f.storePendingL2Blocks(ctx)
 
-	// Foced batches checking
+	// Forced batches checking
 	go f.checkForcedBatches(ctx)
 
 	// Processing transactions and finalizing batches
