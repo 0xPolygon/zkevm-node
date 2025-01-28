@@ -9,7 +9,7 @@ zkEVM Node is a Go implementation of a node that operates the Polygon zkEVM Netw
 
 ## About the Polygon zkEVM network
 
-Since this is an implementation of a protocol it's fundamental to understand it, [here](https://zkevm.polygon.technology/docs/zknode/zknode-overview) you can find the specification of the protocol.
+Since this is an implementation of a protocol, it's fundamental to understand it, [here](https://zkevm.polygon.technology/docs/zknode/zknode-overview) you can find the specification of the protocol.
 
 Glossary:
 
@@ -25,7 +25,7 @@ Glossary:
 - Trusted state: state reached through processing transactions that have been shared by the trusted sequencer. This state is considered trusted as the trusted sequencer could commit to a certain sequence, and then send a different one to L1
 - Virtual state: state reached through processing transactions that have already been submitted to L1. These transactions are sent in batches by either trusted or permissionless sequencers. Those batches are also called virtual batches. Note that this state is trustless as it relies on L1 security assumptions
 - Consolidated state: state that is proven on-chain by submitting a ZKP (Zero Knowledge Proof) that proves the execution of a sequence of the last virtual batch.
-- Invalid transaction: a transaction that can't be processed and doesn't affect the state. Note that such a transaction could be included in a virtual batch. The reason for a transaction to be invalid could be related to the Ethereum protocol (invalid nonce, not enough balance, ...) or due to limitations introduced by the zkEVM (each batch can make use of a limited amount of resources such as the total amount of keccak hashes that can be computed)
+- Invalid transaction: a transaction that can't be processed and doesn't affect the state. Note that such a transaction could be included in a virtual batch. The reason for a transaction to be invalid could be related to the Ethereum protocol (invalid nonce, not enough balance, etc.) or due to limitations introduced by the zkEVM (each batch can make use of a limited amount of resources such as the total amount of keccak hashes that can be computed)
 - Reverted transaction: a transaction that is executed, but is reverted (because of smart contract logic). The main difference with *invalid transaction* is that this transaction modifies the state, at least to increment nonce of the sender.
 
 ## Architecture
@@ -45,7 +45,7 @@ The diagram represents the main components of the software and how they interact
 - Etherman: abstraction that implements the needed methods to interact with the Ethereum network and the relevant smart contracts.
 - Synchronizer: Updates the `state` (virtual batches, verified batches, forced batches, ...) by fetching data from L1 through the `etherman`. If the node is not a `trusted sequencer` it also updates the state with the data fetched from the `rpc` of the `trusted sequencer`. It also detects and handles reorgs that can happen if the `trusted sequencer` sends different data in the rpc vs the sequences sent to L1 (trusted reorg aka L2 reorg). Also handles L1 reorgs (reorgs that happen on the L1 network)
 - State: Responsible for managing the state data (batches, blocks, transactions, ...) that is stored on the `state SB`. It also handles the integration with the `executor` and the `Merkletree` service
-- State DB: persistence layer for the state data (except the Merkletree that is handled by the `HashDB` service), it stores informationrelated to L1 (blocks, global exit root updates, ...) and L2 (batches, L2 blocks, transactions, ...)
+- State DB: persistence layer for the state data (except the Merkletree that is handled by the `HashDB` service), it stores information related to L1 (blocks, global exit root updates, ...) and L2 (batches, L2 blocks, transactions, ...)
 - Aggregator: consolidates batches by generating ZKPs (Zero Knowledge proofs). To do so it gathers the necessary data that the `prover` needs as input through the `state` and sends a request to it. Once the proof is generated it sends a request to send an L1 tx to verify the proof and move the state from virtual to verified to the `ethtxmanager`. Note that provers connect to the aggregator and not the other way around. The aggregator can handle multiple connected provers at once and make them work concurrently in the generation of different proofs
 - Prover/Executor/hashDB: service that generates ZK proofs. Note that this component is not implemented in this repository, and it's treated as a "black box" from the perspective of the node. The prover/executor has two implementations: [JS reference implementation](https://github.com/0xPolygonHermez/zkevm-proverjs) and [C production-ready implementation](https://github.com/0xPolygonHermez/zkevm-prover). Although it's the same software/binary, it implements three services:
   - Executor: Provides an EVM implementation that allows processing batches as well as getting metadata (state root, transaction receipts, logs, ...) of all the needed results.
@@ -84,7 +84,7 @@ Required services and components:
 - Pool DB: Postgres SQL that can be run in a separate instance
 - State DB: Postgres SQL that can be run in a separate instance
 
-Note that the JSON RPC is required to receive transactions. It's recommended that the JSON RPC runs on separated instances, and potentially more than one (depending on the load of the network). It's also recommended that the JSON RPC and the Sequencer don't share the same executor instance, to make sure that the sequencer has exclusive access to an executor
+Note that the JSON RPC is required to receive transactions. It's recommended that the JSON RPC runs on separate instances, and potentially more than one (depending on the load of the network). It's also recommended that the JSON RPC and the Sequencer don't share the same executor instance, to make sure that the sequencer has exclusive access to an executor
 
 ### Aggregator
 
