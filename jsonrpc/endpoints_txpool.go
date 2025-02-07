@@ -28,7 +28,7 @@ type txPoolTransaction struct {
 }
 
 // Content creates a response for txpool_content request.
-// See https://geth.ethereum.org/docs/rpc/ns-txpool#txpool_content.
+// See https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-txpool.
 func (e *TxPoolEndpoints) Content() (interface{}, types.Error) {
 	resp := contentResponse{
 		Pending: make(map[common.Address]map[uint64]*txPoolTransaction),
