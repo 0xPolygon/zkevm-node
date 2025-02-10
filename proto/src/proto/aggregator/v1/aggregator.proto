@@ -11,7 +11,7 @@ message Version {
 // timestamps are represented in unix time in seconds
 
 /**
- * Define all methods implementes by the gRPC
+ * Define all methods implements by the gRPC
  * Channel: prover receives aggregator messages and returns prover messages with the same id
  */
 service AggregatorService {
