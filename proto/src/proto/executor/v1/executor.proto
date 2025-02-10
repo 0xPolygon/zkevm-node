@@ -551,7 +551,7 @@ message ProcessTransactionResponseV2 {
     uint64 gas_left = 8;
     // Total gas used as result of execution or gas estimation
     uint64 gas_used = 9;
-    // Cumulative gas used by this tranaction in the block
+    // Cumulative gas used by this transaction in the block
     uint64 cumulative_gas_used = 10;
     // Total gas refunded as result of execution
     uint64 gas_refunded = 11;

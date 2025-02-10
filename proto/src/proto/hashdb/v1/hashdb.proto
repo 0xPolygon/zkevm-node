@@ -13,7 +13,7 @@ message Version {
 // timestamps are represented in unix time in seconds
 
 /**
- * Define all methods implementes by the gRPC
+ * Define all methods implements by the gRPC
  * Get: get the value for a specific key
  * Set: set the value for a specific key
  * SetProgram: set the byte data for a specific key

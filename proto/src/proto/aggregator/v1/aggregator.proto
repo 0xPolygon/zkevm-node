@@ -11,7 +11,7 @@ message Version {
 // timestamps are represented in unix time in seconds
 
 /**
- * Define all methods implementes by the gRPC
+ * Define all methods implements by the gRPC
  * Channel: prover receives aggregator messages and returns prover messages with the same id
  */
 service AggregatorService {
@@ -116,7 +116,7 @@ message GetProofRequest {
  * @param {last_computed_end_time} - last proof timestamp when it was finished
  * @param {current_computing_request_id} - id of the proof that is being computed
  * @param {current_computing_start_time} - timestamp when the proof that is being computed started
- * @param {version_proto} - .proto verion
+ * @param {version_proto} - .proto version
  * @param {version_server} - server version
  * @param {pending_request_queue_ids} - list of identifierss of proof requests that are in the pending queue
  * @param {prover_name} - id of this prover server, normally specified via config.json, or UNSPECIFIED otherwise; it does not change if prover reboots
