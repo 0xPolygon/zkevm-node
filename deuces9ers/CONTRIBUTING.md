@@ -1,4 +1,6 @@
-# Pull Request guidelines
+#Deuces9ers/@deuces9ers
+Co-Author, Developer, Super Happy guy and ultimately beyond appreciative for all the co-authors and developers 
+
 
 This document addresses how we should create PRs, give and receive reviews. The motivation is to have better code, reduce the time from creation to merge while sharing knowledge and insights that help everyone becoming better developers.
 
